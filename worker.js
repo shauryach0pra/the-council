@@ -34,13 +34,30 @@ export default {
           'tanya', 'tarun', 'sunny', 'mani', 'gokul', 'vijay', 'shruti', 'suhani', 'mohit', 'kavitha', 'rehan', 'soham', 'rupali'];
         const speaker = SARVAM.includes(body.speaker) ? body.speaker : 'shubh';
         const pace = Math.min(2, Math.max(0.5, Number(body.pace) || 1));
+        const langCode = body.lang === 'en' ? 'en-IN' : 'hi-IN';   // en-IN = Indian-accented English (e.g. customer care)
+        // Bulbul reads romanised Hindi badly. If a Hindi line arrives in Latin script (no Devanagari
+        // transcript came back from the council), convert it with Sarvam's transliteration first.
+        let ttsText = text;
+        if (langCode === 'hi-IN' && !/[\u0900-\u097F]/.test(text)) {
+          try {
+            const tr = await fetch('https://api.sarvam.ai/transliterate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'api-subscription-key': env.SARVAM_KEY },
+              body: JSON.stringify({ input: text.slice(0, 1000), source_language_code: 'en-IN', target_language_code: 'hi-IN' }),
+            });
+            if (tr.ok) {
+              const tj = await tr.json();
+              if (tj.transliterated_text && /[\u0900-\u097F]/.test(tj.transliterated_text)) ttsText = tj.transliterated_text;
+            }
+          } catch { /* fall back to the original text */ }
+        }
         try {
           const res = await fetch('https://api.sarvam.ai/text-to-speech', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'api-subscription-key': env.SARVAM_KEY },
             body: JSON.stringify({
-              text, speaker, pace,
-              language_code: body.lang === 'en' ? 'en-IN' : 'hi-IN',   // en-IN = Indian-accented English (e.g. customer care)
+              text: ttsText, speaker, pace,
+              language_code: langCode,
               model: 'bulbul:v3',
               temperature: 0.9,          // a bit more expressive than the default
               speech_sample_rate: 24000,
