@@ -354,63 +354,144 @@ button { -webkit-tap-highlight-color: transparent; }
   background-size: 12px 12px;
 }
 
+/* Narration boxes (system messages) */
 .sys {
   align-self: center;
-  max-width: 100%;
+  max-width: min(560px, 100%);
   font-family: var(--mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
+  line-height: 1.4;
   text-transform: uppercase;
-  background: var(--ink);
-  color: var(--white);
+  text-align: center;
+  background: var(--c4);
+  border: 2.5px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
   padding: 4px 10px;
 }
-.sys.err { background: var(--err); color: var(--ink); border: var(--b); align-self: stretch; text-align: left; }
-
-.msg { display: flex; flex-direction: column; max-width: min(580px, 82%); }
-.msg.me { align-self: flex-end; align-items: flex-end; }
-.msg.member-msg { align-self: flex-start; }
-
-.msg-tag {
-  display: inline-flex;
+.sys.err {
+  align-self: stretch;
+  max-width: none;
+  text-align: left;
+  background: var(--err);
+  color: var(--white);
+  display: flex;
+  gap: 10px;
   align-items: center;
-  gap: 6px;
+}
+.sys.err::before {
+  content: '!';
+  flex-shrink: 0;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--white);
+  color: var(--err);
+  border: 2px solid var(--ink);
+  font-family: var(--display);
+  font-weight: 800;
+}
+.day {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.day::before, .day::after { content: ''; flex: 1; height: 3px; background: var(--ink); }
+.day span { background: var(--ink); color: var(--white); padding: 2px 8px; }
+
+/* Squad change card */
+.squad-card {
+  align-self: center;
+  width: min(520px, 100%);
+  background: var(--white);
+  border: var(--b);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+.sc-title {
+  background: var(--ink);
+  color: var(--white);
+  padding: 8px 12px;
   font-weight: 800;
   font-stretch: 85%;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+.sc-title small { display: block; font-family: var(--mono); font-size: 0.6rem; font-weight: 700; color: var(--c4); margin-bottom: 3px; }
+.sc-row { display: flex; gap: 10px; align-items: baseline; padding: 8px 12px; border-top: 2px solid var(--ink); }
+.sc-k { flex-shrink: 0; width: 52px; font-family: var(--mono); font-size: 0.6rem; font-weight: 700; text-transform: uppercase; }
+.sc-names { display: flex; flex-wrap: wrap; gap: 6px; }
+.sc-chip { font-size: 0.8rem; font-weight: 700; border: 2px solid var(--ink); padding: 1px 6px; background: var(--accent, var(--white)); color: var(--tag-ink, var(--ink)); }
+.sc-row.out .sc-chip { background: var(--paper); color: #6A6A6A; text-decoration: line-through; border-style: dashed; }
+
+/* Messages */
+.msg { display: flex; align-items: flex-start; gap: 12px; max-width: min(640px, 86%); }
+.msg.me { align-self: flex-end; margin-right: 14px; }
+.msg.member-msg { align-self: flex-start; }
+.msg-col { display: flex; flex-direction: column; min-width: 0; }
+.msg.me .msg-col { align-items: flex-end; }
+
+.msg-av {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  margin-top: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: var(--accent, var(--white));
+  border: var(--b);
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: rotate(-4deg);
+}
+.msg-head { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 8px; }
+.msg-tag {
+  font-weight: 800;
+  font-stretch: 85%;
+  font-size: 0.82rem;
+  line-height: 1;
   text-transform: uppercase;
   background: var(--accent, var(--ink));
-  color: var(--tag-ink, var(--ink));
-  border: var(--b);
-  border-bottom: none;
-  padding: 3px 9px;
-  align-self: flex-start;
+  color: var(--tag-ink, var(--white));
+  border: 2.5px solid var(--ink);
+  padding: 4px 8px 3px;
+  transform: rotate(-1.5deg);
 }
-.msg.me .msg-tag { background: var(--ink); color: var(--white); align-self: flex-end; }
+.msg-vibe { font-family: var(--mono); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; color: #5A5A5A; }
 
 .bubble {
   position: relative;
   border: var(--b);
   background: var(--white);
-  padding: 11px 14px;
-  font-size: 1rem;
+  padding: 12px 16px;
+  font-size: 1.02rem;
   line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.msg.member-msg .bubble { border-left: 10px solid var(--accent, var(--ink)); }
 .msg.me .bubble { background: var(--ink); color: var(--white); }
+
+/* Comic speech-bubble tail */
+.tail { position: absolute; top: 12px; left: -15px; width: 18px; height: 22px; overflow: visible; }
+.tail path { fill: var(--white); stroke: var(--ink); stroke-width: 3; stroke-linejoin: miter; }
+.msg.me .tail { left: auto; right: -15px; transform: scaleX(-1); }
+.msg.me .tail path { fill: var(--ink); }
 
 .msg-meta {
   display: flex;
   gap: 10px;
-  margin-top: 6px;
+  margin-top: 9px;
   font-family: var(--mono);
-  font-size: 0.66rem;
+  font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
-  opacity: 0.7;
+  color: #5A5A5A;
 }
+.msg-meta .receipt { color: var(--ink); }
 
 /* ---------- Composer ---------- */
 .bar {
@@ -518,18 +599,35 @@ button { -webkit-tap-highlight-color: transparent; }
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--ink);
-  transform: translate(4px, 4px);
+  background: var(--accent, var(--ink));
+  outline: 2.5px solid var(--ink);
+  outline-offset: -2.5px;
+  transform: translate(7px, 7px);
 }
+.msg.me .bwrap::before { background: var(--l5); }
 
-/* Typing indicator */
+/* Typing indicators */
 .dots i { font-style: normal; animation: blink 0.9s steps(1) infinite; }
 .dots i:nth-child(2) { animation-delay: 0.15s; }
 .dots i:nth-child(3) { animation-delay: 0.3s; }
 @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.15; } }
-.ghost .bubble { background: var(--paper); border-style: dashed; font-weight: 700; letter-spacing: 2px; }
-.ghost .bwrap::before { display: none; }
-.ghost .msg-tag { background: var(--accent, var(--paper)); color: var(--tag-ink, var(--ink)); border-style: dashed; }
+.bounce { display: inline-flex; gap: 6px; padding: 5px 2px; }
+.bounce i { width: 9px; height: 9px; background: var(--ink); animation: bounce 0.9s ease-in-out infinite; }
+.bounce i:nth-child(2) { animation-delay: 0.15s; }
+.bounce i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-7px); } }
+.ghost .bubble { background: var(--paper); }
+.ghost .bwrap::before { opacity: 0.35; }
+.ghost .tail path { fill: var(--paper); }
+.ghost .msg-tag { transform: none; }
+.ghost-stack { display: flex; margin-top: 26px; }
+.ghost-stack span {
+  width: 34px; height: 34px; margin-left: -8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  background: var(--accent); border: var(--b);
+}
+.ghost-stack span:first-child { margin-left: 0; }
 
 /* Boot: window slams in with a two-frame jitter */
 .a-boot { animation: slam 520ms cubic-bezier(.2,.9,.3,1) both; }
@@ -549,7 +647,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .a-stamp { animation: stamp 300ms cubic-bezier(.2,.9,.3,1.25) both; transform-origin: top left; }
 .a-stamp .bwrap::before { animation: shadowGrow 220ms 140ms cubic-bezier(.3,1.4,.5,1) both; }
 @keyframes stamp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
-@keyframes shadowGrow { from { transform: translate(0, 0); } to { transform: translate(4px, 4px); } }
+@keyframes shadowGrow { from { transform: translate(0, 0); } to { transform: translate(7px, 7px); } }
 
 .a-ghost, .a-sys, .a-stubin { animation: fadeIn 160ms both; }
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
@@ -595,6 +693,7 @@ button { -webkit-tap-highlight-color: transparent; }
   100% { clip-path: inset(50%);             opacity: 0; }
 }
 .stub {
+  margin-left: 56px;
   border: 3px dashed var(--ink);
   padding: 6px 10px;
   font-size: 0.72rem;
@@ -609,39 +708,49 @@ button { -webkit-tap-highlight-color: transparent; }
 /* Reaction tags */
 .react {
   position: absolute;
-  top: -13px;
-  right: -8px;
+  bottom: -16px;
+  right: 14px;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 3px;
   background: var(--white);
-  border: var(--b);
+  border: 2.5px solid var(--ink);
   box-shadow: 2px 2px 0 var(--ink);
-  padding: 1px 6px;
-  font-size: 0.78rem;
-  line-height: 1.4;
+  padding: 2px 7px;
+  font-size: 0.95rem;
+  line-height: 1.2;
   transform: rotate(-4deg);
 }
+.react small { font-size: 0.7rem; }
 .a-pop { animation: pop 260ms cubic-bezier(.2,.9,.3,1.5) both; }
 @keyframes pop { from { opacity: 0; transform: scale(0.4) rotate(-14deg); } to { opacity: 1; transform: rotate(-4deg); } }
 
 @media (prefers-reduced-motion: reduce) {
   .a-boot, .a-launch, .a-stamp, .a-stamp-in, .a-ghost, .a-sys, .a-stubin, .a-pop { animation: fadeIn 180ms both !important; }
   .a-glitch-out, .a-unsend, .a-collapse { animation: fadeOut 200ms both !important; }
-  .a-stamp .bwrap::before, .a-unsend .bubble::after, .dots i { animation: none !important; }
+  .a-stamp .bwrap::before, .a-unsend .bubble::after, .dots i, .bounce i { animation: none !important; }
 }
 
 /* ================================================================
    STORY EXPORT
    ================================================================ */
 .shot-row { display: flex; justify-content: center; padding: 6px 0 4px; }
+.shot-row { padding-top: 14px; }
 .shot-btn {
   background: var(--c4);
-  border: var(--B);
-  box-shadow: var(--shadow);
+  font-family: var(--display);
+  font-weight: 800;
+  font-stretch: 85%;
   font-size: 1.05rem;
-  min-height: 56px;
-  padding: 0 26px;
+  text-transform: uppercase;
+  min-height: 54px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
-.shot-btn:not(:disabled):active { transform: translate(4px, 4px); box-shadow: 4px 4px 0 var(--ink); background: var(--c4); color: var(--ink); }
+.shot-btn .ico { font-size: 1.3rem; }
 .a-slam { animation: slamBtn 380ms cubic-bezier(.2,.9,.3,1.3) both; }
 @keyframes slamBtn {
   0%   { opacity: 0; transform: scale(1.7) rotate(-5deg); }
@@ -810,7 +919,11 @@ button { -webkit-tap-highlight-color: transparent; }
   .member-foot { margin-top: 3px; }
 
   .stream { padding: 16px 12px 20px; }
-  .msg { max-width: 90%; }
+  .msg { max-width: 94%; gap: 9px; }
+  .msg-av { width: 34px; height: 34px; font-size: 1.05rem; margin-top: 24px; }
+  .ghost-stack span { width: 28px; height: 28px; font-size: 0.85rem; }
+  .stub { margin-left: 43px; }
+  .bubble { font-size: 0.97rem; padding: 10px 13px; }
 
   .bar {
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -1397,6 +1510,8 @@ async function typeOut(el, text) {
 //  CHAT RENDER
 // ================================================================
 const DOTS = '<span class="dots" aria-hidden="true"><i>▮</i><i>▮</i><i>▮</i></span>';
+const BOUNCE = '<span class="bounce" aria-hidden="true"><i></i><i></i><i></i></span>';
+const TAIL = '<svg class="tail" viewBox="0 0 18 22" aria-hidden="true"><path d="M18 1.5 L1.5 8 L18 20.5"/></svg>';
 
 function scrollToBottom() {
   requestAnimationFrame(() =>
@@ -1412,20 +1527,43 @@ function appendToStream(el) {
 function postSystem(text, isError = false, { typed = false } = {}) {
   const el = document.createElement('div');
   el.className = 'sys a-sys' + (isError ? ' err' : '');
-  const full = (isError ? '! ERROR: ' : '> ') + text;
+  el.setAttribute('role', isError ? 'alert' : 'status');
   appendToStream(el);
-  if (typed && !REDUCED) typeOut(el, full);
-  else el.textContent = full;
+  if (typed && !REDUCED) typeOut(el, text);
+  else el.textContent = text;
   return el;
+}
+
+function postDay() {
+  const el = document.createElement('div');
+  el.className = 'day a-sys';
+  el.innerHTML = `<span>Today ${clock().slice(0, 5)}</span>`;
+  return appendToStream(el);
+}
+
+// One card for a randomize: who left, who joined, new chat name
+function postSquadChange(prev, next, title) {
+  const chip = (p, i) => {
+    const a = ACCENTS[i % ACCENTS.length];
+    return `<span class="sc-chip" style="--accent:${a.bg};--tag-ink:${a.ink}">${escHtml(p.emoji)} ${escHtml(p.name)}</span>`;
+  };
+  const el = document.createElement('div');
+  el.className = 'squad-card a-stamp';
+  el.innerHTML = `
+    <div class="sc-title"><small>Chat renamed</small>${escHtml(title)}</div>
+    <div class="sc-row out"><span class="sc-k">Left</span><span class="sc-names">${prev.map(chip).join('')}</span></div>
+    <div class="sc-row"><span class="sc-k">Joined</span><span class="sc-names">${next.map(chip).join('')}</span></div>`;
+  return appendToStream(el);
 }
 
 function postUser(text) {
   const el = document.createElement('div');
   el.className = 'msg me a-launch';
   el.innerHTML = `
-    <div class="msg-tag">You</div>
-    <div class="bwrap"><div class="bubble">${escHtml(text)}</div></div>
-    <div class="msg-meta"><span>${nextId()}</span><span>${clock()}</span><span class="receipt">Sending</span></div>`;
+    <div class="msg-col">
+      <div class="bwrap"><div class="bubble">${escHtml(text)}</div>${TAIL}</div>
+      <div class="msg-meta"><span>${nextId()}</span><span>${clock().slice(0, 5)}</span><span class="receipt">Sending</span></div>
+    </div>`;
   return appendToStream(el);
 }
 
@@ -1445,14 +1583,21 @@ function makeGhost(slot, member) {
   const el = document.createElement('div');
   el.className = 'msg member-msg ghost a-ghost';
   el.setAttribute('aria-hidden', 'true');
-  let tag;
+  let av, tag;
   if (slot === null) {
-    tag = `<span>${state.members.map(p => escHtml(p.emoji)).join('')}</span><span>${state.members.length} typing</span>`;
+    av = `<div class="ghost-stack">${state.members.map((p, i) =>
+      `<span style="--accent:${ACCENTS[i % ACCENTS.length].bg}">${escHtml(p.emoji)}</span>`).join('')}</div>`;
+    tag = `${state.members.length} people are typing`;
   } else {
     applyAccent(el, slot);
-    tag = `<span>${escHtml(member.emoji)}</span><span>${escHtml(member.name)}</span>`;
+    av = `<div class="msg-av">${escHtml(member.emoji)}</div>`;
+    tag = escHtml(member.name);
   }
-  el.innerHTML = `<div class="msg-tag">${tag}</div><div class="bwrap"><div class="bubble">${DOTS}</div></div>`;
+  el.innerHTML = `${av}
+    <div class="msg-col">
+      <div class="msg-head"><span class="msg-tag">${tag}</span></div>
+      <div class="bwrap"><div class="bubble">${BOUNCE}</div>${TAIL}</div>
+    </div>`;
   return el;
 }
 
@@ -1461,9 +1606,12 @@ function makeMember(m, slot) {
   el.className = 'msg member-msg a-stamp';
   applyAccent(el, slot);
   el.innerHTML = `
-    <div class="msg-tag"><span>${escHtml(m.emoji)}</span><span>${escHtml(m.name)}</span></div>
-    <div class="bwrap"><div class="bubble">${escHtml(m.response)}</div></div>
-    <div class="msg-meta"><span>${nextId()}</span><span>${clock()}</span><span>${escHtml(m.vibe)}</span></div>`;
+    <div class="msg-av" aria-hidden="true">${escHtml(m.emoji)}</div>
+    <div class="msg-col">
+      <div class="msg-head"><span class="msg-tag">${escHtml(m.name)}</span><span class="msg-vibe">${escHtml(m.vibe)}</span></div>
+      <div class="bwrap"><div class="bubble">${escHtml(m.response)}</div>${TAIL}</div>
+      <div class="msg-meta"><span>${nextId()}</span><span>${clock().slice(0, 5)}</span></div>
+    </div>`;
   return el;
 }
 
@@ -1546,7 +1694,7 @@ async function dropReactions(round) {
     const tag = document.createElement('span');
     tag.className = 'react a-pop';
     tag.title = `${reactor.name} reacted`;
-    tag.textContent = `${pickOne(REACTIONS)} ${reactor.emoji}`;
+    tag.innerHTML = `${pickOne(REACTIONS)}<small>${escHtml(reactor.emoji)}</small>`;
     round.memberEls[to].querySelector('.bwrap')?.appendChild(tag);
   }
 }
@@ -1719,7 +1867,6 @@ async function randomize(announce = true) {
   if (!announce || !prev.length) { renderRail(true, announce ? 0 : T.boot - 150); return; }
 
   setBusy(true);
-  postSystem(`${listNames(prev)} left`);
   const old = [...els.rail.querySelectorAll('.member:not(.you)')];
   old.forEach((el, i) => {
     el.style.animationDelay = `${i * T.glitchGap}ms`;
@@ -1728,9 +1875,8 @@ async function randomize(announce = true) {
   });
   await wait(T.glitch + old.length * T.glitchGap);
   renderRail(true);
-  postSystem(`${listNames(state.members)} joined`);
+  postSquadChange(prev, state.members, squad.title);
   await wait(state.members.length * T.stampGap + 260);
-  postSystem(`Chat renamed: ${squad.title}`);
   setBusy(false);
 }
 
@@ -2046,7 +2192,7 @@ function showShotButton() {
   removeShotButton();
   const row = document.createElement('div');
   row.className = 'shot-row';
-  row.innerHTML = '<button class="blk shot-btn a-slam" type="button">📸 Screenshot chat</button>';
+  row.innerHTML = '<button class="kbtn shot-btn a-slam" type="button"><span class="ico" aria-hidden="true">📸</span>Screenshot this chat</button>';
   row.querySelector('button').addEventListener('click', openStory);
   appendToStream(row);
 }
@@ -2334,6 +2480,7 @@ function storyKeydown(e) {
   });
 
   await wait(T.boot + state.members.length * T.stampGap);
+  postDay();
   postSystem(`${state.members.length} members joined the chat`, false, { typed: true });
 })();
 </script>
