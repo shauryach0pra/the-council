@@ -790,8 +790,9 @@ button { -webkit-tap-highlight-color: transparent; }
 .story-back { background: var(--white); }
 .story-status { color: var(--white); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; min-height: 1.2em; text-align: center; }
 
-/* Off-screen 1080x1920 story layout (rendered to PNG) */
-.st {
+/* Off-screen 1080x1920 story: a phone screenshot of the group chat.
+   Kept to CSS that html2canvas draws reliably: no font-stretch, outline or SVG. */
+.sx {
   position: fixed;
   left: -100000px;
   top: 0;
@@ -799,47 +800,172 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 1920px;
   display: flex;
   flex-direction: column;
+  background: #F2F0E9;
+  color: #000;
+  font-family: var(--text);
+  overflow: hidden;
+}
+.sx-status {
+  height: 96px;
+  flex-shrink: 0;
+  background: #000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 64px 0;
+  font-family: var(--mono);
+  font-size: 34px;
+  font-weight: 700;
+}
+.sx-island { width: 230px; height: 62px; background: #1A1A1A; border-radius: 40px; }
+.sx-batt { display: flex; align-items: center; gap: 12px; }
+.sx-batt b { color: #FF3B00; }
+.sx-head {
+  flex-shrink: 0;
+  background: #000;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  padding: 22px 48px 30px;
+}
+.sx-back { font-size: 76px; line-height: 1; font-weight: 800; margin-top: -8px; }
+.sx-avs { display: flex; flex-shrink: 0; }
+.sx-avs > span { background: #fff; padding: 4px; margin-left: -18px; }
+.sx-avs > span:first-child { margin-left: 0; }
+.sx-avs > span:nth-child(odd) { transform: rotate(-5deg); }
+.sx-avs > span:nth-child(even) { transform: rotate(4deg); }
+/* no box-shadow on rotated boxes: html2canvas paints those in the wrong place */
+.sx-avs b {
+  width: 80px; height: 80px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px; font-weight: 400;
+  border: 6px solid #000;
+}
+.sx-title { flex: 1; min-width: 0; }
+.sx-name { font-family: var(--display); font-weight: 800; font-size: 58px; line-height: 1; text-transform: uppercase; letter-spacing: -1px; }
+.sx-sub { display: flex; flex-wrap: wrap; gap: 6px 26px; margin-top: 14px; font-family: var(--mono); font-size: 25px; font-weight: 700; text-transform: uppercase; color: #CFCFCF; }
+.sx-on { color: #00E05A; }
+.sx-ticker {
+  flex-shrink: 0;
+  background: #FFD600;
+  border-top: 6px solid #000;
+  border-bottom: 6px solid #000;
+  padding: 12px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  font-weight: 800;
+  font-size: 26px;
+  text-transform: uppercase;
+}
+.sx-chat {
+  --fs: 40px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 30px 56px 30px 48px;
   background-color: #F2F0E9;
   background-image:
-    linear-gradient(to right, rgba(0,0,0,0.07) 2px, transparent 2px),
-    linear-gradient(to bottom, rgba(0,0,0,0.07) 2px, transparent 2px);
-  background-size: 64px 64px;
-  color: #000;
-  font-family: var(--mono);
-  padding: 150px 64px 200px;   /* clear of Instagram's top and bottom UI */
+    linear-gradient(to right, rgba(0,0,0,0.05) 2px, transparent 2px),
+    linear-gradient(to bottom, rgba(0,0,0,0.05) 2px, transparent 2px);
+  background-size: 48px 48px;
 }
-.st-top { background: #000; color: #fff; padding: 28px 36px 24px; border: 6px solid #000; box-shadow: 14px 14px 0 #FF3B00; }
-.st-title { font-family: var(--display); font-size: 120px; line-height: 0.95; text-transform: uppercase; letter-spacing: -2px; }
-.st-sub { display: flex; justify-content: space-between; gap: 24px; margin-top: 14px; font-size: 26px; font-weight: 700; text-transform: uppercase; }
-.st-body { --fs: 46px; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 34px; padding: 56px 14px 24px 0; }
-.st-tag {
-  display: inline-block;
-  font-family: var(--display);
-  font-size: calc(var(--fs) * 0.62);
+.sx-day { display: flex; align-items: center; gap: 20px; font-family: var(--mono); font-size: 24px; font-weight: 700; text-transform: uppercase; }
+.sx-day i { flex: 1; height: 5px; background: #000; }
+.sx-day span { background: #000; color: #fff; padding: 4px 14px; }
+
+.sx-msg { display: flex; align-items: flex-start; gap: 34px; max-width: 94%; }
+.sx-me { align-self: flex-end; flex-direction: column; align-items: flex-end; max-width: 86%; margin-right: 26px; }
+.sx-av {
+  flex-shrink: 0;
+  width: 80px; height: 80px;
+  margin-top: 48px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px;
+  background: var(--accent);
+  border: 6px solid #000;
+  transform: rotate(-4deg);
+}
+.sx-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.sx-tag {
+  font-weight: 800;
+  font-size: calc(var(--fs) * 0.7);
+  line-height: 1;
   text-transform: uppercase;
-  background: var(--accent, #000);
-  color: var(--tag-ink, #fff);
+  background: var(--accent);
+  color: var(--tag-ink);
   border: 5px solid #000;
-  border-bottom: none;
-  padding: 6px 16px;
+  padding: 9px 14px 7px;
+  margin-bottom: 16px;
+  transform: rotate(-1.5deg);
 }
-.st-tag-you { background: #000; color: #fff; }
-.st-bubble {
+.sx-bub {
+  position: relative;
   background: #fff;
-  border: 5px solid #000;
-  border-left: 20px solid var(--accent, #000);
-  box-shadow: 10px 10px 0 #000;
-  padding: 18px 24px;
+  border: 6px solid #000;
+  box-shadow: 14px 14px 0 var(--accent);
+  padding: 24px 30px;
   font-size: var(--fs);
   line-height: 1.32;
-  font-weight: 700;
+  font-weight: 500;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.st-bubble-you { background: #000; color: #fff; border-left-width: 5px; font-size: calc(var(--fs) * 1.08); }
-.st-foot { background: #FFD600; border: 6px solid #000; box-shadow: 14px 14px 0 #000; padding: 24px 36px; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
-.st-cta { font-family: var(--display); font-size: 44px; text-transform: uppercase; line-height: 1; }
-.st-url { font-size: 28px; font-weight: 700; }
+/* tail: a pre-drawn triangle image (html2canvas draws <img> more reliably than
+   rotated boxes or border triangles) overlapping the bubble's left border */
+.sx-tail { position: absolute; left: -40px; top: 20px; width: 46px; height: 52px; }
+.sx-me .sx-bub { background: #000; color: #fff; box-shadow: 14px 14px 0 #FF4FD8; font-weight: 600; }
+.sx-me .sx-tail { left: auto; right: -40px; transform: scaleX(-1); }
+.sx-meta { margin-top: 24px; font-family: var(--mono); font-size: 22px; font-weight: 700; text-transform: uppercase; color: #555; }
+.sx-react {
+  position: absolute;
+  right: 24px; bottom: -34px;
+  background: #fff;
+  border: 5px solid #000;
+  padding: 4px 14px;
+  font-size: 34px;
+  line-height: 1.2;
+  transform: rotate(-4deg);
+}
+
+.sx-compose {
+  flex-shrink: 0;
+  display: flex;
+  gap: 22px;
+  align-items: stretch;
+  padding: 26px 48px 150px;   /* bottom stays clear of Instagram's reply bar */
+  background: #fff;
+  border-top: 7px solid #000;
+  position: relative;
+}
+.sx-input {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  border: 6px solid #000;
+  box-shadow: 8px 8px 0 #0038FF;
+  padding: 16px 26px;
+}
+.sx-input small { font-family: var(--mono); font-size: 22px; font-weight: 700; text-transform: uppercase; color: #666; }
+.sx-input b { font-weight: 800; font-size: 34px; }
+.sx-send {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 34px;
+  background: #FF3B00;
+  border: 6px solid #000;
+  box-shadow: 8px 8px 0 #000;
+  font-weight: 800;
+  font-size: 36px;
+  text-transform: uppercase;
+}
+.sx-home { position: absolute; left: 50%; bottom: 44px; width: 300px; height: 12px; margin-left: -150px; background: #000; border-radius: 8px; }
+
 
 @media (prefers-reduced-motion: reduce) {
   .a-slam { animation: fadeIn 180ms both !important; }
@@ -1666,10 +1792,12 @@ async function dropReactions(round) {
     if (from === to || used.has(to)) return;
     used.add(to);
     const reactor = round.members[from];
+    const emoji = pickOne(REACTIONS);
+    (round.reactions ||= []).push({ to, emoji, by: reactor.emoji });
     const tag = document.createElement('span');
     tag.className = 'react a-pop';
     tag.title = `${reactor.name} reacted`;
-    tag.innerHTML = `${pickOne(REACTIONS)}<small>${escHtml(reactor.emoji)}</small>`;
+    tag.innerHTML = `${emoji}<small>${escHtml(reactor.emoji)}</small>`;
     round.memberEls[to].querySelector('.bwrap')?.appendChild(tag);
     playSfx('boing');
   }
@@ -2475,56 +2603,88 @@ function showShotButton() {
 }
 
 // ---------- off-screen story layout ----------
+// Speech-bubble tail as a PNG data URL: fill + 6px black outline on the two outer edges
+const tailCache = {};
+function tailSrc(fill) {
+  if (tailCache[fill]) return tailCache[fill];
+  const c = document.createElement('canvas');
+  c.width = 46; c.height = 52;
+  const g = c.getContext('2d');
+  g.beginPath(); g.moveTo(46, 3); g.lineTo(4, 22); g.lineTo(46, 49); g.closePath();
+  g.fillStyle = fill; g.fill();
+  g.beginPath(); g.moveTo(46, 3); g.lineTo(4, 22); g.lineTo(46, 49);
+  g.lineWidth = 6; g.lineJoin = 'miter'; g.strokeStyle = '#000'; g.stroke();
+  g.fillStyle = fill; g.fillRect(40, 6, 6, 40);   // erase the bubble border under the tail
+  return (tailCache[fill] = c.toDataURL('image/png'));
+}
+
 function buildStoryDOM(round) {
   const lvl = LEVELS[round.level - 1];
+  const reactFor = i => (round.reactions || []).filter(r => r.to === i)
+    .map(r => `<span class="sx-react">${r.emoji} ${escHtml(r.by)}</span>`).join('');
+  const now = clock().slice(0, 5);
   const root = document.createElement('div');
   root.id = 'storyRender';
-  root.className = 'st';
+  root.className = 'sx';
   root.innerHTML = `
-    <div class="st-top">
-      <div class="st-title">The Council</div>
-      <div class="st-sub"><span>${escHtml(round.squadTitle)}</span><span>Level ${lvl.v} // ${escHtml(lvl.name)} ${lvl.emoji}</span></div>
+    <div class="sx-status"><span>${now}</span><span class="sx-island"></span><span class="sx-batt">📶 <b>1%</b> 🪫</span></div>
+    <div class="sx-head">
+      <div class="sx-back">‹</div>
+      <div class="sx-avs">${round.members.map((m, i) =>
+        `<span><b style="background:${ACCENTS[round.slots[i] % ACCENTS.length].bg}">${escHtml(m.emoji)}</b></span>`).join('')}</div>
+      <div class="sx-title">
+        <div class="sx-name">${escHtml(round.squadTitle)}</div>
+        <div class="sx-sub"><span>${round.members.length + 1} members</span><span class="sx-on">● online</span><span>Chaos: ${escHtml(lvl.name)} ${lvl.emoji}</span></div>
+      </div>
     </div>
-    <div class="st-body">
-      <div class="st-q">
-        <div class="st-tag st-tag-you">You asked</div>
-        <div class="st-bubble st-bubble-you"></div>
+    <div class="sx-ticker">✸ The Council ✸ Advice quality: not guaranteed ✸ Members may disagree violently ✸ Screenshots encouraged ✸ The Council</div>
+    <div class="sx-chat">
+      <div class="sx-day"><i></i><span>Today ${now}</span><i></i></div>
+      <div class="sx-msg sx-me">
+        <div class="sx-bub"><img class="sx-tail" alt="" src="${tailSrc('#000')}"><span class="sx-txt"></span></div>
+        <div class="sx-meta">Read by ${round.members.length}</div>
       </div>
       ${round.members.map((m, i) => {
         const a = ACCENTS[round.slots[i] % ACCENTS.length];
         return `
-        <div class="st-r" style="--accent:${a.bg};--tag-ink:${a.ink}">
-          <div class="st-tag">${escHtml(m.emoji)} ${escHtml(m.name)}</div>
-          <div class="st-bubble" data-i="${i}"></div>
+        <div class="sx-msg" style="--accent:${a.bg};--tag-ink:${a.ink}">
+          <div class="sx-av">${escHtml(m.emoji)}</div>
+          <div class="sx-col">
+            <div class="sx-tag">${escHtml(m.name)}</div>
+            <div class="sx-bub"><img class="sx-tail" alt="" src="${tailSrc('#fff')}"><span class="sx-txt" data-i="${i}"></span>${reactFor(i)}</div>
+          </div>
         </div>`;
       }).join('')}
     </div>
-    <div class="st-foot">
-      <div class="st-cta">Ask your own council</div>
-      <div class="st-url">${escHtml(SITE_URL)}</div>
+    <div class="sx-compose">
+      <div class="sx-input"><small>Ask your own council</small><b>${escHtml(SITE_URL)}</b></div>
+      <div class="sx-send">Send</div>
+      <i class="sx-home"></i>
     </div>`;
   // text via textContent so nothing from the model is ever parsed as HTML
-  root.querySelector('.st-bubble-you').textContent = round.question;
-  root.querySelectorAll('.st-bubble[data-i]').forEach(b => {
-    b.textContent = round.members[Number(b.dataset.i)].response;
+  root.querySelector('.sx-me .sx-txt').textContent = round.question;
+  root.querySelectorAll('.sx-txt[data-i]').forEach(t => {
+    t.textContent = round.members[Number(t.dataset.i)].response;
   });
   return root;
 }
 
-// Shrink type until everything fits; truncate the longest text only as a last resort
+// Shrink type until the chat fits; truncate the longest message only as a last resort
 function fitStory(root) {
-  const body = root.querySelector('.st-body');
-  const overflowing = () => body.scrollHeight > body.clientHeight + 1;
-  for (let fs = 46; fs >= 24; fs -= 2) {
-    body.style.setProperty('--fs', fs + 'px');
+  const chat = root.querySelector('.sx-chat');
+  const name = root.querySelector('.sx-name');
+  for (let fs = 58; fs > 40 && name.scrollHeight > fs * 2.2; fs -= 4) name.style.fontSize = fs + 'px';
+  const overflowing = () => chat.scrollHeight > chat.clientHeight + 1;
+  for (let fs = 42; fs >= 26; fs -= 2) {
+    chat.style.setProperty('--fs', fs + 'px');
     if (!overflowing()) return;
   }
-  const bubbles = [...root.querySelectorAll('.st-bubble')];
+  const texts = [...root.querySelectorAll('.sx-txt')];
   for (let guard = 0; guard < 80 && overflowing(); guard++) {
-    const longest = bubbles.reduce((a, b) => (b.textContent.length > a.textContent.length ? b : a));
+    const longest = texts.reduce((a, b) => (b.textContent.length > a.textContent.length ? b : a));
     const text = longest.textContent.replace(/\.\.\.$/, '');
     if (text.length < 40) break;
-    longest.textContent = text.slice(0, Math.floor(text.length * 0.88)).trimEnd() + '...';
+    longest.textContent = text.slice(0, Math.floor(text.length * 0.9)).replace(/[\s,.;:!?-]+$/, '') + '...';
   }
 }
 
@@ -2532,7 +2692,8 @@ async function fontsReady() {
   if (!document.fonts) return;
   try {
     await Promise.all([
-      document.fonts.load('80px "Archivo Black"'),
+      document.fonts.load('800 60px "Bricolage Grotesque"'),
+      document.fonts.load('500 40px "Bricolage Grotesque"'),
       document.fonts.load('400 30px "Space Mono"'),
       document.fonts.load('700 30px "Space Mono"'),
     ]);
