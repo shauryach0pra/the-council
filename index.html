@@ -178,32 +178,21 @@ button { -webkit-tap-highlight-color: transparent; }
 .sound-btn:active { transform: translate(2px, 2px); }
 .viz, .sound-off { grid-area: 1 / 1; }
 .viz { display: block; width: 44px; height: 28px; transform-origin: bottom; transition: transform 0.28s cubic-bezier(.5,0,.75,0), opacity 0.2s; }
-.sound-off { width: 28px; height: 28px; transform: scale(0) rotate(-30deg); opacity: 0; transition: transform 0.32s cubic-bezier(.2,.9,.3,1.5), opacity 0.15s; }
+.sound-off { display: block; margin: auto; width: 28px; height: 28px; transform: scale(0) rotate(-30deg); opacity: 0; transition: transform 0.32s cubic-bezier(.2,.9,.3,1.5), opacity 0.15s; }
 .sound-off path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: square; }
 .sound-off path:first-child { fill: currentColor; stroke: none; }
 .sound-btn[aria-checked="false"] .viz { transform: scaleY(0.05); opacity: 0; }
 .sound-btn[aria-checked="false"] .sound-off { transform: none; opacity: 1; transition-delay: 0.18s; }
 .sound-btn[aria-checked="true"] .viz { transition-delay: 0.12s; transition-timing-function: cubic-bezier(.2,.9,.3,1.3); }
 
-/* Randomize: each card turns into a spinning reel */
-.member.slotting { display: block; padding: 0; overflow: hidden; position: relative; }
+/* Randomize: each card turns into a spinning reel of identical card faces */
 .slot-strip { will-change: transform; }
-.slot-face {
-  height: var(--h);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 14px;
-  background: var(--white);
-  border-bottom: var(--b);
-}
-.slot-face .avatar { flex-shrink: 0; transform: none; }
 /* flat 'glass' bands top and bottom so the faces look like they pass behind a window */
 .slot-glass { position: absolute; inset: 0; pointer-events: none; border-top: 6px solid rgba(0,0,0,0.12); border-bottom: 6px solid rgba(0,0,0,0.12); }
 
 /* NEW! sticker on members you've never met before */
-.member.is-new .avatar { position: relative; }
-.member.is-new .avatar::after {
+.is-new .avatar { position: relative; }
+.is-new .avatar::after {
   content: 'NEW';
   position: absolute;
   top: -9px; right: -12px;
@@ -282,13 +271,23 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 2px 6px;
 }
 .rail-list { overflow-y: auto; flex: 1; min-height: 0; }
+/* Every card is the same fixed height (name: 1 line, description: 2 lines max),
+   so randomizing never changes the layout. .card-body is shared with the slot reel faces. */
 .member {
+  height: var(--card-h);
+  border-bottom: var(--b);
+  background: var(--white);
+  overflow: hidden;
+  position: relative;
+}
+:root { --card-h: 100px; }
+.card-body {
+  height: var(--card-h);
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
-  padding: 9px 14px 9px;
-  border-bottom: var(--b);
+  padding: 9px 14px;
   background: var(--white);
 }
 .avatar {
@@ -303,7 +302,7 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: 3px 3px 0 var(--ink);
   transform: rotate(-3deg);
 }
-.member:nth-child(odd) .avatar { transform: rotate(2.5deg); }
+.card-body.odd .avatar { transform: rotate(2.5deg); }
 .member-text { min-width: 0; }
 .member-name {
   font-weight: 800;
@@ -368,7 +367,8 @@ button { -webkit-tap-highlight-color: transparent; }
   line-height: 1.4;
   text-transform: uppercase;
   text-align: center;
-  background: var(--c4);
+  background: var(--white);
+  color: var(--ink);
   border: 2.5px solid var(--ink);
   box-shadow: 3px 3px 0 var(--ink);
   padding: 4px 10px;
@@ -404,7 +404,7 @@ button { -webkit-tap-highlight-color: transparent; }
   text-transform: uppercase;
 }
 .day { justify-content: center; }
-.day span { background: var(--ink); color: var(--white); padding: 3px 10px; }
+.day span { background: var(--white); color: var(--ink); border: 2.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 3px 10px; }
 
 /* Squad change card */
 .squad-card {
@@ -511,19 +511,20 @@ button { -webkit-tap-highlight-color: transparent; }
 /* loading: the button turns into a little stepping progress bar */
 .msg.voice-loading .say { cursor: progress; }
 .msg.voice-loading .say .say-ico { opacity: 0; }
-.msg.voice-loading .say::before, .msg.voice-loading .say::after, .say .ld {
-  content: '';
+.say .ld {
+  display: none;
   position: absolute;
-  top: 50%;
-  width: 6px; height: 6px;
-  margin-top: -3px;
-  background: currentColor;
+  left: 50%; top: 50%;
+  width: 4px; height: 4px;
+  margin: -2px 0 0 -2px;
+  color: currentColor;
+  box-shadow:
+     0px -8px 0 0 currentColor,  6px -6px 0 0 rgba(128,128,128,0.9),  8px 0 0 0 rgba(128,128,128,0.75),
+     6px  6px 0 0 rgba(128,128,128,0.6), 0 8px 0 0 rgba(128,128,128,0.45), -6px 6px 0 0 rgba(128,128,128,0.35),
+    -8px  0 0 0 rgba(128,128,128,0.25), -6px -6px 0 0 rgba(128,128,128,0.15);
 }
-.msg.voice-loading .say::before { left: 8px; animation: ldot 0.9s steps(1) infinite; }
-.msg.voice-loading .say::after { right: 8px; animation: ldot 0.9s 0.6s steps(1) infinite; }
-.say .ld { display: none; left: 50%; margin-left: -3px; }
-.msg.voice-loading .say .ld { display: block; animation: ldot 0.9s 0.3s steps(1) infinite; }
-@keyframes ldot { 0% { transform: translateY(0); } 33% { transform: translateY(-5px); } 66% { transform: translateY(0); } }@keyframes loadbar { from { background-position: 0 0; } to { background-position: 150% 0; } }
+.msg.voice-loading .say .ld { display: block; animation: pxspin 0.8s steps(8) infinite; }
+@keyframes pxspin { to { transform: rotate(360deg); } }
 .say:hover { background: var(--paper); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
 .say:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
 .msg.speaking .say, .msg.speaking .say:hover { background: var(--ink); color: var(--white); }
@@ -589,7 +590,7 @@ button { -webkit-tap-highlight-color: transparent; }
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.msg.me .bubble { background: var(--ink); color: var(--white); }
+.msg.me .bubble { background: var(--white); color: var(--ink); }
 /* Time (and ticks) tucked into the bubble's bottom-right corner, like a messaging app */
 .btime {
   float: right;
@@ -610,7 +611,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .tail { position: absolute; top: 9px; left: -15px; width: 18px; height: 22px; overflow: visible; }
 .tail path { fill: var(--white); stroke: var(--ink); stroke-width: 3; stroke-linejoin: miter; }
 .msg.me .tail { left: auto; right: -15px; transform: scaleX(-1); }
-.msg.me .tail path { fill: var(--ink); }
+.msg.me .tail path { fill: var(--white); }
 
 /* ---------- Composer ---------- */
 /* Composer: its own section under the chat, like a messaging app */
@@ -693,7 +694,7 @@ button { -webkit-tap-highlight-color: transparent; }
   outline-offset: -2.5px;
   transform: translate(7px, 7px);
 }
-.msg.me .bwrap::before { background: var(--c4); }
+.msg.me .bwrap::before { background: var(--ink); }
 
 /* Typing indicators */
 .dots i { font-style: normal; animation: blink 0.9s steps(1) infinite; }
@@ -735,7 +736,9 @@ button { -webkit-tap-highlight-color: transparent; }
 @keyframes stamp { from { opacity: 0; transform: translateY(22px) scale(0.92); } to { opacity: 1; transform: none; } }
 @keyframes shadowGrow { from { transform: translate(0, 0); } to { transform: translate(7px, 7px); } }
 
-.a-ghost, .a-sys { animation: fadeUp 220ms ease-out both; }
+.a-ghost { animation: fadeUp 220ms ease-out both; }
+.a-sys { animation: sysIn 420ms cubic-bezier(.2,.9,.25,1.25) both; }
+@keyframes sysIn { from { opacity: 0; transform: translateY(14px) scale(0.85); } to { opacity: 1; transform: none; } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
@@ -887,7 +890,6 @@ button { -webkit-tap-highlight-color: transparent; }
   word-spacing: 0.1em;
 }
 .story-dl { background: var(--c3); }
-.story-share { background: var(--c4); }
 .story-back { background: var(--white); }
 .story-status { color: var(--ink); font-family: var(--mono); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; min-height: 1.2em; text-align: center; }
 
@@ -970,7 +972,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-top: 8px solid #000;
   background-color: #F2F0E9;
 }
-.sx-day { align-self: center; background: #000; color: #fff; font-family: var(--mono); font-weight: 700; font-size: 24px; text-transform: uppercase; padding: 6px 18px; }
+.sx-day { align-self: center; background: #fff; color: #000; border: 5px solid #000; font-family: var(--mono); font-weight: 700; font-size: 24px; text-transform: uppercase; padding: 6px 18px; }
 
 .sx-msg { display: flex; align-items: flex-start; gap: 34px; max-width: 94%; }
 .sx-me { align-self: flex-end; max-width: 84%; margin-right: 26px; }
@@ -1010,7 +1012,7 @@ button { -webkit-tap-highlight-color: transparent; }
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.sx-me .sx-bub { background: #000; color: #fff; box-shadow: 14px 14px 0 #FFD600; font-weight: 600; }
+.sx-me .sx-bub { background: #fff; color: #000; box-shadow: 14px 14px 0 #000; font-weight: 600; }
 .sx-time { float: right; margin: 18px -4px -6px 22px; font-family: var(--mono); font-weight: 700; font-size: 22px; line-height: 1; color: #777; }
 .sx-me .sx-time { color: #AAA; }
 .sx-ticks { color: #4FC3F7; margin-left: 6px; letter-spacing: -6px; }
@@ -1095,7 +1097,7 @@ button { -webkit-tap-highlight-color: transparent; }
   .sound { margin-right: 10px; }
   .sound-btn { width: 54px; height: 42px; }
   .randbox { border-right: none; border-top: var(--B); padding: 10px 0 12px 10px; background: var(--paper); }
-  .squad-name { font-size: 1.15rem; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .squad-name { font-size: 1.15rem; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; height: 2em; }   /* fixed 2 lines so the layout never shifts */
   .head-sub { font-size: 0.68rem; margin-top: 4px; }
   .viz { width: 34px; height: 22px; }
 
@@ -1104,18 +1106,10 @@ button { -webkit-tap-highlight-color: transparent; }
   .toast { min-width: 200px; }
   .rail-list { display: flex; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
   .rail-list::-webkit-scrollbar { display: none; }
-  .member {
-    grid-template-columns: 38px minmax(0, 1fr);
-    gap: 8px;
-    align-items: center;
-    border-bottom: none;
-    border-right: var(--b);
-    padding: 9px 10px;
-    flex: 0 0 158px;
-  }
+  :root { --card-h: 64px; }
+  .member { border-bottom: none; border-right: var(--b); flex: 0 0 158px; }
+  .card-body { grid-template-columns: 38px minmax(0, 1fr); gap: 8px; align-items: start; padding: 9px 10px; }
   .member.you { display: none; }
-  .slot-face { padding: 0 10px; gap: 8px; border-bottom: none; }
-  .member.slotting { flex: 0 0 158px; }
   .avatar { width: 38px; height: 38px; font-size: 1.2rem; box-shadow: 2px 2px 0 var(--ink); }
   .member-name { font-size: 0.78rem; }
   .member-arch, .role { display: none; }
@@ -1169,7 +1163,7 @@ button { -webkit-tap-highlight-color: transparent; }
     <div class="sound" id="soundBox">
       <button class="sound-btn" id="soundBtn" type="button" role="switch" aria-checked="true" aria-label="Sound on" title="Sound on">
         <canvas class="viz" id="viz" aria-hidden="true"></canvas>
-        <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z"/><path d="M16 9l6 6M22 9l-6 6"/></svg>
+        <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 9h4l5-4v14l-5-4h-4z"/><path d="M14.5 9l6 6M20.5 9l-6 6"/></svg>
       </button>
       <span class="sr-only" id="nowPlaying" aria-live="polite"></span>
     </div>
@@ -1217,7 +1211,6 @@ button { -webkit-tap-highlight-color: transparent; }
   <div class="story-actions" id="storyActions">
     <div class="story-btns">
       <button class="kbtn story-dl" id="storyDownload" type="button">Download</button>
-      <button class="kbtn story-share" id="storyShare" type="button">Share</button>
       <button class="kbtn story-back" id="storyBack" type="button">Back to chat</button>
     </div>
     <div class="story-status" id="storyStatus" aria-live="polite"></div>
@@ -1762,7 +1755,7 @@ function postUser(text, into) {
   el.className = 'msg me a-launch';
   el.innerHTML = `
     <div class="msg-col">
-      <div class="bwrap"><div class="bubble">${escHtml(text)}<span class="btime">${clock().slice(0, 5)}<b class="ticks receipt" aria-label="Sending">✓</b></span></div>${TAIL}</div>
+      <div class="bwrap"><div class="bubble">${escHtml(text)}<span class="btime">${clock().slice(0, 5)}</span></div>${TAIL}</div>
     </div>`;
   return appendToStream(el, into);
 }
@@ -1836,25 +1829,30 @@ const ROLE_LABEL = {
   CORPORATE: 'Corporate', DESI: 'Desi', UNHINGED_OBJECT: 'Unhinged object',
 };
 
+// The inside of a member card (also used for every face on the slot reel, so they match exactly)
+function cardBody(p, i, { isNew = false } = {}) {
+  const role = ROLE_LABEL[p.role] ? `<span class="role">${ROLE_LABEL[p.role]}</span>` : '';
+  return `<div class="card-body${i % 2 === 0 ? ' odd' : ''}${isNew ? ' is-new' : ''}" style="--accent:${ACCENTS[i % ACCENTS.length].bg}">
+      <div class="avatar" aria-hidden="true">${escHtml(p.emoji)}</div>
+      <div class="member-text">
+        <div class="member-name">${escHtml(p.name)}</div>
+        <div class="member-arch">${escHtml(p.archetype)}</div>
+        <div class="member-foot">${role}<span class="member-status idle">${STATUS.idle}</span></div>
+      </div>
+    </div>`;
+}
+const isUnmet = p => !game.data.met.includes(p.name);
+
 function renderRail(animate = false, baseDelay = 0) {
   els.rail.innerHTML = state.members.map((p, i) => {
-    const a = ACCENTS[i % ACCENTS.length];
-    const anim = animate ? ` a-stamp-in" style="--accent:${a.bg};animation-delay:${baseDelay + i * T.stampGap}ms` : `" style="--accent:${a.bg}`;
-    const role = ROLE_LABEL[p.role] ? `<span class="role">${ROLE_LABEL[p.role]}</span>` : '';
-    return `
-      <div class="member${anim}" data-slot="${i}">
-        <div class="avatar" aria-hidden="true">${escHtml(p.emoji)}</div>
-        <div class="member-text">
-          <div class="member-name">${escHtml(p.name)}</div>
-          <div class="member-arch">${escHtml(p.archetype)}</div>
-          <div class="member-foot">${role}<span class="member-status idle">${STATUS.idle}</span></div>
-        </div>
-      </div>`;
+    const anim = animate ? ` a-stamp-in" style="animation-delay:${baseDelay + i * T.stampGap}ms` : '"';
+    return `<div class="member${anim}" data-slot="${i}">${cardBody(p, i, { isNew: isUnmet(p) })}</div>`;
   }).join('');
-  $('headMembers').textContent = state.members.map(p => p.name).join(', ') + ', You';
+  updateHeadMembers();
   const total = state.members.length + 1;
   els.railCount.textContent = String(total).padStart(2, '0');
 }
+function updateHeadMembers() { $('headMembers').textContent = state.members.map(p => p.name).join(', ') + ', You'; }
 
 function setStatus(slot, mode) {
   const s = els.rail.querySelector(`.member[data-slot="${slot}"] .member-status`);
@@ -2135,7 +2133,8 @@ async function randomize(announce = true) {
   }
 
   setBusy(true);
-  swapTitle(squad.title);
+  els.squad.textContent = squad.title;   // header switches instantly
+  updateHeadMembers();
   await slotRail(prev, state.members);   // every member card spins like a slot reel, stopping one by one
   renderRail(false);
   playSfx('slide', true);
@@ -2144,30 +2143,26 @@ async function randomize(announce = true) {
   setBusy(false);
 }
 
-// Slot machine: each card becomes a reel of random faces that drops downward with motion blur,
-// kicks up first (anticipation), then stops with a bounce. Reels stop one after another.
+// Slot machine: each card becomes a reel of card faces (identical to real cards) that drops
+// downward with motion blur, kicks up first, then stops with a bounce on the new member.
+// Cards never change size: every face is exactly one card tall.
 async function slotRail(prev, next) {
   if (REDUCED) return;
   const cards = [...els.rail.querySelectorAll('.member')];
-  const face = (p, i) => `<div class="slot-face" style="--accent:${ACCENTS[i % ACCENTS.length].bg}">
-      <div class="avatar" aria-hidden="true">${escHtml(p.emoji)}</div><div class="member-name">${escHtml(p.name)}</div></div>`;
   playSfx('lever');
   await Promise.all(cards.map(async (card, i) => {
     if (!next[i]) return;
-    const h = card.offsetHeight;
+    const h = card.clientHeight;
     const filler = shuffle(ROSTER.filter(p => p !== next[i] && p !== prev[i])).slice(0, 14);
-    // final face on top, old face at the bottom: the strip slides DOWN like a real reel
-    const faces = [next[i], ...filler, prev[i] || filler[0]];
-    card.classList.add('slotting');
-    card.style.height = `${h}px`;
-    card.innerHTML = `<div class="slot-strip" style="--h:${h}px">${faces.map(p => face(p, i)).join('')}</div><i class="slot-glass" aria-hidden="true"></i>`;
+    const faces = [next[i], ...filler, prev[i] || filler[0]];    // new member on top: the strip slides DOWN
+    card.innerHTML = `<div class="slot-strip">${faces.map((p, k) => cardBody(p, i, { isNew: k === 0 ? isUnmet(p) : false })).join('')}</div><i class="slot-glass" aria-hidden="true"></i>`;
     const strip = card.firstElementChild;
     const dist = (faces.length - 1) * h;
     const dur = 1150 + i * 330;
     const spin = strip.animate([
       { transform: `translateY(${-dist}px)` },
-      { transform: `translateY(${-dist - 14}px)`, offset: 0.06 },      // kick up
-      { transform: `translateY(${10}px)`, offset: 0.9 },               // overshoot past the face
+      { transform: `translateY(${-dist - 14}px)`, offset: 0.06 },
+      { transform: 'translateY(10px)', offset: 0.9 },
       { transform: 'translateY(-4px)', offset: 0.96 },
       { transform: 'translateY(0)' },
     ], { duration: dur, easing: 'cubic-bezier(.3,.1,.2,1)', fill: 'forwards' });
@@ -2185,10 +2180,8 @@ async function slotRail(prev, next) {
     requestAnimationFrame(watch);
     await spin.finished;
     playSfx('thunk');
-    strip.firstElementChild.querySelector('.avatar').animate(
-      [{ transform: 'scale(1.25) rotate(-6deg)' }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.9,.3,1.4)' });
   }));
-  await wait(260);
+  await wait(200);
 }
 
 function autosize() {
@@ -3372,7 +3365,9 @@ function startVoiceBed(name, seconds) {
     const now = Tone.now(), g = k.bus.gain;
     g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(0.3, now + 0.1);
     const period = BED_PERIOD[key] || 1.7;
-    for (let at = now + 0.05; at < now + seconds; at += period) { try { STINGS[key](at); } catch {} }
+    const times = [now + 0.05];                      // once at the start…
+    if (seconds > Math.max(4.5, period * 2)) times.push(now + seconds * 0.6);   // …and once more on long replies
+    times.forEach(at => { try { STINGS[key](at); } catch {} });
     k.bedEnd = now + seconds + 1.6;
   } catch {}
 }
@@ -3597,7 +3592,7 @@ function buildStoryDOM(round) {
       <div class="sx-day">Today ${now}</div>
       <div class="sx-msg sx-me">
         <div class="sx-col" style="align-items:flex-end">
-          <div class="sx-bub"><img class="sx-tail" alt="" src="${tailSrc('#000')}"><span class="sx-txt"></span><span class="sx-time">${now}<span class="sx-ticks">✓✓</span></span></div>
+          <div class="sx-bub"><img class="sx-tail" alt="" src="${tailSrc('#fff')}"><span class="sx-txt"></span><span class="sx-time">${now}</span></div>
         </div>
       </div>
       ${round.members.map((m, i) => {
@@ -3702,7 +3697,6 @@ function sizeStoryCard() {
 function setStoryStatus(text) { $('storyStatus').textContent = text; }
 function setStoryButtons(enabled) {
   $('storyDownload').disabled = !enabled;
-  $('storyShare').disabled = !enabled;
 }
 
 // Where the card would sit if it were fitted inside the chat area, same proportions.
@@ -3956,8 +3950,8 @@ function confetti(n = 30) {
 function gameMeet(members, quiet = false) {
   const fresh = members.filter(p => !game.data.met.includes(p.name));
   fresh.forEach(p => game.data.met.push(p.name));
-  els.rail.querySelectorAll('.member').forEach((card, i) => {
-    if (fresh.includes(state.members[i])) card.classList.add('is-new');
+  els.rail.querySelectorAll('.member .card-body').forEach((body, i) => {
+    if (fresh.includes(state.members[i])) body.classList.add('is-new');
   });
   gameSave();
   const metNow = game.data.met.filter(n => ROSTER_BY_NAME.has(n)).length;   // ignore members from older casts
@@ -4024,7 +4018,6 @@ function gameRound(round) {
   $('soundBtn').addEventListener('mouseenter', () => viz.kick());
   $('soundBtn').addEventListener('mouseleave', () => viz.kick());
   $('storyDownload').addEventListener('click', downloadStory);
-  $('storyShare').addEventListener('click', shareStory);
   $('storyBack').addEventListener('click', closeStory);
   document.addEventListener('keydown', storyKeydown);
   window.addEventListener('resize', () => { if (story.open) sizeStoryCard(); });
@@ -4036,7 +4029,7 @@ function gameRound(round) {
 
   await wait(T.boot + state.members.length * T.stampGap);
   postDay();
-  postSystem(`${state.members.length} members joined the chat`, false, { typed: true });
+  postSystem(`${state.members.length} members joined the chat`);
 })();
 </script>
 </body>
