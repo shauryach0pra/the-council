@@ -3300,7 +3300,11 @@ async function fetchCloudVoice(text, prof, hindi) {
   const key = JSON.stringify(req);
   if (voice.cache.has(key)) return voice.cache.get(key);
   const res = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req) });
-  if (!res.ok || !(res.headers.get('Content-Type') || '').startsWith('audio/')) throw new Error('No voice');
+  if (!res.ok || !(res.headers.get('Content-Type') || '').startsWith('audio/')) {
+    const why = await res.text().catch(() => '');
+    throw new Error(`worker voice ${res.status} ${why.slice(0, 160)}`);
+  }
+  voice.last = { engine: res.headers.get('X-Voice-Engine'), speaker: res.headers.get('X-Voice-Speaker'), note: res.headers.get('X-Voice-Note') };
   const buf = await Tone.context.decodeAudioData(await res.arrayBuffer());
   voice.cache.set(key, buf);
   return buf;
@@ -3514,7 +3518,11 @@ async function playVoice(m, el) {
   } catch (e) {
     el?.classList.remove('voice-loading');
     if (token !== voice.token || voice.cur !== cur) return done;
-    voice.cloud = false;   // no route on the worker: use browser voices from now on
+    // One failed request must NOT switch every character to the browser's single built-in voice.
+    // Only give up on the worker for good if its probe said it has no voice route.
+    console.warn('[council] worker voice failed, using the browser voice for this line only:', e?.message || e);
+    voice.fails = (voice.fails || 0) + 1;
+    if (voice.cloud !== true && voice.fails >= 3) voice.cloud = false;
     speakBrowser();
   }
   return done;
@@ -4042,6 +4050,27 @@ window.councilSoundTest = async () => {
   setTimeout(() => playSfx('lvl5'), 700);
   return { ctx: Tone.context.state, soundOn: music.enabled, playing: music.playing, mood: music.mood,
     musicGain: +(music.master?.gain.value ?? 0).toFixed(2), speaking: !!voice.cur };
+};
+// councilVoiceCheck(): shows which engine and voice actually speaks for a few members
+window.councilVoiceCheck = async () => {
+  if (voice.cloud === null) await probeCloudVoice();
+  const rows = [];
+  for (const name of ['A Pirate Captain', 'Your Ex', 'A Mosquito', 'Sherlock Holmes', 'Your Indian Mom', 'Railway Announcer']) {
+    const prof = voiceProfile(name);
+    const hindi = wantsHindi({ name, speak: '' }, prof);
+    const req = hindi
+      ? { tts_text: 'Voice check, one two three.', engine: 'hindi', speaker: prof.hsp, pace: prof.pace || 1, lang: prof.hlang || 'hi' }
+      : { tts_text: 'Voice check, one two three.', engine: 'aura2', speaker: prof.sp };
+    try {
+      const r = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req) });
+      rows.push({ member: name, asked_for: req.speaker, status: r.status,
+        engine: r.headers.get('X-Voice-Engine') || (r.ok ? '(old worker: no info)' : '-'),
+        spoke_with: r.headers.get('X-Voice-Speaker') || '-',
+        note: r.headers.get('X-Voice-Note') || (r.ok ? '' : (await r.text()).slice(0, 120)) });
+    } catch (e) { rows.push({ member: name, asked_for: req.speaker, status: 'network error', note: String(e) }); }
+  }
+  console.table(rows);
+  return { workerHasVoices: voice.cloud, workerHasHindi: voice.hindi, browserFallbacksSoFar: voice.fails || 0 };
 };
 // councilVoice('Railway Announcer', 'Yatri kripya dhyan dein'): hear any member's voice + effect + background
 window.councilVoice = (name, text = 'Hello, this is a quick voice test from the council.') => {

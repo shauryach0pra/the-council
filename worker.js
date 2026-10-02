@@ -4,6 +4,7 @@ export default {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Expose-Headers': 'X-Voice-Engine, X-Voice-Speaker, X-Voice-Note',
     };
     const json = (obj, status = 200) =>
       new Response(JSON.stringify(obj), {
@@ -25,7 +26,9 @@ export default {
     if (body.tts_text) {
       const text = String(body.tts_text).replace(/\s+/g, ' ').trim().slice(0, 700);
       if (!text) return json({ error: 'Nothing to say' }, 400);
-      const audioHeaders = (type) => ({ ...corsHeaders, 'Content-Type': type, 'Cache-Control': 'public, max-age=604800' });
+      // X-Voice-* headers say which engine and voice actually spoke (check them with councilVoiceCheck() in the browser console)
+      const audioHeaders = (type, engine = '', speaker = '', note = '') => ({ ...corsHeaders, 'Content-Type': type, 'Cache-Control': 'public, max-age=604800',
+        'X-Voice-Engine': engine, 'X-Voice-Speaker': speaker, 'X-Voice-Note': note });
 
       if (body.engine === 'hindi') {
         if (!env.SARVAM_KEY) return json({ error: 'Hindi voices are not set up' }, 501);
@@ -68,7 +71,7 @@ export default {
           const b64 = (data.audios || []).join('');
           if (!b64) return json({ error: 'Hindi voice returned no audio' }, 502);
           const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-          return new Response(bytes, { headers: audioHeaders('audio/wav') });
+          return new Response(bytes, { headers: audioHeaders('audio/wav', 'sarvam-bulbul-v3', speaker, ttsText === text ? '' : 'transliterated') });
         } catch {
           return json({ error: 'Hindi voice failed' }, 502);
         }
@@ -80,14 +83,29 @@ export default {
         'juno', 'jupiter', 'luna', 'mars', 'minerva', 'neptune', 'odysseus', 'ophelia', 'orion', 'orpheus', 'pandora', 'phoebe',
         'pluto', 'saturn', 'thalia', 'theia', 'vesta', 'zeus'];
       const speaker = AURA2.includes(body.speaker) ? body.speaker : 'luna';
+      // If Aura-2 fails, fall back to Aura-1 with the closest of its 12 voices (instead of one voice for everyone)
+      const AURA1_FOR = {
+        zeus: 'zeus', jupiter: 'zeus', mars: 'orion', pluto: 'orpheus', saturn: 'perseus', odysseus: 'orpheus', orion: 'orion',
+        orpheus: 'orpheus', draco: 'helios', hermes: 'arcas', arcas: 'arcas', apollo: 'angus', atlas: 'angus', aries: 'perseus',
+        hyperion: 'helios', janus: 'arcas', neptune: 'perseus',
+        pandora: 'athena', athena: 'athena', helena: 'stella', hera: 'hera', harmonia: 'hera', luna: 'luna', iris: 'stella',
+        phoebe: 'stella', delia: 'luna', andromeda: 'luna', aurora: 'stella', cordelia: 'hera', callista: 'asteria', cora: 'hera',
+        electra: 'asteria', asteria: 'asteria', thalia: 'asteria', theia: 'athena', juno: 'luna', minerva: 'athena', ophelia: 'stella',
+        vesta: 'asteria', amalthea: 'luna',
+      };
+      let note = '';
       try {
-        let ai = await env.AI.run('@cf/deepgram/aura-2-en', { text, speaker, encoding: 'mp3' }, { returnRawResponse: true });
-        // fall back to Aura-1 if Aura-2 is unavailable on this account
-        if (!ai.ok) ai = await env.AI.run('@cf/deepgram/aura-1', { text, speaker: 'angus', encoding: 'mp3' }, { returnRawResponse: true });
-        if (!ai.ok) return json({ error: 'Voice generation failed' }, 502);
-        return new Response(ai.body, { headers: audioHeaders('audio/mpeg') });
-      } catch {
-        return json({ error: 'Voice generation failed' }, 502);
+        const ai = await env.AI.run('@cf/deepgram/aura-2-en', { text, speaker, encoding: 'mp3' }, { returnRawResponse: true });
+        if (ai.ok) return new Response(ai.body, { headers: audioHeaders('audio/mpeg', 'aura-2', speaker) });
+        note = `aura-2 HTTP ${ai.status}`;
+      } catch (e) { note = `aura-2 error: ${String(e.message || e).slice(0, 120)}`; }
+      try {
+        const fallback = AURA1_FOR[speaker] || 'angus';
+        const ai1 = await env.AI.run('@cf/deepgram/aura-1', { text, speaker: fallback, encoding: 'mp3' }, { returnRawResponse: true });
+        if (!ai1.ok) return json({ error: 'Voice generation failed', note }, 502);
+        return new Response(ai1.body, { headers: audioHeaders('audio/mpeg', 'aura-1-fallback', fallback, note) });
+      } catch (e) {
+        return json({ error: 'Voice generation failed', note: `${note}; aura-1 error: ${String(e.message || e).slice(0, 120)}` }, 502);
       }
     }
 
