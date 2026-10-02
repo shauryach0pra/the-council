@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 /* ================================================================
    TOKENS
@@ -484,6 +485,138 @@ button, textarea { font: inherit; color: inherit; }
 }
 
 /* ================================================================
+   STORY EXPORT
+   ================================================================ */
+.shot-row { display: flex; justify-content: center; padding: 6px 0 4px; }
+.shot-btn {
+  background: var(--c4);
+  border: var(--B);
+  box-shadow: var(--shadow);
+  font-size: 1.05rem;
+  min-height: 56px;
+  padding: 0 26px;
+}
+.shot-btn:not(:disabled):active { transform: translate(4px, 4px); box-shadow: 4px 4px 0 var(--ink); background: var(--c4); color: var(--ink); }
+.a-slam { animation: slamBtn 380ms cubic-bezier(.2,.9,.3,1.3) both; }
+@keyframes slamBtn {
+  0%   { opacity: 0; transform: scale(1.7) rotate(-5deg); }
+  65%  { opacity: 1; transform: scale(0.95) rotate(1deg); }
+  100% { opacity: 1; transform: none; }
+}
+
+.viewfinder {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  border: 4px solid var(--ink);
+  outline: 3px solid var(--white);
+  outline-offset: -10px;
+  animation: viewfinder 260ms ease-out both;
+}
+@keyframes viewfinder {
+  0%   { opacity: 0; transform: scale(1.05); background: rgba(255,255,255,0); }
+  35%  { opacity: 1; transform: scale(1); background: rgba(255,255,255,0.85); }
+  100% { opacity: 1; transform: scale(1); background: rgba(255,255,255,0); }
+}
+
+.story-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+}
+.story-overlay[hidden] { display: none; }
+.story-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.88); }
+.story-card {
+  position: relative;
+  background: var(--paper);
+  border: var(--B);
+  box-shadow: 10px 10px 0 var(--c4);
+  transform-origin: top left;
+  overflow: hidden;
+}
+.story-img { display: block; width: 100%; height: 100%; }
+.story-img[hidden], .story-loading[hidden] { display: none; }
+.story-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.story-actions { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.story-btns { display: flex; border: var(--B); box-shadow: 6px 6px 0 var(--white); }
+.story-btns .blk { min-height: 52px; font-size: 0.85rem; }
+.story-dl { background: var(--c3); border-right: var(--b); }
+.story-share { background: var(--c4); border-right: var(--b); }
+.story-back { background: var(--white); }
+.story-status { color: var(--white); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; min-height: 1.2em; text-align: center; }
+
+/* Off-screen 1080x1920 story layout (rendered to PNG) */
+.st {
+  position: fixed;
+  left: -100000px;
+  top: 0;
+  width: 1080px;
+  height: 1920px;
+  display: flex;
+  flex-direction: column;
+  background-color: #F2F0E9;
+  background-image:
+    linear-gradient(to right, rgba(0,0,0,0.07) 2px, transparent 2px),
+    linear-gradient(to bottom, rgba(0,0,0,0.07) 2px, transparent 2px);
+  background-size: 64px 64px;
+  color: #000;
+  font-family: var(--mono);
+  padding: 150px 64px 200px;   /* clear of Instagram's top and bottom UI */
+}
+.st-top { background: #000; color: #fff; padding: 28px 36px 24px; border: 6px solid #000; box-shadow: 14px 14px 0 #FF3B00; }
+.st-title { font-family: var(--display); font-size: 120px; line-height: 0.95; text-transform: uppercase; letter-spacing: -2px; }
+.st-sub { display: flex; justify-content: space-between; gap: 24px; margin-top: 14px; font-size: 26px; font-weight: 700; text-transform: uppercase; }
+.st-body { --fs: 46px; flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 34px; padding: 56px 14px 24px 0; }
+.st-tag {
+  display: inline-block;
+  font-family: var(--display);
+  font-size: calc(var(--fs) * 0.62);
+  text-transform: uppercase;
+  background: var(--accent, #000);
+  color: var(--tag-ink, #fff);
+  border: 5px solid #000;
+  border-bottom: none;
+  padding: 6px 16px;
+}
+.st-tag-you { background: #000; color: #fff; }
+.st-bubble {
+  background: #fff;
+  border: 5px solid #000;
+  border-left: 20px solid var(--accent, #000);
+  box-shadow: 10px 10px 0 #000;
+  padding: 18px 24px;
+  font-size: var(--fs);
+  line-height: 1.32;
+  font-weight: 700;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.st-bubble-you { background: #000; color: #fff; border-left-width: 5px; font-size: calc(var(--fs) * 1.08); }
+.st-foot { background: #FFD600; border: 6px solid #000; box-shadow: 14px 14px 0 #000; padding: 24px 36px; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.st-cta { font-family: var(--display); font-size: 44px; text-transform: uppercase; line-height: 1; }
+.st-url { font-size: 28px; font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .a-slam { animation: fadeIn 180ms both !important; }
+}
+
+/* ================================================================
    MOBILE
    ================================================================ */
 @media (max-width: 720px) {
@@ -526,6 +659,7 @@ button, textarea { font: inherit; color: inherit; }
   .lvl { flex: 1; min-width: 0; padding: 6px 0; }
   .blk { min-height: 54px; padding: 0 12px; font-size: 0.8rem; }
   .send-btn { min-width: 76px; }
+  .story-btns .blk { padding: 0 12px; font-size: 0.75rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -585,11 +719,30 @@ button, textarea { font: inherit; color: inherit; }
   </div>
 </div>
 
+<!-- STORY PREVIEW OVERLAY -->
+<div class="story-overlay" id="storyOverlay" role="dialog" aria-modal="true" aria-label="Story preview" hidden>
+  <div class="story-backdrop" id="storyBackdrop"></div>
+  <div class="story-card" id="storyCard">
+    <div class="story-loading" id="storyLoading">▮▮▮ Developing</div>
+    <img class="story-img" id="storyImg" alt="Story image of this chat" hidden>
+  </div>
+  <div class="story-actions" id="storyActions">
+    <div class="story-btns">
+      <button class="blk story-dl" id="storyDownload" type="button">Download</button>
+      <button class="blk story-share" id="storyShare" type="button">Share</button>
+      <button class="blk story-back" id="storyBack" type="button">Back to chat</button>
+    </div>
+    <div class="story-status" id="storyStatus" aria-live="polite"></div>
+  </div>
+</div>
+
 <script>
 // ================================================================
 //  CONFIG
 // ================================================================
 const WORKER_URL = 'https://thecouncil-api.shaurya-chopra.workers.dev';
+const SITE_URL = 'shauryachopra.dev/thecouncil';          // printed on the story image
+const SHARE_URL = 'https://shauryachopra.dev/thecouncil';  // copied / shared as a link
 
 // One loud accent per member slot; tagInk = readable text colour on that accent
 const ACCENTS = [
@@ -1266,6 +1419,7 @@ async function resummon(round) {
   state.resummonTimer = null;
   if (state.busy || state.round !== round) return;
   setBusy(true);
+  removeShotButton();
   await unsendAll(round.memberEls);
   round.memberEls = [];
   await runCouncil(round.question, round.userEl);
@@ -1283,6 +1437,7 @@ function setBusy(on) {
 
 async function runCouncil(question, userEl) {
   setBusy(true);
+  removeShotButton();
   setAllStatus('typing');
   const groupGhost = appendToStream(makeGhost(null));
   setReceipt(userEl, 'Delivered');
@@ -1302,7 +1457,12 @@ async function runCouncil(question, userEl) {
   setReceipt(userEl, `Read by ${members.length}`);
   setAllStatus('idle');
 
-  const round = { question, userEl, members, memberEls: [] };
+  const round = {
+    question, userEl, members, memberEls: [],
+    level: state.level, squadTitle: state.squadTitle,
+    slots: members.map((m, i) => slotFor(m, i)),
+    story: null,               // cached PNG blob
+  };
   state.round = round;
 
   // Sequential reveal: each member types, then their bubble stamps in
@@ -1333,6 +1493,7 @@ async function runCouncil(question, userEl) {
 
   await dropReactions(round);
   setBusy(false);
+  if (members.length) showShotButton();
 }
 
 async function send() {
@@ -1358,6 +1519,7 @@ async function randomize(announce = true) {
   const squad = pickSquad(prev, state.squadTitle);
   cancelResummon();
   state.round = null;          // a new squad shouldn't rewrite the old squad's replies
+  removeShotButton();
   state.members = squad.members;
   state.squadTitle = squad.title;
   els.squad.textContent = squad.title;
@@ -1672,6 +1834,280 @@ function updateMusicUI() {
 }
 
 // ================================================================
+//  STORY EXPORT  (screenshot -> 1080x1920 Instagram story)
+// ================================================================
+const STORY_W = 1080;
+const STORY_H = 1920;
+const story = { open: false, token: 0, file: null, url: null, lastFocus: null };
+
+// ---------- screenshot button in the stream ----------
+function removeShotButton() {
+  els.stream.querySelectorAll('.shot-row').forEach(el => el.remove());
+}
+
+function showShotButton() {
+  removeShotButton();
+  const row = document.createElement('div');
+  row.className = 'shot-row';
+  row.innerHTML = '<button class="blk shot-btn a-slam" type="button">📸 Screenshot chat</button>';
+  row.querySelector('button').addEventListener('click', openStory);
+  appendToStream(row);
+}
+
+// ---------- off-screen story layout ----------
+function buildStoryDOM(round) {
+  const lvl = LEVELS[round.level - 1];
+  const root = document.createElement('div');
+  root.id = 'storyRender';
+  root.className = 'st';
+  root.innerHTML = `
+    <div class="st-top">
+      <div class="st-title">The Council</div>
+      <div class="st-sub"><span>${escHtml(round.squadTitle)}</span><span>Level ${lvl.v} // ${escHtml(lvl.name)} ${lvl.emoji}</span></div>
+    </div>
+    <div class="st-body">
+      <div class="st-q">
+        <div class="st-tag st-tag-you">You asked</div>
+        <div class="st-bubble st-bubble-you"></div>
+      </div>
+      ${round.members.map((m, i) => {
+        const a = ACCENTS[round.slots[i] % ACCENTS.length];
+        return `
+        <div class="st-r" style="--accent:${a.bg};--tag-ink:${a.ink}">
+          <div class="st-tag">${escHtml(m.emoji)} ${escHtml(m.name)}</div>
+          <div class="st-bubble" data-i="${i}"></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="st-foot">
+      <div class="st-cta">Ask your own council</div>
+      <div class="st-url">${escHtml(SITE_URL)}</div>
+    </div>`;
+  // text via textContent so nothing from the model is ever parsed as HTML
+  root.querySelector('.st-bubble-you').textContent = round.question;
+  root.querySelectorAll('.st-bubble[data-i]').forEach(b => {
+    b.textContent = round.members[Number(b.dataset.i)].response;
+  });
+  return root;
+}
+
+// Shrink type until everything fits; truncate the longest text only as a last resort
+function fitStory(root) {
+  const body = root.querySelector('.st-body');
+  const overflowing = () => body.scrollHeight > body.clientHeight + 1;
+  for (let fs = 46; fs >= 24; fs -= 2) {
+    body.style.setProperty('--fs', fs + 'px');
+    if (!overflowing()) return;
+  }
+  const bubbles = [...root.querySelectorAll('.st-bubble')];
+  for (let guard = 0; guard < 80 && overflowing(); guard++) {
+    const longest = bubbles.reduce((a, b) => (b.textContent.length > a.textContent.length ? b : a));
+    const text = longest.textContent.replace(/\.\.\.$/, '');
+    if (text.length < 40) break;
+    longest.textContent = text.slice(0, Math.floor(text.length * 0.88)).trimEnd() + '...';
+  }
+}
+
+async function fontsReady() {
+  if (!document.fonts) return;
+  try {
+    await Promise.all([
+      document.fonts.load('80px "Archivo Black"'),
+      document.fonts.load('400 30px "Space Mono"'),
+      document.fonts.load('700 30px "Space Mono"'),
+    ]);
+    await document.fonts.ready;
+  } catch { /* fall back to system fonts */ }
+}
+
+async function renderStory(round) {
+  if (!window.html2canvas) throw new Error('Screenshot library failed to load. Check your connection and reload.');
+  await fontsReady();
+  const root = buildStoryDOM(round);
+  document.body.appendChild(root);
+  try {
+    fitStory(root);
+    const canvas = await html2canvas(root, {
+      width: STORY_W, height: STORY_H, scale: 1, x: 0, y: 0,
+      windowWidth: STORY_W, windowHeight: STORY_H, scrollX: 0, scrollY: 0,
+      backgroundColor: '#F2F0E9', logging: false,
+      // the live copy sits off-screen; move the clone into frame before painting
+      onclone: doc => {
+        const el = doc.getElementById('storyRender');
+        el.style.left = '0px';
+        el.style.top = '0px';
+      },
+    });
+    const blob = await new Promise((res, rej) =>
+      canvas.toBlob(b => (b ? res(b) : rej(new Error('Could not create the image.'))), 'image/png'));
+    return blob;
+  } finally {
+    root.remove();
+  }
+}
+
+// ---------- overlay + FLIP ----------
+function storyFileName() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  return `the-council-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
+}
+
+function sizeStoryCard() {
+  const card = $('storyCard');
+  const actions = $('storyActions').offsetHeight || 70;
+  const maxH = window.innerHeight - actions - 72;
+  const w = Math.min(window.innerWidth - 32, maxH * 9 / 16);
+  card.style.width = `${Math.floor(w)}px`;
+  card.style.height = `${Math.floor(w * 16 / 9)}px`;
+}
+
+function setStoryStatus(text) { $('storyStatus').textContent = text; }
+function setStoryButtons(enabled) {
+  $('storyDownload').disabled = !enabled;
+  $('storyShare').disabled = !enabled;
+}
+
+function flipFrom(rectFrom, card) {
+  const to = card.getBoundingClientRect();
+  return `translate(${rectFrom.left - to.left}px, ${rectFrom.top - to.top}px) scale(${rectFrom.width / to.width}, ${rectFrom.height / to.height})`;
+}
+
+async function openStory() {
+  const round = state.round;
+  if (story.open || state.busy || !round?.members.length) return;
+  story.open = true;
+  story.lastFocus = document.activeElement;
+  const token = ++story.token;
+
+  // Start rendering right away; the animation runs while it works
+  const cached = round.story;
+  const render = cached ? Promise.resolve(cached) : renderStory(round).then(blob => (round.story = blob));
+
+  const overlay = $('storyOverlay');
+  const card = $('storyCard');
+  const img = $('storyImg');
+  img.hidden = true;
+  img.removeAttribute('src');
+  $('storyLoading').hidden = false;
+  setStoryButtons(false);
+  setStoryStatus('Developing');
+
+  // 1. viewfinder flash over the chat
+  const from = els.stream.getBoundingClientRect();
+  if (!REDUCED) {
+    const vf = document.createElement('div');
+    vf.className = 'viewfinder';
+    Object.assign(vf.style, { left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px' });
+    document.body.appendChild(vf);
+    await wait(260);
+    vf.remove();
+  }
+
+  // 2. chat frame morphs into the story card
+  overlay.hidden = false;
+  sizeStoryCard();
+  els.stream.style.visibility = 'hidden';
+  if (REDUCED) {
+    overlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
+  } else {
+    $('storyBackdrop').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 380, fill: 'both' });
+    $('storyActions').animate([{ opacity: 0, transform: 'translateY(30px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 300, delay: 300, fill: 'both', easing: 'cubic-bezier(.2,.9,.3,1.2)' });
+    await card.animate([{ transform: flipFrom(from, card) }, { transform: 'none' }],
+      { duration: 520, easing: 'cubic-bezier(.2,.9,.3,1)' }).finished;
+  }
+  $('storyDownload').focus();
+
+  // 3. swap the loading state for the rendered image
+  try {
+    const blob = await render;
+    if (token !== story.token || !story.open) return;
+    if (story.url) URL.revokeObjectURL(story.url);
+    story.url = URL.createObjectURL(blob);
+    story.file = new File([blob], storyFileName(), { type: 'image/png' });
+    img.src = story.url;
+    await img.decode().catch(() => {});
+    if (token !== story.token || !story.open) return;
+    $('storyLoading').hidden = true;
+    img.hidden = false;
+    img.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220 });
+    setStoryButtons(true);
+    setStoryStatus('1080 × 1920 // Ready for your story');
+  } catch (err) {
+    if (token !== story.token) return;
+    round.story = null;
+    $('storyLoading').textContent = '! Render failed';
+    setStoryStatus(err.message || 'Render failed. Go back and try again.');
+  }
+}
+
+async function closeStory() {
+  if (!story.open) return;
+  story.open = false;
+  story.token++;
+  const overlay = $('storyOverlay');
+  const card = $('storyCard');
+  els.stream.style.visibility = '';
+  if (!REDUCED) {
+    const to = els.stream.getBoundingClientRect();
+    els.stream.style.visibility = 'hidden';
+    $('storyActions').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, fill: 'both' });
+    $('storyBackdrop').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 420, fill: 'both' });
+    await card.animate([{ transform: 'none' }, { transform: flipFrom(to, card), opacity: 0.6 }],
+      { duration: 420, easing: 'cubic-bezier(.5,0,.3,1)' }).finished;
+    els.stream.style.visibility = '';
+  }
+  overlay.hidden = true;
+  $('storyLoading').textContent = '▮▮▮ Developing';
+  (story.lastFocus?.isConnected ? story.lastFocus : els.input).focus();
+}
+
+function downloadStory() {
+  if (!story.url || !story.file) return;
+  const a = document.createElement('a');
+  a.href = story.url;
+  a.download = story.file.name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setStoryStatus('Downloaded ' + story.file.name);
+}
+
+async function shareStory() {
+  const file = story.file;
+  if (!file) return;
+  // navigator.share must be the first await so the click still counts as a gesture
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: 'The Council', text: `Ask your own council: ${SHARE_URL}` });
+      setStoryStatus('Shared');
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') { setStoryStatus('Share cancelled'); return; }
+    }
+  }
+  // Fallback: copy the link and download the image
+  let copied = false;
+  try { await navigator.clipboard.writeText(SHARE_URL); copied = true; } catch {}
+  downloadStory();
+  setStoryStatus(copied ? 'Link copied // Image downloaded' : 'Image downloaded // Share it from your photos');
+}
+
+function storyKeydown(e) {
+  if (!story.open) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeStory(); return; }
+  if (e.key === 'Tab') {
+    const btns = [...$('storyActions').querySelectorAll('button:not(:disabled)')];
+    if (!btns.length) return;
+    const first = btns[0], last = btns[btns.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    else if (!btns.includes(document.activeElement)) { e.preventDefault(); first.focus(); }
+  }
+}
+
+// ================================================================
 //  INIT
 // ================================================================
 (async function init() {
@@ -1688,6 +2124,11 @@ function updateMusicUI() {
     if (b) setLevel(parseInt(b.dataset.level, 10));
   });
   $('soundBtn').addEventListener('click', toggleSound);
+  $('storyDownload').addEventListener('click', downloadStory);
+  $('storyShare').addEventListener('click', shareStory);
+  $('storyBack').addEventListener('click', closeStory);
+  document.addEventListener('keydown', storyKeydown);
+  window.addEventListener('resize', () => { if (story.open) sizeStoryCard(); });
   updateMusicUI();
   els.input.addEventListener('input', autosize);
   els.input.addEventListener('keydown', e => {
