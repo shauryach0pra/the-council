@@ -21,7 +21,8 @@ export default {
     // ── ROUTE 0: Voices ───────────────────────────────────────────
     // English voices: Workers AI (Deepgram Aura-2), needs the AI binding.
     // Hindi / Hinglish voices: Sarvam AI Bulbul v3, needs the SARVAM_KEY secret.
-    if (body.tts_probe) return json({ tts: !!env.AI, hindi: !!env.SARVAM_KEY });
+    const hasAzure = !!(env.AZURE_SPEECH_KEY && env.AZURE_SPEECH_REGION);
+    if (body.tts_probe) return json({ tts: !!env.AI || hasAzure, hindi: !!env.SARVAM_KEY, azure: hasAzure });
 
     // Sarvam Bulbul v3 call, shared by the Hindi route and the English fallback
     async function sarvamSpeak(text, speaker, pace, langCode) {
@@ -35,6 +36,69 @@ export default {
       const b64 = (data.audios || []).join('');
       if (!b64) throw new Error('sarvam returned no audio');
       return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    }
+
+    // ── Azure Speech: styled neural voices (whisper, shout, cheerful, angry…) ──
+    // Keyed by the Deepgram speaker the site asks for. Every English character has its own
+    // Deepgram speaker, so this is effectively a per-character casting.
+    // [Azure voice, speaking style or '', style strength, pitch, rate]
+    const AZURE_CAST = {
+      saturn:    ['en-US-ChristopherNeural', '', 1, '-6%', '-4%'],          // Socrates
+      pluto:     ['en-US-DavisNeural', 'friendly', 0.6, '-8%', '-12%'],    // Buddha
+      draco:     ['en-GB-ThomasNeural', '', 1, '-2%', '-8%'],             // Nature Doc Narrator
+      orion:     ['en-US-JasonNeural', 'sad', 1.2, '-4%', '-6%'],          // Your Future Self
+      zeus:      ['en-US-DavisNeural', 'unfriendly', 1.4, '-18%', '-12%'], // Movie Trailer Voice
+      arcas:     ['en-GB-OliverNeural', '', 1, '0%', '+12%'],              // Sherlock Holmes
+      pandora:   ['en-GB-SoniaNeural', '', 1, '-2%', '-4%'],               // Cleopatra
+      atlas:     ['en-US-GuyNeural', 'angry', 1.6, '+12%', '+10%'],        // Napoleon Bonaparte
+      jupiter:   ['en-US-TonyNeural', 'excited', 1.5, '-12%', '-4%'],      // A Pirate Captain
+      delia:     ['en-US-JaneNeural', 'unfriendly', 1.3, '0%', '-6%'],     // Your Ex
+      mars:      ['en-US-BrandonNeural', '', 1, '-22%', '-16%'],           // The Grim Reaper
+      iris:      ['en-US-AnaNeural', '', 1, '+28%', '+14%'],               // A Mosquito
+      andromeda: ['en-US-SaraNeural', 'unfriendly', 1.5, '+4%', '-4%'],    // A Cat
+      phoebe:    ['en-US-JennyNeural', 'excited', 2, '+14%', '+12%'],      // A Golden Retriever
+      neptune:   ['en-US-SteffanNeural', '', 1, '-4%', '0%'],              // Your Dad
+      harmonia:  ['en-US-NancyNeural', 'sad', 0.8, '-4%', '-12%'],         // Tired Therapist
+      odysseus:  ['en-US-AndrewNeural', '', 1, '-10%', '-24%'],            // A Capybara
+      aurora:    ['en-US-AriaNeural', 'cheerful', 1.4, '+6%', '-4%'],      // Kindergarten Teacher
+      hermes:    ['en-GB-RyanNeural', 'cheerful', 1.3, '0%', '-4%'],       // William Shakespeare
+      luna:      ['en-US-AmberNeural', '', 1, '+6%', '+6%'],               // Astrology Girl
+      apollo:    ['en-US-TonyNeural', 'excited', 1.4, '+4%', '+10%'],      // Crypto Bro
+      aries:     ['en-US-DavisNeural', 'chat', 1.2, '-6%', '-2%'],         // Sigma Podcaster
+      hyperion:  ['en-AU-WilliamNeural', '', 1, '-4%', '+4%'],             // Gym Bro
+      janus:     ['en-US-JasonNeural', 'terrified', 1.6, '+4%', '+16%'],   // Conspiracy Theorist
+      orpheus:   ['en-US-EricNeural', '', 1, '+18%', '+6%'],               // Alien on a Gap Year
+      vesta:     ['en-US-MichelleNeural', '', 1, '0%', '+4%'],             // LinkedIn Guru
+      athena:    ['en-US-ElizabethNeural', '', 1, '0%', '0%'],             // Corporate HR
+      ophelia:   ['en-US-JaneNeural', 'chat', 1, '+4%', '+6%'],            // Gen Z Intern
+      thalia:    ['en-US-AriaNeural', 'excited', 1.6, '+4%', '0%'],        // Motivational Poster
+      asteria:   ['en-US-JennyNeural', 'assistant', 1, '+2%', '0%'],       // Your Smart Speaker
+      cora:      ['en-US-NancyNeural', 'terrified', 1.8, '+8%', '+20%'],   // Your 1% Battery
+      theia:     ['en-US-SaraNeural', 'whispering', 1.4, '-2%', '-10%'],   // A Fortune Cookie
+      electra:   ['en-US-GuyNeural', 'newscast', 1.2, '0%', '+16%'],       // The Stock Market
+      juno:      ['en-GB-MaisieNeural', '', 1, '+4%', '-10%'],             // The Haunted Doll
+      minerva:   ['en-US-AriaNeural', 'unfriendly', 1.2, '-6%', '-4%'],    // The Algorithm
+      helena:    ['en-US-JennyNeural', 'excited', 1.6, '+24%', '+8%'],     // A Pigeon
+    };
+    const xmlEsc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+    async function azureSpeak(text, cast) {
+      const [voiceName, style, degree, pitch, rate] = cast;
+      const lang = voiceName.slice(0, 5);
+      let inner = `<prosody pitch="${pitch}" rate="${rate}">${xmlEsc(text)}</prosody>`;
+      if (style) inner = `<mstts:express-as style="${style}" styledegree="${degree}">${inner}</mstts:express-as>`;
+      const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${lang}"><voice name="${voiceName}">${inner}</voice></speak>`;
+      const res = await fetch(`https://${env.AZURE_SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+        method: 'POST',
+        headers: {
+          'Ocp-Apim-Subscription-Key': env.AZURE_SPEECH_KEY,
+          'Content-Type': 'application/ssml+xml',
+          'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3',
+          'User-Agent': 'the-council',
+        },
+        body: ssml,
+      });
+      if (!res.ok) throw new Error(`azure HTTP ${res.status}`);
+      return res.arrayBuffer();
     }
 
     if (body.tts_text) {
@@ -118,12 +182,19 @@ export default {
         vesta: 'tanya', amalthea: 'simran',
       };
       let note = '';
+      // 1st choice: Azure, styled per character
+      if (hasAzure && AZURE_CAST[speaker]) {
+        try {
+          const audio = await azureSpeak(text, AZURE_CAST[speaker]);
+          return new Response(audio, { headers: audioHeaders('audio/mpeg', 'azure', AZURE_CAST[speaker][0] + (AZURE_CAST[speaker][1] ? ` (${AZURE_CAST[speaker][1]})` : '')) });
+        } catch (e) { note = `${String(e.message || e).slice(0, 80)}; `; }
+      }
       if (env.AI) {
         try {
           const ai = await env.AI.run('@cf/deepgram/aura-2-en', { text, speaker, encoding: 'mp3' }, { returnRawResponse: true });
           if (ai.ok) return new Response(ai.body, { headers: audioHeaders('audio/mpeg', 'aura-2', speaker) });
-          note = `aura-2 HTTP ${ai.status}`;   // 429 = Workers AI daily free allowance used up
-        } catch (e) { note = `aura-2 error: ${String(e.message || e).slice(0, 120)}`; }
+          note += `aura-2 HTTP ${ai.status}`;   // 429 = Workers AI daily free allowance used up
+        } catch (e) { note += `aura-2 error: ${String(e.message || e).slice(0, 120)}`; }
       }
       if (env.SARVAM_KEY) {
         const sv = SARVAM_FOR[speaker] || 'shubh';
