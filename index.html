@@ -629,69 +629,47 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .ghost-stack span:first-child { margin-left: 0; }
 
-/* Boot: window slams in with a two-frame jitter */
-.a-boot { animation: slam 520ms cubic-bezier(.2,.9,.3,1) both; }
-@keyframes slam {
-  0%   { opacity: 0; transform: scale(1.04); }
-  55%  { opacity: 1; transform: scale(0.996); }
-  62%  { transform: translate(3px, -2px); }
-  69%  { transform: translate(-3px, 2px); }
-  76%, 100% { transform: none; }
+/* Boot: window drops in and settles */
+.a-boot { animation: drop 560ms cubic-bezier(.2,.85,.25,1.05) both; }
+@keyframes drop {
+  0%   { opacity: 0; transform: translateY(18px) scale(0.985); }
+  100% { opacity: 1; transform: none; }
 }
 
 /* User bubble launches up from the input */
-.a-launch { animation: launch 420ms cubic-bezier(.3,1.45,.5,1) both; transform-origin: bottom right; }
-@keyframes launch { from { opacity: 0; transform: translateY(70px) scale(0.94); } to { opacity: 1; transform: none; } }
+.a-launch { animation: launch 440ms cubic-bezier(.2,.9,.25,1.12) both; transform-origin: bottom right; }
+@keyframes launch { from { opacity: 0; transform: translateY(48px) scale(0.96); } to { opacity: 1; transform: none; } }
 
 /* Member bubble stamps in, shadow grows after */
-.a-stamp { animation: stamp 300ms cubic-bezier(.2,.9,.3,1.25) both; transform-origin: top left; }
-.a-stamp .bwrap::before { animation: shadowGrow 220ms 140ms cubic-bezier(.3,1.4,.5,1) both; }
-@keyframes stamp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+.a-stamp { animation: stamp 380ms cubic-bezier(.2,.9,.25,1.15) both; transform-origin: 20px 40px; }
+.a-stamp .bwrap::before { animation: shadowGrow 260ms 160ms cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes stamp { from { opacity: 0; transform: translateY(10px) scale(0.94); } to { opacity: 1; transform: none; } }
 @keyframes shadowGrow { from { transform: translate(0, 0); } to { transform: translate(7px, 7px); } }
 
-.a-ghost, .a-sys, .a-stubin { animation: fadeIn 160ms both; }
+.a-ghost, .a-sys { animation: fadeUp 220ms ease-out both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-/* Rail cards: glitch out, stamp in */
-.a-stamp-in { animation: railStamp 260ms cubic-bezier(.2,.9,.3,1.2) both; }
-@keyframes railStamp {
-  0%   { opacity: 0; transform: scale(1.18) rotate(-1.5deg); }
-  70%  { opacity: 1; transform: scale(0.97); }
-  100% { opacity: 1; transform: none; }
-}
-.a-glitch-out { animation: glitchOut 420ms steps(1) both; pointer-events: none; }
-@keyframes glitchOut {
-  0%   { clip-path: inset(0 0 0 0);     transform: none; }
-  15%  { clip-path: inset(8% 0 58% 0);  transform: translateX(-7px); }
-  30%  { clip-path: inset(48% 0 18% 0); transform: translateX(9px); }
-  45%  { clip-path: inset(20% 0 44% 0); transform: translateX(-4px); }
-  60%  { clip-path: inset(66% 0 6% 0);  transform: translateX(5px); }
-  75%  { clip-path: inset(40% 0 40% 0); transform: translateX(-10px); opacity: 0.6; }
-  100% { clip-path: inset(50% 0 50% 0); opacity: 0; }
+/* Rail cards on first load (randomize uses card flips in JS) */
+.a-stamp-in { animation: railIn 420ms cubic-bezier(.2,.85,.25,1.1) both; }
+@keyframes railIn {
+  from { opacity: 0; transform: translateX(-16px) rotate(-1deg); }
+  to   { opacity: 1; transform: none; }
 }
 
-/* Level change: dim, strike, shred, stub, collapse */
+/* Level change: dim, strike through, fold away, stub, collapse */
 .msg.pending { opacity: 0.45; transition: opacity 0.2s; }
 .a-unsend .bubble::after {
   content: '';
   position: absolute;
-  left: 8px; right: 8px; top: 50%;
-  height: 3px;
-  background: var(--ink);
+  left: 10px; right: 10px; top: 50%;
+  height: 4px;
+  background: var(--err);
   transform-origin: left;
-  animation: strike 160ms ease-out both;
+  animation: strike 200ms cubic-bezier(.4,0,.2,1) both;
 }
 @keyframes strike { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.a-unsend { animation: shred 520ms 160ms steps(1) both; }
-@keyframes shred {
-  0%   { clip-path: inset(0);               transform: none; }
-  20%  { clip-path: inset(0 12% 0 0);       transform: translateX(4px) skewX(-4deg); }
-  40%  { clip-path: inset(0 0 0 30%);       transform: translateX(-6px); }
-  60%  { clip-path: inset(30% 20% 10% 0);   transform: translateX(8px) skewX(6deg); }
-  80%  { clip-path: inset(55% 0 25% 40%);   opacity: 0.5; }
-  100% { clip-path: inset(50%);             opacity: 0; }
-}
 .stub {
   margin-left: 56px;
   border: 3px dashed var(--ink);
@@ -702,8 +680,6 @@ button { -webkit-tap-highlight-color: transparent; }
   text-transform: uppercase;
   opacity: 0.65;
 }
-.a-collapse { animation: collapse 260ms ease-in both; transform-origin: top left; }
-@keyframes collapse { to { opacity: 0; transform: scaleY(0); } }
 
 /* Reaction tags */
 .react {
@@ -727,8 +703,7 @@ button { -webkit-tap-highlight-color: transparent; }
 @keyframes pop { from { opacity: 0; transform: scale(0.4) rotate(-14deg); } to { opacity: 1; transform: rotate(-4deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .a-boot, .a-launch, .a-stamp, .a-stamp-in, .a-ghost, .a-sys, .a-stubin, .a-pop { animation: fadeIn 180ms both !important; }
-  .a-glitch-out, .a-unsend, .a-collapse { animation: fadeOut 200ms both !important; }
+  .a-boot, .a-launch, .a-stamp, .a-stamp-in, .a-ghost, .a-sys, .a-pop { animation: fadeIn 180ms both !important; }
   .a-stamp .bwrap::before, .a-unsend .bubble::after, .dots i, .bounce i { animation: none !important; }
 }
 
@@ -765,7 +740,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border: 4px solid var(--ink);
   outline: 3px solid var(--white);
   outline-offset: -10px;
-  animation: viewfinder 260ms ease-out both;
+  animation: viewfinder 240ms ease-out both;
 }
 @keyframes viewfinder {
   0%   { opacity: 0; transform: scale(1.05); background: rgba(255,255,255,0); }
@@ -791,7 +766,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: var(--paper);
   border: var(--B);
   box-shadow: 10px 10px 0 var(--c4);
-  transform-origin: top left;
+  transform-origin: center;
   overflow: hidden;
 }
 .story-img { display: block; width: 100%; height: 100%; }
@@ -1481,14 +1456,14 @@ const rand = (a, b) => a + Math.random() * (b - a);
 
 // Durations in ms; keep in sync with the CSS keyframes
 const T = {
-  boot: 520,       // window slam
-  glitch: 420,     // rail card glitch-out
-  glitchGap: 60,   // stagger between glitching cards
-  stampGap: 110,   // stagger between stamping-in cards
-  unsend: 700,     // strike (160) + shred (520)
+  boot: 560,       // window drop
+  stampGap: 110,   // stagger between rail cards on first load
+  flipOut: 190,    // randomize: card turns away
+  flipIn: 420,     // randomize: new card turns in
+  flipGap: 65,     // stagger between flipping cards
   unsendGap: 90,
   stubHold: 650,   // how long "deleted" stubs stay
-  collapse: 260,
+  collapse: 280,
   debounce: 900,   // level change -> re-summon
 };
 
@@ -1700,18 +1675,34 @@ async function dropReactions(round) {
 }
 
 // ---------- Unsend (level change) ----------
+// Collapse an element's height smoothly so nothing below it jumps
+async function collapseAway(el) {
+  if (REDUCED) { el.remove(); return; }
+  const h = el.offsetHeight;
+  el.style.overflow = 'hidden';
+  await el.animate(
+    [{ height: `${h}px`, opacity: 1, marginBottom: '0px' }, { height: '0px', opacity: 0, marginBottom: '-16px' }],
+    { duration: T.collapse, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }).finished;
+  el.remove();
+}
+
 async function unsendAll(msgEls) {
   await Promise.all(msgEls.map(async (el, i) => {
     await wait(i * T.unsendGap);
     el.classList.remove('pending', 'a-stamp');
-    el.classList.add('a-unsend');
-    await wait(T.unsend);
-    el.className = 'msg member-msg deleted a-stubin';
+    el.classList.add('a-unsend');                 // red strike draws across
+    await wait(240);
+    if (!REDUCED) {
+      await el.animate(
+        [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(-10px) rotate(-1.5deg) scale(0.97)' }],
+        { duration: 220, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' }).finished;
+    }
+    el.getAnimations().forEach(a => a.cancel());
+    el.className = 'msg member-msg deleted';
     el.innerHTML = '<div class="stub">⌫ This message was deleted</div>';
+    el.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'ease-out' });
     await wait(T.stubHold);
-    el.classList.add('a-collapse');
-    await wait(T.collapse);
-    el.remove();
+    await collapseAway(el);
   }));
 }
 
@@ -1853,6 +1844,26 @@ async function send() {
   els.input.focus();
 }
 
+// Swap the header title with a quick slide (old text up and out, new text up and in)
+async function swapTitle(text) {
+  if (REDUCED || !els.squad.textContent) { els.squad.textContent = text; return; }
+  await els.squad.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-70%)', opacity: 0 }],
+    { duration: 160, easing: 'ease-in', fill: 'forwards' }).finished;
+  els.squad.getAnimations().forEach(a => a.cancel());
+  els.squad.textContent = text;
+  els.squad.animate([{ transform: 'translateY(70%)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+    { duration: 300, easing: 'cubic-bezier(.2,.9,.25,1.15)' });
+}
+
+const flipOut = el => el.animate(
+  [{ transform: 'perspective(700px) rotateY(0deg)', opacity: 1 }, { transform: 'perspective(700px) rotateY(90deg)', opacity: 0.4 }],
+  { duration: T.flipOut, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
+const flipIn = (el, delay) => el.animate(
+  [{ transform: 'perspective(700px) rotateY(-90deg)', opacity: 0.4 },
+   { transform: 'perspective(700px) rotateY(10deg)', opacity: 1, offset: 0.7 },
+   { transform: 'perspective(700px) rotateY(0deg)', opacity: 1 }],
+  { duration: T.flipIn, delay, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' });
+
 async function randomize(announce = true) {
   if (state.busy) return;
   const prev = state.members;
@@ -1862,21 +1873,33 @@ async function randomize(announce = true) {
   removeShotButton();
   state.members = squad.members;
   state.squadTitle = squad.title;
-  els.squad.textContent = squad.title;
 
-  if (!announce || !prev.length) { renderRail(true, announce ? 0 : T.boot - 150); return; }
+  if (!announce || !prev.length) {
+    els.squad.textContent = squad.title;
+    renderRail(true, announce ? 0 : T.boot - 150);
+    return;
+  }
 
   setBusy(true);
-  const old = [...els.rail.querySelectorAll('.member:not(.you)')];
-  old.forEach((el, i) => {
-    el.style.animationDelay = `${i * T.glitchGap}ms`;
-    el.classList.remove('a-stamp-in');
-    el.classList.add('a-glitch-out');
-  });
-  await wait(T.glitch + old.length * T.glitchGap);
-  renderRail(true);
+  const oldCards = [...els.rail.querySelectorAll('.member:not(.you)')];
+  const oldAvatars = [...$('headAvatars').children];
+  if (!REDUCED) {
+    oldAvatars.forEach((el, i) => el.animate([{ transform: 'scale(1)' }, { transform: 'scale(0)' }],
+      { duration: 160, delay: i * 40, easing: 'ease-in', fill: 'forwards' }));
+    // each card turns away, staggered, like dealing a new hand
+    await Promise.all(oldCards.map((el, i) =>
+      wait(i * T.flipGap).then(() => flipOut(el).finished)));
+  }
+  swapTitle(squad.title);
+  renderRail(false);
+  if (!REDUCED) {
+    els.rail.querySelectorAll('.member:not(.you)').forEach((el, i) => flipIn(el, i * T.flipGap));
+    [...$('headAvatars').children].forEach((el, i) => el.animate(
+      [{ transform: 'scale(0) rotate(-20deg)' }, { transform: 'scale(1.15)', offset: 0.7 }, { transform: 'none' }],
+      { duration: 360, delay: 120 + i * 60, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' }));
+  }
   postSquadChange(prev, state.members, squad.title);
-  await wait(state.members.length * T.stampGap + 260);
+  await wait(REDUCED ? 0 : state.members.length * T.flipGap + T.flipIn);
   setBusy(false);
 }
 
@@ -2311,9 +2334,14 @@ function setStoryButtons(enabled) {
   $('storyShare').disabled = !enabled;
 }
 
-function flipFrom(rectFrom, card) {
+// Where the card would sit if it were fitted inside the chat area, same proportions.
+// Uniform scale only, so nothing ever looks squashed.
+function fitInto(rect, card) {
   const to = card.getBoundingClientRect();
-  return `translate(${rectFrom.left - to.left}px, ${rectFrom.top - to.top}px) scale(${rectFrom.width / to.width}, ${rectFrom.height / to.height})`;
+  const s = Math.min(rect.width / to.width, rect.height / to.height) * 0.9;
+  const dx = rect.left + rect.width / 2 - (to.left + to.width / 2);
+  const dy = rect.top + rect.height / 2 - (to.top + to.height / 2);
+  return `translate(${dx}px, ${dy}px) scale(${s})`;
 }
 
 async function openStory() {
@@ -2347,18 +2375,21 @@ async function openStory() {
     vf.remove();
   }
 
-  // 2. chat frame morphs into the story card
+  // 2. the card rises out of the chat area and settles in the centre
   overlay.hidden = false;
   sizeStoryCard();
-  els.stream.style.visibility = 'hidden';
+  [overlay, card, $('storyBackdrop'), $('storyActions')].forEach(el => el.getAnimations().forEach(a => a.cancel()));
   if (REDUCED) {
     overlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180 });
   } else {
-    $('storyBackdrop').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 380, fill: 'both' });
-    $('storyActions').animate([{ opacity: 0, transform: 'translateY(30px)' }, { opacity: 1, transform: 'none' }],
-      { duration: 300, delay: 300, fill: 'both', easing: 'cubic-bezier(.2,.9,.3,1.2)' });
-    await card.animate([{ transform: flipFrom(from, card) }, { transform: 'none' }],
-      { duration: 520, easing: 'cubic-bezier(.2,.9,.3,1)' }).finished;
+    $('storyBackdrop').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: 'ease-out', fill: 'both' });
+    $('storyActions').animate([{ opacity: 0, transform: 'translateY(24px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 340, delay: 260, fill: 'both', easing: 'cubic-bezier(.2,.9,.25,1.15)' });
+    await card.animate([
+      { transform: fitInto(from, card), opacity: 0 },
+      { opacity: 1, offset: 0.3 },
+      { transform: 'none', opacity: 1 },
+    ], { duration: 520, easing: 'cubic-bezier(.2,.9,.25,1.08)' }).finished;
   }
   $('storyDownload').focus();
 
@@ -2391,17 +2422,18 @@ async function closeStory() {
   story.token++;
   const overlay = $('storyOverlay');
   const card = $('storyCard');
-  els.stream.style.visibility = '';
   if (!REDUCED) {
     const to = els.stream.getBoundingClientRect();
-    els.stream.style.visibility = 'hidden';
-    $('storyActions').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, fill: 'both' });
-    $('storyBackdrop').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 420, fill: 'both' });
-    await card.animate([{ transform: 'none' }, { transform: flipFrom(to, card), opacity: 0.6 }],
-      { duration: 420, easing: 'cubic-bezier(.5,0,.3,1)' }).finished;
-    els.stream.style.visibility = '';
+    $('storyActions').animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(16px)' }],
+      { duration: 160, easing: 'ease-in', fill: 'forwards' });
+    $('storyBackdrop').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 360, delay: 60, easing: 'ease-in', fill: 'forwards' });
+    await card.animate([{ transform: 'none', opacity: 1 }, { opacity: 1, offset: 0.6 }, { transform: fitInto(to, card), opacity: 0 }],
+      { duration: 380, easing: 'cubic-bezier(.5,0,.4,1)', fill: 'forwards' }).finished;
+  } else {
+    await overlay.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' }).finished;
   }
   overlay.hidden = true;
+  [overlay, card, $('storyBackdrop'), $('storyActions')].forEach(el => el.getAnimations().forEach(a => a.cancel()));
   $('storyLoading').textContent = '▮▮▮ Developing';
   (story.lastFocus?.isConnected ? story.lastFocus : els.input).focus();
 }
