@@ -320,10 +320,10 @@ button { -webkit-tap-highlight-color: transparent; }
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 22px 24px 28px;
+  padding: 18px 24px 22px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   background-color: var(--paper);
   background-image: var(--halftone);
   background-size: 12px 12px;
@@ -434,7 +434,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .sc-cell.out .sc-chip .e { filter: grayscale(1); opacity: 0.6; }
 
 /* A question and its replies */
-.round { display: flex; flex-direction: column; gap: 16px; transition: zoom 0.45s cubic-bezier(.2,.8,.3,1); }
+.round { display: flex; flex-direction: column; gap: 12px; }
 
 /* Skip chip while replies are arriving */
 .skip-chip {
@@ -455,101 +455,108 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .skip-chip:hover { background: var(--c4); }
 
-/* Voice buttons */
+/* Voice button: a square key docked to the right of each reply bubble */
+.brow { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brow .bwrap { min-width: 0; }
 .say {
-  width: 28px; height: 22px;
-  margin-right: 2px;
+  flex-shrink: 0;
+  width: 34px; height: 34px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--ink); color: var(--white);
-  border: 2px solid var(--ink);
-  font-size: 0.72rem;
+  background: var(--white);
+  color: var(--ink);
+  border: var(--b);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 0.95rem;
   cursor: pointer;
-  opacity: 1;
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out;
 }
-.say:hover { background: var(--c4); color: var(--ink); }
-.msg.speaking .say { background: var(--c4); color: var(--ink); animation: blink 0.8s steps(1) infinite; }
+.say:hover { background: var(--c4); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.say:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+.msg.speaking .say { background: var(--c4); animation: blink 0.8s steps(1) infinite; }
 .msg.speaking .bubble { animation: none; background: #FFF3A8; }
 .msg.speaking .msg-av { animation: talk 0.28s ease-in-out infinite alternate; }
 @keyframes talk { from { transform: rotate(-4deg) scale(1); } to { transform: rotate(-2deg) scale(1.08); } }
-.shot-row { gap: 14px; flex-wrap: wrap; }
+.shot-row { gap: 12px; flex-wrap: wrap; padding-top: 6px; }
 .play-btn {
   background: var(--white);
   font-family: var(--display);
   font-weight: 800;
   font-stretch: 85%;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   text-transform: uppercase;
-  min-height: 54px;
-  padding: 0 22px;
-  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 44px;
+  padding: 0 18px;
+  display: inline-flex; align-items: center; gap: 8px;
 }
 
 /* Messages */
-.msg { display: flex; align-items: flex-start; gap: 12px; max-width: min(640px, 86%); }
-.msg.me { align-self: flex-end; margin-right: 14px; }
+.msg { display: flex; align-items: flex-start; gap: 12px; max-width: min(760px, 88%); }
+.msg.me { align-self: flex-end; margin-right: 14px; max-width: min(620px, 80%); }
 .msg.member-msg { align-self: flex-start; }
 .msg-col { display: flex; flex-direction: column; min-width: 0; }
 .msg.me .msg-col { align-items: flex-end; }
 
 .msg-av {
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  margin-top: 26px;
+  width: 38px;
+  height: 38px;
+  margin-top: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   background: var(--accent, var(--white));
   border: var(--b);
   box-shadow: 3px 3px 0 var(--ink);
   transform: rotate(-4deg);
 }
-.msg-head { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 8px; }
+.msg-head { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 6px; }
 .msg-tag {
   font-weight: 800;
   font-stretch: 85%;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   line-height: 1;
   text-transform: uppercase;
   background: var(--accent, var(--ink));
   color: var(--tag-ink, var(--white));
   border: 2.5px solid var(--ink);
-  padding: 4px 8px 3px;
+  padding: 3px 7px 2px;
   transform: rotate(-1.5deg);
 }
-.msg-vibe { font-family: var(--mono); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; color: #5A5A5A; }
+.msg-vibe { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: #5A5A5A; }
 
 .bubble {
   position: relative;
   border: var(--b);
   background: var(--white);
-  padding: 12px 16px;
-  font-size: 1.02rem;
-  line-height: 1.45;
+  padding: 8px 12px 7px;
+  font-size: 0.92rem;
+  line-height: 1.42;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .msg.me .bubble { background: var(--ink); color: var(--white); }
+/* Time (and ticks) tucked into the bubble's bottom-right corner, like a messaging app */
+.btime {
+  float: right;
+  margin: 7px -2px -3px 14px;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #777;
+  white-space: nowrap;
+}
+.msg.me .btime { color: #AAA; }
+.ticks { margin-left: 3px; letter-spacing: -3px; color: #AAA; }
+.ticks.read { color: #4FC3F7; }
+.ticks.fail { color: var(--c1); letter-spacing: 0; }
 
 /* Comic speech-bubble tail */
-.tail { position: absolute; top: 12px; left: -15px; width: 18px; height: 22px; overflow: visible; }
+.tail { position: absolute; top: 9px; left: -15px; width: 18px; height: 22px; overflow: visible; }
 .tail path { fill: var(--white); stroke: var(--ink); stroke-width: 3; stroke-linejoin: miter; }
 .msg.me .tail { left: auto; right: -15px; transform: scaleX(-1); }
 .msg.me .tail path { fill: var(--ink); }
-
-.msg-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 9px;
-  font-family: var(--mono);
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #5A5A5A;
-}
-.msg-meta .receipt { color: var(--ink); }
 
 /* ---------- Composer ---------- */
 /* Composer: its own section under the chat, like a messaging app */
@@ -824,13 +831,13 @@ button { -webkit-tap-highlight-color: transparent; }
   transform: rotate(-4deg);
 }
 .react small { font-size: 0.7rem; }
+.msg:has(.react) { margin-bottom: 10px; }
 .a-pop { animation: pop 260ms cubic-bezier(.2,.9,.3,1.5) both; }
 @keyframes pop { from { opacity: 0; transform: scale(0.4) rotate(-14deg); } to { opacity: 1; transform: rotate(-4deg); } }
 
 @media (prefers-reduced-motion: reduce) {
   .a-boot, .a-launch, .a-stamp, .a-stamp-in, .a-ghost, .a-sys, .a-pop { animation: fadeIn 180ms both !important; }
   .a-stamp .bwrap::before, .a-unsend .bubble::after, .dots i, .bounce i, .msg.a-stamp .bubble { animation: none !important; }
-  .round { transition: none; }
   .msg.speaking .msg-av, .msg.speaking .say { animation: none; }
 }
 
@@ -838,16 +845,16 @@ button { -webkit-tap-highlight-color: transparent; }
    STORY EXPORT
    ================================================================ */
 .shot-row { display: flex; justify-content: center; padding: 6px 0 4px; }
-.shot-row { padding-top: 14px; }
+.shot-row { padding-top: 6px; }
 .shot-btn {
   background: var(--c4);
   font-family: var(--display);
   font-weight: 800;
   font-stretch: 85%;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   text-transform: uppercase;
-  min-height: 54px;
-  padding: 0 24px;
+  min-height: 44px;
+  padding: 0 18px;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -1151,10 +1158,15 @@ button { -webkit-tap-highlight-color: transparent; }
 
   .stream { padding: 16px 12px 20px; }
   .msg { max-width: 94%; gap: 9px; }
-  .msg-av { width: 34px; height: 34px; font-size: 1.05rem; margin-top: 24px; }
+  .msg-av { width: 30px; height: 30px; font-size: 0.95rem; margin-top: 20px; }
   .ghost-stack span { width: 28px; height: 28px; font-size: 0.85rem; }
   .stub { margin-left: 43px; }
-  .bubble { font-size: 0.97rem; padding: 10px 13px; }
+  .bubble { font-size: 0.9rem; padding: 8px 11px 7px; }
+  .say { width: 30px; height: 30px; font-size: 0.85rem; }
+  .msg-vibe { display: none; }
+  .play-btn, .shot-btn { font-size: 0.78rem; padding: 0 12px; min-height: 40px; gap: 6px; }
+  .shot-btn .ico { font-size: 1rem; }
+  .brow { gap: 9px; }
 
   .bar { gap: 10px; padding: 10px 10px 12px; border-top: var(--B); }
   .chaos { border-right: none; padding: 8px 10px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
@@ -1829,15 +1841,20 @@ function postUser(text, into) {
   el.className = 'msg me a-launch';
   el.innerHTML = `
     <div class="msg-col">
-      <div class="bwrap"><div class="bubble">${escHtml(text)}</div>${TAIL}</div>
-      <div class="msg-meta"><span>${nextId()}</span><span>${clock().slice(0, 5)}</span><span class="receipt">Sending</span></div>
+      <div class="bwrap"><div class="bubble">${escHtml(text)}<span class="btime">${clock().slice(0, 5)}<b class="ticks receipt" aria-label="Sending">✓</b></span></div>${TAIL}</div>
     </div>`;
   return appendToStream(el, into);
 }
 
+// Ticks like a messaging app: ✓ sent, ✓✓ delivered, blue ✓✓ read, ! failed
 function setReceipt(userEl, text) {
   const r = userEl?.querySelector('.receipt');
-  if (r) r.textContent = text;
+  if (!r) return;
+  r.setAttribute('aria-label', text);
+  r.title = text;
+  r.classList.toggle('read', /^Read/.test(text));
+  r.classList.toggle('fail', /^Not/.test(text));
+  r.textContent = /^Not/.test(text) ? '!' : /^(Read|Delivered)/.test(text) ? '✓✓' : '✓';
 }
 
 function applyAccent(el, slot) {
@@ -1877,8 +1894,10 @@ function makeMember(m, slot) {
     <div class="msg-av" aria-hidden="true">${escHtml(m.emoji)}</div>
     <div class="msg-col">
       <div class="msg-head"><span class="msg-tag">${escHtml(m.name)}</span><span class="msg-vibe">${escHtml(m.vibe)}</span></div>
-      <div class="bwrap"><div class="bubble">${escHtml(m.response)}</div>${TAIL}</div>
-      <div class="msg-meta"><button class="say" type="button" aria-label="Play voice">🔊</button><span>${nextId()}</span><span>${clock().slice(0, 5)}</span></div>
+      <div class="brow">
+        <div class="bwrap"><div class="bubble">${escHtml(m.response)}<span class="btime">${clock().slice(0, 5)}</span></div>${TAIL}</div>
+        <button class="say" type="button" aria-label="Play voice" title="Hear it">🔊</button>
+      </div>
     </div>`;
   return el;
 }
@@ -2252,28 +2271,18 @@ function showSkip() {
   return b;
 }
 
-// ---------- fit the finished round on screen ----------
-// Shrinks the whole round (question + replies) with CSS zoom until it fits the chat area,
-// then scrolls so your question sits at the top. Older rounds keep whatever size they had.
-const roundZoom = el => parseFloat(el.style.zoom || '1') || 1;
-function unfitRound(el) { if (el) el.style.zoom = '1'; }
-
+// ---------- finished round: scroll so your question sits at the top ----------
+// No shrinking: messages are already compact, so a full round normally fits as-is.
+function unfitRound() {}
 async function fitRound(el) {
   if (!el?.isConnected) return;
-  const avail = els.stream.clientHeight - 36;
-  const natural = el.getBoundingClientRect().height / roundZoom(el);
-  const min = window.innerWidth <= 720 ? 0.68 : 0.62;
-  const z = Math.max(min, Math.min(1, Math.floor((avail / natural) * 100) / 100));
-  el.style.zoom = String(z);
-  await wait(REDUCED ? 0 : 480);
-  const top = el.getBoundingClientRect().top - els.stream.getBoundingClientRect().top + els.stream.scrollTop - 14;
-  els.stream.scrollTo({ top, behavior: REDUCED ? 'auto' : 'smooth' });
+  const top = el.getBoundingClientRect().top - els.stream.getBoundingClientRect().top + els.stream.scrollTop - 12;
+  const bottomGap = els.stream.scrollHeight - (top + els.stream.clientHeight);
+  // only scroll up to the question if that still leaves the newest reply in view
+  if (el.getBoundingClientRect().height <= els.stream.clientHeight - 24 || bottomGap < 0) {
+    els.stream.scrollTo({ top: Math.min(top, els.stream.scrollHeight), behavior: REDUCED ? 'auto' : 'smooth' });
+  }
 }
-let fitTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(fitTimer);
-  fitTimer = setTimeout(() => { if (!state.busy && state.round) fitRound(state.round.userEl.parentElement); }, 250);
-});
 
 async function send() {
   if (state.busy) return;
@@ -3636,7 +3645,7 @@ function fitStory(root) {
   const name = root.querySelector('.sx-name');
   for (let fs = 58; fs > 40 && name.scrollHeight > fs * 2.2; fs -= 4) name.style.fontSize = fs + 'px';
   const overflowing = () => chat.scrollHeight > chat.clientHeight + 1;
-  for (let fs = 42; fs >= 26; fs -= 2) {
+  for (let fs = 42; fs >= 22; fs -= 2) {
     chat.style.setProperty('--fs', fs + 'px');
     if (!overflowing()) return;
   }
