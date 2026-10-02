@@ -92,53 +92,47 @@ button { -webkit-tap-highlight-color: transparent; }
 .titlebar {
   grid-area: title;
   display: flex;
-  align-items: center;
-  gap: 18px;
+  align-items: stretch;
+  gap: 0;
   background: var(--ink);
   color: var(--white);
-  padding: 12px 16px 12px 14px;
   min-width: 0;
+  min-height: 74px;
 }
+/* Logo: a flat yellow slab flush with the window edge */
 .logo {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: var(--c4);
   color: var(--ink);
-  border: var(--b);
-  box-shadow: 3px 3px 0 var(--white);
-  padding: 6px 10px 5px;
+  padding: 0 16px 0 14px;
   font-family: var(--display);
   font-weight: 800;
   font-stretch: 75%;
-  font-size: 0.95rem;
-  line-height: 0.9;
+  font-size: 1.05rem;
+  line-height: 0.88;
   text-transform: uppercase;
-  transform: rotate(-3deg);
 }
-.logo .ico { font-size: 1.15rem; }
-.head-avatars { display: flex; flex-shrink: 0; padding-left: 4px; }
+.logo .ico { font-size: 1.35rem; }
+/* Member strip: four flat squares on a hard grid, black gaps between */
+.head-avatars { display: flex; align-items: center; gap: 4px; flex-shrink: 0; padding: 0 16px 0 16px; }
 .head-avatars span {
-  width: 38px;
-  height: 38px;
-  margin-left: -9px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   background: var(--accent, var(--white));
-  border: 3px solid var(--ink);
-  outline: 2px solid var(--white);
 }
-.head-avatars span:nth-child(odd)  { transform: rotate(-4deg); }
-.head-avatars span:nth-child(even) { transform: rotate(3deg); }
-.head-main { flex: 1; min-width: 0; }
+.head-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 10px 16px 10px 0; }
 .squad-name {
   font-family: var(--display);
   font-weight: 800;
   font-stretch: 80%;
-  font-size: clamp(1.25rem, 2.1vw, 1.9rem);
+  font-size: clamp(1.3rem, 2.2vw, 2rem);
   line-height: 1;
   letter-spacing: -0.01em;
   text-transform: uppercase;
@@ -155,77 +149,54 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #CFCFCF;
+  color: #BDBDBD;
 }
 .head-sub .on { color: var(--c3); }
-.head-sub .on::before { content: '● '; }
+.head-sub .on::before { content: '■ '; }
 .head-sub .lvl-now { color: var(--lvl-color, var(--l1)); }
 
-/* ---------- Sound widget ---------- */
+/* ---------- Sound panel: flat slab flush right ---------- */
 .sound {
   flex-shrink: 0;
   display: flex;
   align-items: stretch;
-  background: var(--white);
+  background: var(--paper);
   color: var(--ink);
-  border: var(--b);
-  box-shadow: 4px 4px 0 var(--c4);
 }
-.np {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 12px 6px 10px;
-  min-width: 0;
-  width: 236px;
-}
-.eq { display: flex; align-items: flex-end; gap: 3px; height: 24px; flex-shrink: 0; }
-.eq i {
-  width: 5px;
-  height: 100%;
-  background: var(--ink);
-  transform-origin: bottom;
-  transform: scaleY(0.18);
-  transition: transform 0.3s;
-}
-.eq i:nth-child(1) { background: var(--c1); }
-.eq i:nth-child(2) { background: var(--c2); }
-.eq i:nth-child(3) { background: var(--c3); }
-.eq i:nth-child(4) { background: var(--ink); }
-.sound.playing .eq i { animation: eq 0.9s ease-in-out infinite alternate; }
-.sound.playing .eq i:nth-child(2) { animation-duration: 0.7s; animation-delay: -0.3s; }
-.sound.playing .eq i:nth-child(3) { animation-duration: 1.1s; animation-delay: -0.6s; }
-.sound.playing .eq i:nth-child(4) { animation-duration: 0.8s; animation-delay: -0.2s; }
-@keyframes eq { from { transform: scaleY(0.2); } to { transform: scaleY(1); } }
-.np-txt { min-width: 0; line-height: 1.1; }
-.np-k { font-family: var(--mono); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; opacity: 0.6; }
-.np-v {
-  font-weight: 800;
-  font-size: 0.92rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.sound-btn {
+.viz-wrap { display: flex; align-items: center; padding: 0 12px 0 14px; background: var(--ink); border-left: 4px solid var(--c4); }
+.viz { display: block; width: 132px; height: 44px; }
+.np-txt { display: flex; flex-direction: column; justify-content: center; min-width: 0; width: 176px; padding: 0 14px; line-height: 1.1; border-left: var(--b); }
+.np-k { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: #5A5A5A; }
+.np-v { font-weight: 800; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+
+/* Power switch */
+.switch {
   border: none;
   border-left: var(--b);
-  background: var(--c3);
-  padding: 0 12px;
-  min-width: 72px;
+  background: var(--paper);
+  padding: 0 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 5px;
   cursor: pointer;
   font-family: var(--mono);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
 }
-.sound-btn .ico { font-size: 1.05rem; line-height: 1; }
-.sound-btn[aria-pressed="false"] { background: var(--paper); }
-.sound-btn:active { background: var(--ink); color: var(--white); }
+.switch-track { position: relative; width: 48px; height: 24px; background: var(--white); border: var(--b); transition: background 0.15s; }
+.switch-knob {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  background: var(--ink);
+  transition: transform 0.18s cubic-bezier(.3,1.4,.5,1);
+}
+.switch[aria-checked="true"] .switch-track { background: var(--c3); }
+.switch[aria-checked="true"] .switch-knob { transform: translateX(24px); }
+.switch:active .switch-knob { width: 18px; }
 
 /* ---------- Ticker ---------- */
 .ticker {
@@ -399,8 +370,8 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
   text-transform: uppercase;
 }
-.day::before, .day::after { content: ''; flex: 1; height: 3px; background: var(--ink); }
-.day span { background: var(--ink); color: var(--white); padding: 2px 8px; }
+.day { justify-content: center; }
+.day span { background: var(--ink); color: var(--white); padding: 3px 10px; }
 
 /* Squad change card */
 .squad-card {
@@ -421,11 +392,42 @@ button { -webkit-tap-highlight-color: transparent; }
   line-height: 1.1;
 }
 .sc-title small { display: block; font-family: var(--mono); font-size: 0.6rem; font-weight: 700; color: var(--c4); margin-bottom: 3px; }
-.sc-row { display: flex; gap: 10px; align-items: baseline; padding: 8px 12px; border-top: 2px solid var(--ink); }
-.sc-k { flex-shrink: 0; width: 52px; font-family: var(--mono); font-size: 0.6rem; font-weight: 700; text-transform: uppercase; }
-.sc-names { display: flex; flex-wrap: wrap; gap: 6px; }
-.sc-chip { font-size: 0.8rem; font-weight: 700; border: 2px solid var(--ink); padding: 1px 6px; background: var(--accent, var(--white)); color: var(--tag-ink, var(--ink)); }
-.sc-row.out .sc-chip { background: var(--paper); color: #6A6A6A; text-decoration: line-through; border-style: dashed; }
+.sc-grid { display: grid; grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr); }
+.sc-h {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-top: var(--b);
+  background: var(--paper);
+}
+.sc-h.mid { padding: 0; }
+.sc-cell { padding: 8px 10px; border-top: 2px solid var(--ink); display: flex; }
+.sc-arrow {
+  border-top: 2px solid var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--ink); color: var(--c4);
+  font-weight: 800; font-size: 1rem;
+}
+.sc-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.15;
+  border: 2.5px solid var(--ink);
+  padding: 3px 8px 3px 3px;
+  background: var(--accent, var(--white));
+  color: var(--tag-ink, var(--ink));
+}
+.sc-chip .e { flex-shrink: 0; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: var(--white); border: 2px solid var(--ink); font-size: 0.9rem; }
+.sc-cell.out .sc-chip { background: var(--paper); color: #6A6A6A; border-style: dashed; }
+.sc-cell.out .sc-chip .n { text-decoration: line-through; text-decoration-thickness: 2px; }
+.sc-cell.out .sc-chip .e { filter: grayscale(1); opacity: 0.6; }
 
 /* Messages */
 .msg { display: flex; align-items: flex-start; gap: 12px; max-width: min(640px, 86%); }
@@ -975,7 +977,7 @@ button { -webkit-tap-highlight-color: transparent; }
    MOBILE
    ================================================================ */
 @media (max-width: 1100px) {
-  .np { width: 180px; }
+  .np-txt { width: 140px; }
   .head-avatars { display: none; }
 }
 @media (max-width: 720px) {
@@ -990,14 +992,17 @@ button { -webkit-tap-highlight-color: transparent; }
     grid-template-rows: auto auto auto minmax(0, 1fr) auto;
     grid-template-areas: "title" "ticker" "rail" "stream" "bar";
   }
-  .titlebar { gap: 10px; padding: 10px 12px; }
+  .titlebar { min-height: 0; }
   .logo { display: none; }
+  .head-main { padding: 10px 10px 10px 12px; }
   .squad-name { font-size: 1.15rem; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .head-sub { font-size: 0.62rem; margin-top: 4px; }
   .head-sub .lvl-now { display: none; }
-  .np { display: none; }
-  .sound { box-shadow: 3px 3px 0 var(--c4); }
-  .sound-btn { border-left: none; min-width: 52px; padding: 6px 8px; }
+  .np-txt { display: none; }
+  .viz-wrap { padding: 0 8px; }
+  .viz { width: 56px; height: 34px; }
+  .switch { padding: 0 10px; }
+  .switch #soundTxt { display: none; }
   .ticker { height: 24px; font-size: 0.7rem; border-top-width: 2px; }
 
   .rail { border-right: none; border-bottom: var(--b); }
@@ -1045,7 +1050,6 @@ button { -webkit-tap-highlight-color: transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   .ticker-track { animation: none; padding-left: 12px; }
-  .sound.playing .eq i { animation: none; transform: scaleY(0.6); }
   .kbtn, .lvl .e { transition: none; }
   * { scroll-behavior: auto !important; }
 }
@@ -1070,15 +1074,14 @@ button { -webkit-tap-highlight-color: transparent; }
       </div>
     </div>
     <div class="sound" id="soundBox">
-      <div class="np" aria-live="polite">
-        <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <div class="np-txt">
-          <div class="np-k">Now playing</div>
-          <div class="np-v" id="nowPlaying">Nothing yet</div>
-        </div>
+      <div class="viz-wrap" aria-hidden="true"><canvas class="viz" id="viz"></canvas></div>
+      <div class="np-txt" aria-live="polite">
+        <div class="np-k">Now playing</div>
+        <div class="np-v" id="nowPlaying">Silence</div>
       </div>
-      <button class="sound-btn" id="soundBtn" type="button" aria-pressed="true" aria-label="Sound on">
-        <span class="ico" id="soundIco" aria-hidden="true">🔊</span><span id="soundTxt">On</span>
+      <button class="switch" id="soundBtn" type="button" role="switch" aria-checked="true" aria-label="Sound">
+        <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+        <span id="soundTxt">Sound on</span>
       </button>
     </div>
   </header>
@@ -1642,18 +1645,21 @@ function postDay() {
   return appendToStream(el);
 }
 
-// One card for a randomize: who left, who joined, new chat name
+// One card for a randomize: who left -> who replaced them, row by row
 function postSquadChange(prev, next, title) {
   const chip = (p, i) => {
+    if (!p) return '';
     const a = ACCENTS[i % ACCENTS.length];
-    return `<span class="sc-chip" style="--accent:${a.bg};--tag-ink:${a.ink}">${escHtml(p.emoji)} ${escHtml(p.name)}</span>`;
+    return `<span class="sc-chip" style="--accent:${a.bg};--tag-ink:${a.ink}"><span class="e">${escHtml(p.emoji)}</span><span class="n">${escHtml(p.name)}</span></span>`;
   };
+  const rows = Math.max(prev.length, next.length);
+  let grid = '<div class="sc-h">Left</div><div class="sc-h mid"></div><div class="sc-h">Joined</div>';
+  for (let i = 0; i < rows; i++) {
+    grid += `<div class="sc-cell out">${chip(prev[i], i)}</div><div class="sc-arrow" aria-hidden="true">→</div><div class="sc-cell">${chip(next[i], i)}</div>`;
+  }
   const el = document.createElement('div');
   el.className = 'squad-card a-stamp';
-  el.innerHTML = `
-    <div class="sc-title"><small>Chat renamed</small>${escHtml(title)}</div>
-    <div class="sc-row out"><span class="sc-k">Left</span><span class="sc-names">${prev.map(chip).join('')}</span></div>
-    <div class="sc-row"><span class="sc-k">Joined</span><span class="sc-names">${next.map(chip).join('')}</span></div>`;
+  el.innerHTML = `<div class="sc-title"><small>Chat renamed</small>${escHtml(title)}</div><div class="sc-grid">${grid}</div>`;
   return appendToStream(el);
 }
 
@@ -2386,6 +2392,9 @@ function ensureMaster() {
   music.comp = new Tone.Compressor({ threshold: -18, ratio: 3, attack: 0.01, release: 0.2 }).connect(music.limiter);
   music.master = new Tone.Gain(0).connect(music.comp);      // music crossfades here
   music.sfxBus = new Tone.Gain(0.9).connect(music.limiter); // effects skip the compressor
+  music.analyser = new Tone.Analyser('fft', 32);
+  music.analyser.smoothing = 0.6;
+  music.master.connect(music.analyser);
 }
 
 function cleanupMusic() {
@@ -2566,20 +2575,57 @@ function startMusicFor(question) {
 function updateMusicUI() {
   const btn = $('soundBtn');
   const np = $('nowPlaying');
-  $('soundIco').textContent = music.enabled ? '🔊' : '🔇';
-  $('soundTxt').textContent = music.enabled ? 'On' : 'Off';
-  btn.setAttribute('aria-pressed', String(music.enabled));
-  btn.setAttribute('aria-label', music.enabled ? 'Sound on' : 'Sound off');
+  btn.setAttribute('aria-checked', String(music.enabled));
+  $('soundTxt').textContent = music.enabled ? 'Sound on' : 'Sound off';
   const mood = music.enabled ? (music.mood || music.wanted) : null;
   let text;
   if (!window.Tone) text = 'Audio unavailable';
   else if (!music.enabled) text = 'Muted';
   else if (mood && music.playing) text = MOODS[mood].label;
-  else text = 'Nothing yet';
+  else text = 'Silence. Ask something';
   np.textContent = text;
   np.title = text;
   $('soundBox').classList.toggle('playing', !!(music.enabled && music.playing));
+  viz.kick();
 }
+
+// ---------- visualiser: stepped LED bars driven by the real music ----------
+const viz = {
+  bars: 14, heights: [], raf: 0, last: 0,
+  kick() { if (!this.raf) this.raf = requestAnimationFrame(t => this.frame(t)); },
+  frame(t) {
+    this.raf = 0;
+    const live = music.enabled && music.playing && music.analyser && !document.hidden;
+    if (live && t - this.last < (REDUCED ? 200 : 33)) { this.raf = requestAnimationFrame(x => this.frame(x)); return; }
+    this.last = t;
+    const c = $('viz');
+    const dpr = window.devicePixelRatio || 1;
+    const w = c.clientWidth, h = c.clientHeight;
+    if (!w || !h) return;
+    if (c.width !== Math.round(w * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+    const g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    const fft = live ? music.analyser.getValue() : null;
+    const n = this.bars, gap = 2, bw = (w - gap * (n - 1)) / n, cell = 4, step = cell + 1;
+    const colors = ['#FF3B00', '#FFD600', '#00E05A', '#0038FF', '#FF4FD8'];
+    for (let i = 0; i < n; i++) {
+      let target = 0.06;
+      if (fft) {
+        const db = fft[Math.min(fft.length - 1, 1 + Math.floor(i * 1.6))];
+        target = Math.max(0.06, Math.min(1, (db + 92) / 64));
+      }
+      const prev = this.heights[i] ?? 0.06;
+      const v = target > prev ? target : Math.max(target, prev * 0.88);
+      this.heights[i] = v;
+      const blocks = Math.max(1, Math.round((v * h) / step));
+      g.fillStyle = colors[i % colors.length];
+      for (let b = 0; b < blocks; b++) g.fillRect(i * (bw + gap), h - (b + 1) * step + 1, bw, cell);
+    }
+    if (live) this.raf = requestAnimationFrame(x => this.frame(x));
+  },
+};
+document.addEventListener('visibilitychange', () => viz.kick());
 
 // ================================================================
 //  STORY EXPORT  (screenshot -> 1080x1920 Instagram story)
