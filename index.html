@@ -766,10 +766,92 @@ const ROSTER = [
 ];
 
 // ================================================================
+//  SQUADS  (contrast-engineered randomize)
+// ================================================================
+const CHAOS_CHANCE = 0.3;
+
+// Hand-curated squads. Every name must match a ROSTER name exactly
+// (anything that doesn't is skipped with a console warning).
+const CHAOS_SQUADS = [
+  { title: 'The Ministry of Inner Peace (Failed)', members: ['Buddha', 'Gym Bro', 'Your Indian Mom', "Your Phone's 1% Battery"] },
+  { title: 'The Committee of Closure',             members: ['Socrates', 'Your Ex (Seen 2:14 AM)', 'The Grim Reaper (On Probation)', 'A Golden Retriever'] },
+  { title: 'The War Room of Arranged Marriage',    members: ['Sun Tzu', 'Rishta Aunty', 'A Capybara', 'Crypto Bro Down 94%'] },
+  { title: 'Survival of the Most Disappointing',   members: ['Charles Darwin', 'Sharma Ji Ka Beta', 'A Raccoon', 'Therapist Who Is Clearly Tired'] },
+  { title: 'The Department of Circling Back',      members: ['Confucius', 'Gen Z Intern', 'Corporate HR', 'A Pigeon'] },
+  { title: 'A Tragedy in Four Auto-Rickshaws',     members: ['William Shakespeare', 'Delhi Auto Driver', 'A Haunted Victorian Doll', 'Your Dad'] },
+  { title: 'The Royal Court of Thought Leadership',members: ['Cleopatra', 'LinkedIn Thought Leader', 'Samosa', 'Your Kindergarten Teacher'] },
+  { title: 'The Bureau of Unverified Facts',       members: ['Sherlock Holmes', 'Astrology Girl', 'WhatsApp Forward Uncle', 'The Algorithm'] },
+  { title: 'The 4 AM Conquest Club',               members: ['Napoleon Bonaparte', 'Sigma Grindset Podcaster', 'A Medieval Peasant', 'A Fortune Cookie'] },
+  { title: 'The Board of Bad Decisions',           members: ['Your Future Self', 'Your Ex (Seen 2:14 AM)', 'Your Indian Mom', 'The Stock Market'] },
+  { title: 'The Relatively Flat Society',          members: ['Albert Einstein', 'A Flat Earther', 'A Bollywood Villain', 'A Capybara'] },
+  { title: 'The Pigeon Appreciation Startup',      members: ['Nikola Tesla', 'A Pigeon', 'A Silicon Valley Founder', 'Aristotle'] },
+  { title: 'The Snack Tribunal',                   members: ['An Angry Celebrity Chef', 'Samosa', 'A Golden Retriever', 'Leonardo da Vinci'] },
+  { title: 'The Fellowship of Actually',           members: ['A Pirate Captain', 'Edgy Redditor', 'A Conspiracy Theorist', 'Buddha'] },
+  { title: 'The Low Battery Mortality Panel',      members: ['The Grim Reaper (On Probation)', 'A Motivational Poster', 'Gym Bro', "Your Phone's 1% Battery"] },
+];
+
+// Generated squad names for non-curated picks
+const SQUAD_BODIES = ['Board', 'Committee', 'Ministry', 'Supreme Court', 'Cabinet', 'Tribunal',
+  'Syndicate', 'Panel', 'Union', 'Department', 'Council Within The Council', 'Emergency Meeting'];
+const SQUAD_OF = ['Bad Decisions', 'Unsolicited Advice', 'Emotional Damage', 'Questionable Ethics',
+  'Midnight Thoughts', 'Zero Accountability', 'Overthinking', 'Main Character Energy', 'Delulu Affairs',
+  'Unpaid Opinions', 'Mild Chaos', 'Things We Should Not Say', 'Avoidable Problems', 'Group Project Trauma'];
+
+const ROSTER_BY_NAME = new Map(ROSTER.map(p => [p.name, p]));
+const VALID_SQUADS = CHAOS_SQUADS.filter(sq => {
+  const missing = sq.members.filter(n => !ROSTER_BY_NAME.has(n));
+  if (missing.length) console.warn('Chaos squad skipped, unknown members:', sq.title, missing);
+  return !missing.length;
+});
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+const pickOne = arr => arr[Math.floor(Math.random() * arr.length)];
+
+function generateSquadName(prevName) {
+  let name;
+  do { name = `The ${pickOne(SQUAD_BODIES)} of ${pickOne(SQUAD_OF)}`; } while (name === prevName);
+  return name;
+}
+
+// Rules: 4 different roles, at least one SAGE/WHOLESOME and one
+// MENACE/UNHINGED_OBJECT, no member carried over from the previous squad.
+function pickContrastSquad(prevNames) {
+  const anchor = pickOne(['SAGE', 'WHOLESOME']);
+  const chaos  = pickOne(['MENACE', 'UNHINGED_OBJECT']);
+  const rest   = shuffle(ROLES.filter(r => r !== anchor && r !== chaos)).slice(0, 2);
+  const roles  = shuffle([anchor, chaos, ...rest]);
+  return roles.map(role => {
+    const pool = ROSTER.filter(p => p.role === role && !prevNames.has(p.name));
+    return pickOne(pool.length ? pool : ROSTER.filter(p => p.role === role));
+  });
+}
+
+function pickSquad(prevMembers, prevTitle) {
+  const prevNames = new Set(prevMembers.map(p => p.name));
+  if (Math.random() < CHAOS_CHANCE) {
+    const options = VALID_SQUADS.filter(sq =>
+      sq.title !== prevTitle && !sq.members.some(n => prevNames.has(n)));
+    if (options.length) {
+      const sq = pickOne(options);
+      return { title: sq.title, members: shuffle(sq.members.map(n => ROSTER_BY_NAME.get(n))) };
+    }
+  }
+  return { title: generateSquadName(prevTitle), members: pickContrastSquad(prevNames) };
+}
+
+// ================================================================
 //  STATE
 // ================================================================
 const state = {
   members: [],     // current squad (personality objects)
+  squadTitle: '',
   level: 1,
   busy: false,
   msgId: 41,       // message counter, displayed as #0042, #0043…
@@ -794,7 +876,7 @@ function escHtml(str) {
 const pad = n => String(n).padStart(4, '0');
 const clock = () => new Date().toTimeString().slice(0, 8);
 const nextId = () => '#' + pad(++state.msgId);
-const pickRandom = (arr, n) => [...arr].sort(() => Math.random() - 0.5).slice(0, n);
+const listNames = ps => ps.map(p => p.name).join(', ').replace(/, ([^,]*)$/, ' and $1');
 
 // ================================================================
 //  API
@@ -915,11 +997,15 @@ function setBusy(on) {
 
 function randomize(announce = true) {
   const prev = state.members;
-  state.members = pickRandom(ROSTER, 4);
+  const squad = pickSquad(prev, state.squadTitle);
+  state.members = squad.members;
+  state.squadTitle = squad.title;
   renderRail();
-  els.squad.textContent = 'Squad: ' + state.members.map(m => m.name).join(' / ');
+  els.squad.textContent = squad.title;
   if (announce && prev.length) {
-    postSystem(`${prev.length} members left // ${state.members.length} members joined`);
+    postSystem(`${listNames(prev)} left`);
+    postSystem(`${listNames(state.members)} joined`);
+    postSystem(`Chat renamed: ${squad.title}`);
   }
 }
 
