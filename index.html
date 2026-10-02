@@ -12,7 +12,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Space+Mono:wght@400;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -37,6 +37,7 @@
   --display: 'Bricolage Grotesque', 'Arial Black', Impact, sans-serif;
   --text: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'Space Mono', ui-monospace, 'Courier New', monospace;
+  --pixel: 'Silkscreen', 'Space Mono', ui-monospace, monospace;
   --rail-w: 300px;
   --halftone: radial-gradient(rgba(0,0,0,0.11) 1.1px, transparent 1.6px);
 }
@@ -223,6 +224,68 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 @keyframes tick { to { transform: translateX(-100%); } }
 
+/* ---------- Scoreboard (top of the sidebar) ---------- */
+.hud { background: var(--ink); color: var(--white); padding: 8px 14px 10px; border-bottom: var(--B); }
+.hud-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.hud-k { font-family: var(--pixel); font-size: 0.7rem; color: var(--c4); text-transform: uppercase; }
+.hud-score { font-family: var(--pixel); font-weight: 700; font-size: 1.7rem; line-height: 1; letter-spacing: 0.04em; color: var(--white); display: inline-block; }
+.hud-score.bump { animation: bumpScore 0.35s cubic-bezier(.3,1.6,.5,1); }
+@keyframes bumpScore { 40% { transform: scale(1.18); color: var(--c4); } }
+.hud-stats { display: flex; gap: 6px; margin-top: 6px; }
+.hud-chip { flex: 1; text-align: center; font-family: var(--pixel); font-size: 0.62rem; text-transform: uppercase; border: 2px solid #555; padding: 3px 2px; white-space: nowrap; }
+.hud-chip b { color: var(--c4); }
+.hud-chip.hot { border-color: var(--c1); background: var(--c1); color: var(--ink); }
+.hud-chip.hot b { color: var(--ink); }
+
+/* NEW! sticker on members you've never met before */
+.member.is-new .avatar { position: relative; }
+.member.is-new .avatar::after {
+  content: 'NEW';
+  position: absolute;
+  top: -9px; right: -12px;
+  font-family: var(--pixel);
+  font-size: 0.55rem;
+  background: var(--c1);
+  color: var(--white);
+  border: 2px solid var(--ink);
+  padding: 1px 4px;
+  transform: rotate(8deg);
+}
+
+/* ---------- Arcade toasts, floating points, confetti ---------- */
+.toasts { position: fixed; z-index: 70; top: calc(20px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+.toast {
+  min-width: 240px;
+  max-width: min(420px, 92vw);
+  background: var(--ink);
+  color: var(--white);
+  border: 3px solid var(--c4);
+  box-shadow: 5px 5px 0 var(--c1);
+  padding: 8px 14px 9px;
+  text-align: center;
+  animation: toastIn 0.42s cubic-bezier(.2,.9,.25,1.3) both;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateY(-24px) scale(0.9); } to { opacity: 1; transform: none; } }
+.t-title { font-family: var(--pixel); font-weight: 700; font-size: 1rem; color: var(--c4); text-transform: uppercase; }
+.t-sub { font-size: 0.8rem; margin-top: 2px; color: #DDD; }
+.toast.ach { background: var(--c4); color: var(--ink); border-color: var(--ink); box-shadow: 6px 6px 0 var(--ink); }
+.toast.ach .t-title { color: var(--ink); font-size: 1.05rem; }
+.toast.ach .t-sub { color: var(--ink); }
+.toast.combo { background: var(--c1); border-color: var(--ink); box-shadow: 5px 5px 0 var(--ink); }
+.toast.combo .t-title, .toast.combo .t-sub { color: var(--ink); }
+.pts {
+  position: absolute;
+  right: 10px; top: -22px;
+  z-index: 3;
+  font-family: var(--pixel);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--c4);
+  text-shadow: 2px 0 0 var(--ink), -2px 0 0 var(--ink), 0 2px 0 var(--ink), 0 -2px 0 var(--ink), 3px 3px 0 var(--ink);
+  pointer-events: none;
+}
+.confetti { position: fixed; top: 38%; z-index: 69; pointer-events: none; }
+
 /* ---------- Member rail ---------- */
 .rail {
   grid-area: rail;
@@ -233,6 +296,7 @@ button { -webkit-tap-highlight-color: transparent; }
   min-width: 0;
   background: var(--white);
 }
+.rail-head[hidden] { display: none; }
 .rail-head {
   display: flex;
   justify-content: space-between;
@@ -259,7 +323,7 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-template-columns: 48px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
-  padding: 11px 14px 11px;
+  padding: 9px 14px 9px;
   border-bottom: var(--b);
   background: var(--white);
 }
@@ -1139,6 +1203,13 @@ button { -webkit-tap-highlight-color: transparent; }
 
   .rail { border-right: none; border-bottom: var(--b); }
   .rail-head { display: none; }
+  .hud { padding: 6px 10px; border-bottom: var(--b); display: flex; align-items: center; gap: 10px; }
+  .hud-top { gap: 6px; }
+  .hud-k { font-size: 0.55rem; }
+  .hud-score { font-size: 1.05rem; }
+  .hud-stats { margin-top: 0; flex: 1; }
+  .hud-chip { font-size: 0.5rem; padding: 2px 1px; }
+  .toast { min-width: 200px; }
   .rail-list { display: flex; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
   .rail-list::-webkit-scrollbar { display: none; }
   .member {
@@ -1230,7 +1301,15 @@ button { -webkit-tap-highlight-color: transparent; }
 
   <!-- MEMBER RAIL -->
   <aside class="rail" aria-label="Chat members">
-    <div class="rail-head">In this chat <small id="railCount">05</small></div>
+    <div class="hud" aria-label="Your score">
+      <div class="hud-top"><span class="hud-k">Score</span><span class="hud-score" id="hudScore">000000</span></div>
+      <div class="hud-stats">
+        <span class="hud-chip" title="Ask again within 2 minutes to build a combo">Combo <b id="hudCombo">x1</b></span>
+        <span class="hud-chip" title="Days in a row">🔥 <b id="hudStreak">0</b></span>
+        <span class="hud-chip" title="Members you've met">Met <b id="hudMet">0/50</b></span>
+      </div>
+    </div>
+    <div class="rail-head" hidden>In this chat <small id="railCount">05</small></div>
     <div class="rail-list" id="railList"></div>
   </aside>
 
@@ -1269,6 +1348,9 @@ button { -webkit-tap-highlight-color: transparent; }
     <button class="kbtn send-btn" id="sendBtn" type="button">Send</button>
   </div>
 </div>
+
+<!-- ARCADE TOASTS -->
+<div class="toasts" id="toasts" aria-live="polite"></div>
 
 <!-- STORY PREVIEW OVERLAY -->
 <div class="story-overlay" id="storyOverlay" role="dialog" aria-modal="true" aria-label="Story preview" hidden>
@@ -2101,6 +2183,7 @@ async function pullLever() {
   const m = $('reelWin');
   setLevel(target);
   paintMode(target);
+  gameSpun(target);
   m.classList.remove('jackpot'); void m.offsetWidth; m.classList.add('jackpot');
 }
 
@@ -2235,8 +2318,8 @@ async function runCouncil(question, userEl) {
     await pace(typingTime(m.response));
     const msgEl = makeMember(m, slot);
     ghost.replaceWith(msgEl);
-    playSfx('pop', slot);
     playSting(m.name);
+    gameReply(msgEl);   // coin + points (replaces the old bloop)
     scrollToBottom();
     round.memberEls.push(msgEl);
     setStatus(slot, 'replied');
@@ -2254,6 +2337,7 @@ async function runCouncil(question, userEl) {
   }
 
   await dropReactions(round);
+  gameRound(round);
   setBusy(false);
   if (members.length) showShotButton(roundEl);
   await wait(REDUCED ? 0 : 500);
@@ -2353,6 +2437,7 @@ async function randomize(announce = true) {
     els.rail.querySelectorAll('.member:not(.you)').forEach((el, i) => flipIn(el, i * T.flipGap));
   }
   postSquadChange(prev, state.members, squad.title);
+  gameRandomized(state.members);
   await wait(REDUCED ? 0 : state.members.length * T.flipGap + T.flipIn);
   setBusy(false);
 }
@@ -2757,6 +2842,7 @@ async function playMood(mood) {
   lead.chain(dist, crunch, reverb);
 
   music.mood = mood;
+  if (mood === 'desi') unlock('desi');
   music.fx = { dist, crunch };
   MOODS[mood].build({ bus, reverb, delay, lead });
   Tone.Transport.bpm.value = MOODS[mood].bpm;
@@ -2916,6 +3002,10 @@ const SFX = {
     sfx.whooshF.frequency.exponentialRampToValueAtTime(7000, t + 0.16);
     sfx.whoosh.triggerAttackRelease(0.16, t);
   },
+  // Arcade: coin per reply, fanfare for achievements, rising combo
+  coin(t) { sfx.sweep.frequency.cancelScheduledValues(t); sfx.sweep.triggerAttackRelease(988, 0.06, t); sfx.sweep.triggerAttackRelease(1319, 0.18, t + 0.07); },
+  fanfare(t) { ['C5', 'E5', 'G5', 'C6'].forEach((n, i) => sfx.sweep.triggerAttackRelease(n, i < 3 ? 0.08 : 0.35, t + i * 0.09)); sfx.bell.triggerAttackRelease('C7', 0.6, t + 0.27); },
+  comboUp(t) { ['G4', 'B4', 'D5', 'G5'].forEach((n, i) => sfx.sweep.triggerAttackRelease(n, 0.06, t + i * 0.05)); },
   // card flick (randomize), camera shutter (screenshot)
   flick(t) { sfx.click.triggerAttackRelease(0.02, t, 0.7); },
   shutter(t) { sfx.click.triggerAttackRelease(0.02, t); sfx.click.triggerAttackRelease(0.05, t + 0.09); },
@@ -3454,6 +3544,7 @@ function stopVoice() { voice.allToken++; voice.playingAll = false; if (voice.cur
 
 // Speak one member's reply. Resolves when it finishes or is stopped.
 async function playVoice(m, el) {
+  unlock('voice');
   if (voice.cur) finishVoice(voice.cur, true);
   const text = speakable(m.response);
   if (!text) return;
@@ -3733,6 +3824,7 @@ async function openStory() {
   const round = state.round;
   if (story.open || state.busy || state.resummonTimer || !round?.members.length) return;
   story.open = true;
+  unlock('story');
   stopVoice();
   story.lastFocus = document.activeElement;
   const token = ++story.token;
@@ -3873,15 +3965,227 @@ function storyKeydown(e) {
 }
 
 // ================================================================
+//  GAME  (score, combos, streaks, collection, achievements, juice)
+// ================================================================
+// Everything here is client-side and saved in this browser (localStorage).
+const ACHIEVEMENTS = {
+  first:    ['First words',      'Asked the council your first question'],
+  rounds10: ['Regular',          'Asked 10 questions'],
+  feral:    ['Feral unlocked',   'Survived a round on Feral'],
+  shuffle5: ['Shuffle addict',   'Randomized the squad 5 times'],
+  spin3:    ['High roller',      'Spun the chaos 3 times'],
+  jackpot:  ['Jackpot',          'Spun straight into Feral'],
+  combo5:   ['Unstoppable',      'Hit a x5 combo'],
+  story:    ['Story time',       'Took your first screenshot'],
+  voice:    ['Hear me out',      'Played a voice'],
+  desi:     ['Full filmy',       'Got the saas-bahu treatment'],
+  met20:    ['Social butterfly', 'Met 20 different members'],
+  met50:    ['Full council',     'Met every single member'],
+  night:    ['Night owl',        'Asked something between midnight and 4 AM'],
+  streak3:  ['Habit forming',    'Played 3 days in a row'],
+};
+
+const game = {
+  data: { score: 0, best: 0, rounds: 0, randoms: 0, spins: 0, met: [], ach: [], lastDay: '', streak: 0 },
+  combo: 1,
+  lastRoundAt: 0,
+  shown: 0,          // score currently displayed (rolls up to data.score)
+};
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+function gameLoad() {
+  try { Object.assign(game.data, JSON.parse(localStorage.getItem('council-game') || '{}')); } catch {}
+  game.shown = game.data.score;
+}
+function gameSave() { try { localStorage.setItem('council-game', JSON.stringify(game.data)); } catch {} }
+
+// ---------- HUD ----------
+function renderHud(bump = false) {
+  const d = game.data;
+  $('hudCombo').textContent = `x${game.combo}`;
+  $('hudCombo').parentElement.classList.toggle('hot', game.combo > 1);
+  $('hudStreak').textContent = d.streak || 0;
+  $('hudMet').textContent = `${d.met.length}/${ROSTER.length}`;
+  rollScore(bump);
+}
+function rollScore(bump) {
+  const el = $('hudScore');
+  const from = game.shown, to = game.data.score;
+  const fmt = n => String(Math.round(n)).padStart(6, '0');
+  if (REDUCED || from === to) { el.textContent = fmt(to); game.shown = to; return; }
+  const start = performance.now(), dur = 650;
+  const step = t => {
+    const p = Math.min(1, (t - start) / dur);
+    game.shown = from + (to - from) * (1 - Math.pow(1 - p, 3));
+    el.textContent = fmt(game.shown);
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+  if (bump) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+}
+
+function addPoints(n) {
+  game.data.score += n;
+  game.data.best = Math.max(game.data.best, game.data.score);
+  gameSave();
+  renderHud(true);
+}
+
+// ---------- toasts ----------
+function toast(title, sub = '', kind = 'info') {
+  const box = $('toasts');
+  const el = document.createElement('div');
+  el.className = `toast ${kind}`;
+  el.innerHTML = `<div class="t-title"></div><div class="t-sub"></div>`;
+  el.querySelector('.t-title').textContent = title;
+  el.querySelector('.t-sub').textContent = sub;
+  box.appendChild(el);
+  while (box.children.length > 3) box.firstElementChild.remove();
+  setTimeout(() => {
+    if (REDUCED) { el.remove(); return; }
+    el.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-14px)' }], { duration: 260, easing: 'ease-in', fill: 'forwards' })
+      .finished.then(() => el.remove());
+  }, kind === 'ach' ? 3200 : 2200);
+}
+
+function unlock(id) {
+  if (!ACHIEVEMENTS[id] || game.data.ach.includes(id)) return;
+  game.data.ach.push(id);
+  gameSave();
+  const [name, desc] = ACHIEVEMENTS[id];
+  toast(`🏆 ${name}`, desc, 'ach');
+  playSfx('fanfare');
+  confetti(40);
+  addPoints(250);
+}
+
+// ---------- juice ----------
+function floatPoints(el, n) {
+  if (!el?.isConnected) return;
+  const p = document.createElement('span');
+  p.className = 'pts';
+  p.textContent = `+${n}`;
+  el.querySelector('.bwrap')?.appendChild(p);
+  if (REDUCED) { setTimeout(() => p.remove(), 900); return; }
+  p.animate([{ opacity: 0, transform: 'translateY(6px) scale(0.6)' }, { opacity: 1, transform: 'translateY(-8px) scale(1.15)', offset: 0.25 },
+    { opacity: 0, transform: 'translateY(-36px) scale(1)' }], { duration: 1100, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' })
+    .finished.then(() => p.remove());
+}
+
+function shake(power = 1) {
+  if (REDUCED) return;
+  const a = 3 * power;
+  $('app').animate([{ transform: 'none' }, { transform: `translate(${a}px, ${-a}px)` }, { transform: `translate(${-a}px, ${a * 0.6}px)` },
+    { transform: `translate(${a * 0.6}px, ${a}px)` }, { transform: 'none' }], { duration: 260, easing: 'steps(4)' });
+}
+
+function confetti(n = 30) {
+  if (REDUCED) return;
+  const colors = ['#FF3B00', '#0038FF', '#00E05A', '#FFD600', '#FF4FD8', '#000000'];
+  const W = window.innerWidth;
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('i');
+    c.className = 'confetti';
+    c.style.background = colors[i % colors.length];
+    c.style.left = `${W / 2 + (Math.random() - 0.5) * 240}px`;
+    const size = 6 + Math.random() * 8;
+    c.style.width = `${size}px`; c.style.height = `${size * (Math.random() < 0.5 ? 1 : 0.5)}px`;
+    document.body.appendChild(c);
+    const dx = (Math.random() - 0.5) * W * 0.9, up = 140 + Math.random() * 220, rot = (Math.random() - 0.5) * 1080;
+    c.animate([
+      { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${dx * 0.5}px, ${-up}px) rotate(${rot * 0.4}deg)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(${dx}px, ${window.innerHeight * 0.75}px) rotate(${rot}deg)`, opacity: 0 },
+    ], { duration: 1500 + Math.random() * 700, easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'forwards' }).finished.then(() => c.remove());
+  }
+}
+
+// ---------- events from the chat ----------
+// New members met (randomize / first load): NEW! badges and a small bonus
+function gameMeet(members, quiet = false) {
+  const fresh = members.filter(p => !game.data.met.includes(p.name));
+  fresh.forEach(p => game.data.met.push(p.name));
+  els.rail.querySelectorAll('.member').forEach((card, i) => {
+    if (fresh.includes(state.members[i])) card.classList.add('is-new');
+  });
+  if (fresh.length && !quiet) {
+    addPoints(fresh.length * 10);
+    toast(`${fresh.length} new member${fresh.length > 1 ? 's' : ''} met`, `+${fresh.length * 10} points`);
+  } else gameSave();
+  if (game.data.met.length >= 20) unlock('met20');
+  if (game.data.met.length >= ROSTER.length) unlock('met50');
+  renderHud();
+}
+
+function gameRandomized(members) {
+  game.data.randoms++;
+  gameMeet(members);
+  if (game.data.randoms >= 5) unlock('shuffle5');
+}
+
+function gameSpun(level) {
+  game.data.spins++;
+  gameSave();
+  if (game.data.spins >= 3) unlock('spin3');
+  if (level === 5) unlock('jackpot');
+}
+
+// Each reply landing: points scale with chaos level and combo
+function gameReply(msgEl) {
+  const pts = 20 * state.level * game.combo;
+  floatPoints(msgEl, pts);
+  addPoints(pts);
+  playSfx('coin');
+  if (state.level >= 4) shake(state.level === 5 ? 1.6 : 1);
+}
+
+function gameRound(round) {
+  const d = game.data;
+  // combo: keep asking within 2 minutes to build it up (max x5)
+  const now = Date.now();
+  const prevCombo = game.combo;
+  game.combo = now - game.lastRoundAt < 120000 ? Math.min(5, game.combo + 1) : 1;
+  game.lastRoundAt = now;
+  // daily streak
+  const t = today();
+  if (d.lastDay !== t) {
+    const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+    d.streak = d.lastDay === y ? d.streak + 1 : 1;
+    d.lastDay = t;
+    if (d.streak > 1) toast(`🔥 ${d.streak}-day streak`, 'Come back tomorrow to keep it alive');
+  }
+  d.rounds++;
+  const reacts = (round.reactions || []).length;
+  const bonus = 100 * round.level * prevCombo + reacts * 25;
+  addPoints(bonus);
+  toast(`Round clear +${bonus}`, reacts ? `${reacts} reaction${reacts > 1 ? 's' : ''} +${reacts * 25}` + (prevCombo > 1 ? `, combo x${prevCombo}` : '') : (prevCombo > 1 ? `Combo x${prevCombo}` : 'Ask again within 2 minutes to build a combo'), 'clear');
+  if (game.combo > prevCombo) { playSfx('comboUp'); setTimeout(() => toast(`Combo x${game.combo}!`, 'Next round scores more', 'combo'), 500); }
+  if (round.level >= 4 || game.combo >= 3) confetti(round.level === 5 ? 50 : 26);
+  renderHud(true);
+  unlock('first');
+  if (d.rounds >= 10) unlock('rounds10');
+  if (round.level === 5) unlock('feral');
+  if (game.combo >= 5) unlock('combo5');
+  if (d.streak >= 3) unlock('streak3');
+  const h = new Date().getHours();
+  if (h < 4) unlock('night');
+  gameSave();
+}
+
+// ================================================================
 //  INIT
 // ================================================================
 (async function init() {
   if (window.matchMedia('(max-width: 720px)').matches) els.input.placeholder = 'Ask the council…';
   $('tickerTrack').textContent = TICKER_LINES.map(t => `✸ ${t}`).join('    ').repeat(2);
 
+  gameLoad();
+  renderHud();
   renderLevels();
   $('app').classList.add('a-boot');
   randomize(false);
+  gameMeet(state.members, true);
 
   els.send.addEventListener('click', send);
   els.stream.addEventListener('click', e => { if (state.busy && !e.target.closest('button')) state.skip = true; });
