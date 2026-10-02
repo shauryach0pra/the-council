@@ -3362,57 +3362,70 @@ document.addEventListener('visibilitychange', () => viz.kick());
 //     when the worker has no voice route yet.
 // While anyone speaks, the music dips and objects/animals get a background bed (sizzle, waves...).
 
-// sp: Aura speaker, rate: playback speed (also raises pitch), shift: extra semitones,
-// fx: echo | ghost | radio | robot, pitch/brate: browser-voice pitch and speed, lang: preferred accent
+// Casting: sp = English voice (Deepgram Aura-2), hsp = Hindi/Hinglish voice (Sarvam Bulbul v3),
+// hi = always speak Hindi-style, rate = gentle playback speed (also nudges pitch, keeps it natural),
+// pace = Bulbul speaking pace, fx = hall | ghost | radio (natural-sounding only, no robot filters),
+// pitch/brate = fallback browser voice settings, lang = preferred browser accent
 const VOICE_ROLE = {
-  SAGE:            { sp: 'helios',  rate: 0.92, shift: -2, fx: 'echo', pitch: 0.8, brate: 0.9,  lang: 'en-GB' },
-  MENACE:          { sp: 'orion',   rate: 0.95, shift: -3, fx: null,   pitch: 0.7, brate: 0.95 },
-  WHOLESOME:       { sp: 'luna',    rate: 1.08, shift: 3,  fx: null,   pitch: 1.4, brate: 1.05 },
-  DELULU:          { sp: 'stella',  rate: 1.12, shift: 4,  fx: null,   pitch: 1.5, brate: 1.15 },
-  CORPORATE:       { sp: 'asteria', rate: 1.05, shift: 0,  fx: 'radio', pitch: 1.0, brate: 1.1 },
-  DESI:            { sp: 'hera',    rate: 1.1,  shift: 2,  fx: null,   pitch: 1.2, brate: 1.1,  lang: 'en-IN' },
-  UNHINGED_OBJECT: { sp: 'arcas',   rate: 1.25, shift: 7,  fx: null,   pitch: 1.9, brate: 1.25 },
+  SAGE:            { sp: 'saturn',  hsp: 'anand',  rate: 0.96, pace: 0.95, fx: 'hall', pitch: 0.8, brate: 0.9, lang: 'en-GB' },
+  MENACE:          { sp: 'mars',    hsp: 'kabir',  rate: 0.98, pace: 1.0,  fx: null,   pitch: 0.7, brate: 0.95 },
+  WHOLESOME:       { sp: 'aurora',  hsp: 'priya',  rate: 1.04, pace: 1.05, fx: null,   pitch: 1.3, brate: 1.05 },
+  DELULU:          { sp: 'phoebe',  hsp: 'simran', rate: 1.06, pace: 1.15, fx: null,   pitch: 1.4, brate: 1.15 },
+  CORPORATE:       { sp: 'electra', hsp: 'shreya', rate: 1.02, pace: 1.05, fx: null,   pitch: 1.0, brate: 1.1 },
+  DESI:            { sp: 'hera',    hsp: 'roopa',  rate: 1.0,  pace: 1.1,  fx: null,   pitch: 1.2, brate: 1.1, lang: 'en-IN', hi: true },
+  UNHINGED_OBJECT: { sp: 'iris',    hsp: 'rohan',  rate: 1.12, pace: 1.25, fx: null,   pitch: 1.7, brate: 1.25 },
 };
 const VOICE_FOR = {
-  'Socrates':                       { sp: 'helios',  rate: 0.9,  shift: -2 },
-  'Buddha':                         { sp: 'orpheus', rate: 0.82, shift: -3, pitch: 0.6, brate: 0.75 },
-  'Sun Tzu':                        { sp: 'zeus',    rate: 0.9,  shift: -4, pitch: 0.5 },
-  'Confucius':                      { sp: 'perseus', rate: 0.9,  shift: -2 },
-  'Charles Darwin':                 { sp: 'helios',  rate: 0.95, shift: 0,  fx: null },
-  'Albert Einstein':                { sp: 'angus',   rate: 1.0,  shift: 1,  fx: null, pitch: 1.1 },
-  'Leonardo da Vinci':              { sp: 'arcas',   rate: 1.05, shift: 1,  fx: null },
-  'Your Future Self':               { sp: 'orion',   rate: 0.9,  shift: -2, fx: 'ghost' },
-  'Cleopatra':                      { sp: 'athena',  rate: 0.95, shift: -1, fx: 'echo', pitch: 0.9, lang: 'en-GB' },
-  'Napoleon Bonaparte':             { sp: 'angus',   rate: 1.15, shift: 5,  pitch: 1.6, brate: 1.2 },
-  'Sherlock Holmes':                { sp: 'helios',  rate: 1.15, shift: 0,  pitch: 0.9, brate: 1.25, lang: 'en-GB' },
-  'A Pirate Captain':               { sp: 'zeus',    rate: 0.95, shift: -5, pitch: 0.5 },
-  'Your Ex (Seen 2:14 AM)':         { sp: 'luna',    rate: 0.95, shift: 0,  pitch: 1.0, brate: 0.9 },
-  'A Raccoon':                      { sp: 'arcas',   rate: 1.35, shift: 9,  pitch: 2.0, brate: 1.4 },
-  'A Bollywood Villain':            { sp: 'zeus',    rate: 0.85, shift: -7, fx: 'echo', pitch: 0.3, brate: 0.85, lang: 'en-IN' },
-  'The Grim Reaper (On Probation)': { sp: 'zeus',    rate: 0.78, shift: -9, fx: 'ghost', pitch: 0.1, brate: 0.75 },
-  'An Angry Celebrity Chef':        { sp: 'angus',   rate: 1.2,  shift: 2,  pitch: 1.2, brate: 1.3 },
-  'A Golden Retriever':             { sp: 'luna',    rate: 1.3,  shift: 8,  pitch: 2.0, brate: 1.4 },
-  'Your Dad':                       { sp: 'perseus', rate: 1.0,  shift: -1, pitch: 0.8 },
-  'Therapist Who Is Clearly Tired': { sp: 'hera',    rate: 0.88, shift: -1, pitch: 0.9, brate: 0.85 },
-  'A Capybara':                     { sp: 'orpheus', rate: 0.75, shift: -5, pitch: 0.6, brate: 0.7 },
-  'William Shakespeare':            { sp: 'helios',  rate: 0.95, shift: 0,  fx: 'echo', lang: 'en-GB' },
-  'Nikola Tesla':                   { sp: 'arcas',   rate: 1.1,  shift: 1,  fx: 'radio' },
-  'Sigma Grindset Podcaster':       { sp: 'zeus',    rate: 1.0,  shift: -4, fx: 'radio', pitch: 0.5 },
-  'Gym Bro':                        { sp: 'zeus',    rate: 1.1,  shift: -3, pitch: 0.6, brate: 1.15 },
-  'A Conspiracy Theorist':          { sp: 'arcas',   rate: 1.25, shift: 2,  fx: 'radio', brate: 1.35 },
-  'A Motivational Poster':          { sp: 'asteria', rate: 1.0,  shift: 2,  fx: 'echo' },
-  'Gen Z Intern':                   { sp: 'luna',    rate: 1.15, shift: 2,  fx: null, pitch: 1.3 },
-  'Your Indian Mom':                { sp: 'hera',    rate: 1.15, shift: 2,  pitch: 1.3, brate: 1.2 },
-  'WhatsApp Forward Uncle':         { sp: 'angus',   rate: 1.0,  shift: -1, fx: 'radio', pitch: 0.8 },
-  'Delhi Auto Driver':              { sp: 'orion',   rate: 1.15, shift: -1, pitch: 0.8, brate: 1.25 },
-  'Rishta Aunty':                   { sp: 'hera',    rate: 1.1,  shift: 3,  pitch: 1.5 },
-  'A Fortune Cookie':               { sp: 'stella',  rate: 0.95, shift: 6,  fx: 'echo' },
-  'The Stock Market':               { sp: 'angus',   rate: 1.3,  shift: 1,  fx: 'radio', brate: 1.5 },
-  'Samosa':                         { sp: 'arcas',   rate: 1.25, shift: 8 },
-  "Your Phone's 1% Battery":        { sp: 'luna',    rate: 1.4,  shift: 6,  fx: 'robot', brate: 1.5 },
-  'A Haunted Victorian Doll':       { sp: 'luna',    rate: 0.85, shift: 5,  fx: 'ghost', pitch: 1.8, brate: 0.8 },
-  'The Algorithm':                  { sp: 'orion',   rate: 0.95, shift: -2, fx: 'robot', pitch: 0.4 },
-  'A Pigeon':                       { sp: 'arcas',   rate: 1.3,  shift: 7,  pitch: 1.8 },
+  'Socrates':                       { sp: 'odysseus', rate: 0.96 },
+  'Buddha':                         { sp: 'pluto',    rate: 0.9,  pitch: 0.6, brate: 0.75 },
+  'Sun Tzu':                        { sp: 'jupiter',  rate: 0.94, fx: null, pitch: 0.5 },
+  'Confucius':                      { sp: 'saturn',   rate: 0.94 },
+  'Charles Darwin':                 { sp: 'draco',    rate: 1.0,  fx: null },
+  'Albert Einstein':                { sp: 'hermes',   rate: 1.0,  fx: null, pitch: 1.1 },
+  'Aristotle':                      { sp: 'orpheus',  rate: 1.0 },
+  'Leonardo da Vinci':              { sp: 'apollo',   rate: 1.04, fx: null },
+  'Your Future Self':               { sp: 'orion',    rate: 0.96, fx: 'ghost' },
+  'Cleopatra':                      { sp: 'pandora',  rate: 0.98, fx: 'hall', pitch: 0.9, lang: 'en-GB' },
+  'Napoleon Bonaparte':             { sp: 'atlas',    rate: 1.12, pitch: 1.5, brate: 1.2 },
+  'Sherlock Holmes':                { sp: 'draco',    rate: 1.1,  pitch: 0.9, brate: 1.25, lang: 'en-GB' },
+  'A Pirate Captain':               { sp: 'zeus',     rate: 0.95, pitch: 0.5 },
+  'Edgy Redditor':                  { sp: 'arcas',    rate: 1.06 },
+  'Your Ex (Seen 2:14 AM)':         { sp: 'delia',    rate: 0.97, brate: 0.9 },
+  'A Raccoon':                      { sp: 'hermes',   rate: 1.18, pitch: 2.0, brate: 1.4 },
+  'A Bollywood Villain':            { sp: 'zeus',     hsp: 'kabir', hi: true, rate: 0.92, pace: 0.85, fx: 'hall', pitch: 0.3, brate: 0.85, lang: 'en-IN' },
+  'The Grim Reaper (On Probation)': { sp: 'pluto',    rate: 0.86, fx: 'ghost', pitch: 0.1, brate: 0.75 },
+  'An Angry Celebrity Chef':        { sp: 'atlas',    rate: 1.1,  pitch: 1.2, brate: 1.3 },
+  'A Golden Retriever':             { sp: 'phoebe',   rate: 1.16, pitch: 2.0, brate: 1.4 },
+  'A Medieval Peasant':             { sp: 'janus',    rate: 1.02 },
+  'Your Dad':                       { sp: 'neptune',  rate: 1.0,  pitch: 0.8 },
+  'Therapist Who Is Clearly Tired': { sp: 'harmonia', rate: 0.92, pitch: 0.9, brate: 0.85 },
+  'A Capybara':                     { sp: 'pluto',    rate: 0.85, pitch: 0.6, brate: 0.7 },
+  'Your Kindergarten Teacher':      { sp: 'cordelia', rate: 1.02 },
+  'William Shakespeare':            { sp: 'draco',    rate: 0.98, fx: 'hall', lang: 'en-GB' },
+  'Nikola Tesla':                   { sp: 'hermes',   rate: 1.06, fx: 'radio' },
+  'A Flat Earther':                 { sp: 'janus',    rate: 1.08 },
+  'Astrology Girl':                 { sp: 'luna',     rate: 1.06 },
+  'Crypto Bro Down 94%':            { sp: 'apollo',   rate: 1.12 },
+  'Sigma Grindset Podcaster':       { sp: 'mars',     rate: 0.98, fx: 'radio', pitch: 0.5 },
+  'Gym Bro':                        { sp: 'atlas',    rate: 1.08, pitch: 0.6, brate: 1.15 },
+  'A Conspiracy Theorist':          { sp: 'arcas',    rate: 1.14, fx: 'radio', brate: 1.35 },
+  'A Motivational Poster':          { sp: 'thalia',   rate: 1.02, fx: 'hall' },
+  'LinkedIn Thought Leader':        { sp: 'electra',  rate: 1.04 },
+  'Corporate HR':                   { sp: 'athena',   rate: 1.0 },
+  'Gen Z Intern':                   { sp: 'delia',    rate: 1.06, pitch: 1.3 },
+  'A Silicon Valley Founder':       { sp: 'apollo',   rate: 1.08 },
+  'Your Indian Mom':                { hsp: 'roopa',   pace: 1.15, pitch: 1.3, brate: 1.2 },
+  'WhatsApp Forward Uncle':         { hsp: 'ratan',   pace: 0.95, fx: 'radio', pitch: 0.8, sp: 'neptune' },
+  'Sharma Ji Ka Beta':              { hsp: 'aditya',  pace: 1.1,  sp: 'apollo' },
+  'Delhi Auto Driver':              { hsp: 'mani',    pace: 1.15, sp: 'mars', pitch: 0.8, brate: 1.25 },
+  'Rishta Aunty':                   { hsp: 'kavitha', pace: 1.1,  pitch: 1.5 },
+  'A Fortune Cookie':               { sp: 'cora',     rate: 0.98, fx: 'hall' },
+  'The Stock Market':               { sp: 'neptune',  rate: 1.15, fx: 'radio', brate: 1.5 },
+  'Samosa':                         { sp: 'iris',     hsp: 'rohan', rate: 1.12, pace: 1.3 },
+  "Your Phone's 1% Battery":        { sp: 'phoebe',   rate: 1.2,  fx: 'radio', brate: 1.5 },
+  'A Haunted Victorian Doll':       { sp: 'ophelia',  rate: 0.94, fx: 'ghost', pitch: 1.8, brate: 0.8 },
+  'The Algorithm':                  { sp: 'orion',    rate: 0.96, fx: 'radio', pitch: 0.4 },
+  'A Pigeon':                       { sp: 'hermes',   rate: 1.15, pitch: 1.8 },
 };
 // Background bed under the voice (sting name from STINGS, repeated)
 const BED_FOR = {
@@ -3426,7 +3439,7 @@ const BED_FOR = {
 const BED_PERIOD = { sizzle: 1.55, waves: 1.9, honk: 2.4, toll: 2.3, musicBox: 1.7, zap: 1.45, lowBatt: 1.9, coo: 1.9,
   birds: 1.5, bubbles: 1.6, typing: 1.2, trash: 1.7, openingBell: 3, forwards: 1.7, bark: 2.5, glitch: 1.3 };
 
-const voice = { cloud: null, cache: new Map(), cur: null, token: 0, allToken: 0 };
+const voice = { cloud: null, hindi: false, cache: new Map(), cur: null, token: 0, allToken: 0 };
 
 function voiceProfile(name) {
   const p = ROSTER_BY_NAME.get(name);
@@ -3441,14 +3454,24 @@ async function probeCloudVoice() {
     const res = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tts_probe: true }) });
     const data = await res.json().catch(() => ({}));
     voice.cloud = res.ok && data.tts === true;
+    voice.hindi = res.ok && data.hindi === true;
   } catch { /* offline: decide on first use */ }
 }
 
-async function fetchCloudVoice(text, speaker) {
-  const key = `${speaker}|${text}`;
+const hasDevanagari = t => /[\u0900-\u097F]/.test(t || '');
+// Hindi voice when the character is desi (or a Hindi transcript came back) and the worker has Sarvam set up
+function wantsHindi(m, prof) {
+  return !!voice.hindi && (!!prof.hi || hasDevanagari(m.speak));
+}
+
+async function fetchCloudVoice(text, prof, hindi) {
+  const req = hindi
+    ? { tts_text: text, engine: 'hindi', speaker: prof.hsp || 'shubh', pace: prof.pace || 1 }
+    : { tts_text: text, engine: 'aura2', speaker: prof.sp || 'luna' };
+  const key = JSON.stringify(req);
   if (voice.cache.has(key)) return voice.cache.get(key);
-  const res = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tts_text: text, speaker }) });
-  if (!res.ok || !(res.headers.get('Content-Type') || '').startsWith('audio/')) throw new Error('No voice route');
+  const res = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req) });
+  if (!res.ok || !(res.headers.get('Content-Type') || '').startsWith('audio/')) throw new Error('No voice');
   const buf = await Tone.context.decodeAudioData(await res.arrayBuffer());
   voice.cache.set(key, buf);
   return buf;
@@ -3456,33 +3479,36 @@ async function fetchCloudVoice(text, speaker) {
 
 function voiceOut() {
   ensureMaster();
-  if (!music.voiceBus) music.voiceBus = new Tone.Gain(1.2).connect(music.limiter);
+  if (!music.voiceBus) {
+    // gentle compression keeps voices present over the music without sounding processed
+    const comp = new Tone.Compressor({ threshold: -22, ratio: 3, attack: 0.005, release: 0.15 }).connect(music.limiter);
+    music.voiceBus = new Tone.Gain(1.15).connect(comp);
+  }
   return music.voiceBus;
 }
 
-// Effect chain for the cloud voice; returns the node to feed
+// Natural-sounding effects only: a room, a ghostly hall, or a phone/radio EQ
 function buildVoiceFx(fx, nodes) {
   const keep = n => (nodes.push(n), n);
   const out = voiceOut();
-  if (fx === 'echo')  return keep(new Tone.FeedbackDelay({ delayTime: 0.16, feedback: 0.3, wet: 0.28 })).connect(out);
+  if (fx === 'hall')  return keep(new Tone.Reverb({ decay: 2.2, wet: 0.2 })).connect(out);
   if (fx === 'ghost') {
-    const rev = keep(new Tone.Reverb({ decay: 4.5, wet: 0.5 })).connect(out);
-    return keep(new Tone.Chorus({ frequency: 1.2, delayTime: 6, depth: 0.7, wet: 0.5 }).start()).connect(rev);
+    const rev = keep(new Tone.Reverb({ decay: 4.5, wet: 0.42 })).connect(out);
+    return keep(new Tone.Chorus({ frequency: 0.8, delayTime: 4, depth: 0.35, wet: 0.3 }).start()).connect(rev);
   }
   if (fx === 'radio') {
-    const lp = keep(new Tone.Filter(3200, 'lowpass')).connect(out);
-    const crunch = keep(new Tone.Distortion({ distortion: 0.25, wet: 0.5 })).connect(lp);
-    return keep(new Tone.Filter(450, 'highpass')).connect(crunch);
-  }
-  if (fx === 'robot') {
-    const cheb = keep(new Tone.Chebyshev({ order: 3, wet: 0.35 })).connect(out);
-    return keep(new Tone.FeedbackDelay({ delayTime: 0.011, feedback: 0.6, wet: 0.55 })).connect(cheb);
+    const lp = keep(new Tone.Filter(3400, 'lowpass')).connect(out);
+    return keep(new Tone.Filter(320, 'highpass')).connect(lp);
   }
   return out;
 }
 
-function pickBrowserVoice(prof) {
+function pickBrowserVoice(prof, hindiText = false) {
   const voices = window.speechSynthesis?.getVoices() || [];
+  if (hindiText) {
+    const hi = voices.find(v => /^hi/i.test(v.lang));
+    if (hi) return hi;
+  }
   const en = voices.filter(v => /^en/i.test(v.lang));
   const want = prof.lang || 'en-US';
   return en.find(v => v.lang.replace('_', '-') === want) || en.find(v => v.lang.replace('_', '-') === 'en-US') || en[0] || null;
@@ -3546,10 +3572,11 @@ function stopVoice() { voice.allToken++; voice.playingAll = false; if (voice.cur
 async function playVoice(m, el) {
   unlock('voice');
   if (voice.cur) finishVoice(voice.cur, true);
+  const prof = voiceProfile(m.name);
   const text = speakable(m.response);
   if (!text) return;
+  const hindiText = speakable(m.speak || '');   // Devanagari transcript from the worker, if any
   const token = ++voice.token;
-  const prof = voiceProfile(m.name);
   const cur = { el, name: m.name, nodes: [] };
   const done = new Promise(r => (cur.resolve = r));
   voice.cur = cur;
@@ -3560,10 +3587,11 @@ async function playVoice(m, el) {
   // Browser voice: decide synchronously when we already know there's no cloud route (iOS needs the gesture)
   const speakBrowser = () => {
     if (!('speechSynthesis' in window)) { finishVoice(cur); return; }
-    const u = new SpeechSynthesisUtterance(text);
+    const useHi = hasDevanagari(hindiText) && (window.speechSynthesis.getVoices() || []).some(v => /^hi/i.test(v.lang));
+    const u = new SpeechSynthesisUtterance(useHi ? hindiText : text);
     u.pitch = Math.min(2, Math.max(0, prof.pitch ?? 1));
     u.rate = Math.min(2, Math.max(0.5, prof.brate ?? 1));
-    const v = pickBrowserVoice(prof);
+    const v = pickBrowserVoice(prof, useHi);
     if (v) { u.voice = v; u.lang = v.lang; }
     cur.utter = u;
     const est = text.length / (14 * u.rate);
@@ -3578,21 +3606,22 @@ async function playVoice(m, el) {
 
   try {
     await ready;
-    const buf = await fetchCloudVoice(text, prof.sp);
+    let buf;
+    if (wantsHindi(m, prof)) {
+      // Hindi voice reads the Devanagari transcript when we have one (much better than romanised Hinglish)
+      try { buf = await fetchCloudVoice(hasDevanagari(hindiText) ? hindiText : text, prof, true); }
+      catch { buf = null; }
+    }
+    if (!buf) buf = await fetchCloudVoice(text, prof, false);
     if (token !== voice.token || voice.cur !== cur) return done;
     voice.cloud = true;
-    let input = buildVoiceFx(prof.fx, cur.nodes);
-    if (prof.shift) {
-      const ps = new Tone.PitchShift({ pitch: prof.shift, windowSize: 0.05 }).connect(input);
-      cur.nodes.push(ps);
-      input = ps;
-    }
+    const input = buildVoiceFx(prof.fx, cur.nodes);
     const player = new Tone.Player(buf).connect(input);
-    player.playbackRate = prof.rate;
+    player.playbackRate = prof.rate || 1;
     cur.nodes.push(player);
     cur.player = player;
     player.onstop = () => finishVoice(cur);
-    startVoiceBed(m.name, buf.duration / prof.rate);
+    startVoiceBed(m.name, buf.duration / (prof.rate || 1));
     player.start();
   } catch (e) {
     if (token !== voice.token || voice.cur !== cur) return done;
