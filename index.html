@@ -160,27 +160,30 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .head-members { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ---------- Sound: one block button. Bars dance while music plays; a crossed speaker when muted. ---------- */
+/* ---------- Sound: one block in the header. Bars move with the music; clicking sinks them and pops a mute icon. ---------- */
 .sound { flex-shrink: 0; align-self: center; display: flex; margin-right: 16px; }
 .sound-btn {
   position: relative;
-  width: 64px; height: 50px;
+  width: 66px; height: 50px;
   display: grid; place-items: center;
   padding: 0;
-  background: var(--c4);
-  color: var(--ink);
-  border: 3px solid var(--ink);
-  outline: 3px solid var(--c4);
+  background: var(--ink);
+  color: var(--white);
+  border: 3px solid var(--white);
   cursor: pointer;
+  overflow: hidden;
+  transition: background 0.15s, color 0.15s;
 }
+.sound-btn:hover { background: var(--white); color: var(--ink); }
 .sound-btn:active { transform: translate(2px, 2px); }
-.viz { display: block; width: 40px; height: 26px; }
-.sound-off { display: none; width: 28px; height: 28px; }
+.viz, .sound-off { grid-area: 1 / 1; }
+.viz { display: block; width: 44px; height: 28px; transform-origin: bottom; transition: transform 0.28s cubic-bezier(.5,0,.75,0), opacity 0.2s; }
+.sound-off { width: 28px; height: 28px; transform: scale(0) rotate(-30deg); opacity: 0; transition: transform 0.32s cubic-bezier(.2,.9,.3,1.5), opacity 0.15s; }
 .sound-off path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: square; }
 .sound-off path:first-child { fill: currentColor; stroke: none; }
-.sound-btn[aria-checked="false"] { background: var(--white); outline-color: var(--white); }
-.sound-btn[aria-checked="false"] .viz { display: none; }
-.sound-btn[aria-checked="false"] .sound-off { display: block; }
+.sound-btn[aria-checked="false"] .viz { transform: scaleY(0.05); opacity: 0; }
+.sound-btn[aria-checked="false"] .sound-off { transform: none; opacity: 1; transition-delay: 0.18s; }
+.sound-btn[aria-checked="true"] .viz { transition-delay: 0.12s; transition-timing-function: cubic-bezier(.2,.9,.3,1.3); }
 
 /* Randomize: each card turns into a spinning reel */
 .member.slotting { display: block; padding: 0; overflow: hidden; position: relative; }
@@ -195,6 +198,8 @@ button { -webkit-tap-highlight-color: transparent; }
   border-bottom: var(--b);
 }
 .slot-face .avatar { flex-shrink: 0; transform: none; }
+/* flat 'glass' bands top and bottom so the faces look like they pass behind a window */
+.slot-glass { position: absolute; inset: 0; pointer-events: none; border-top: 6px solid rgba(0,0,0,0.12); border-bottom: 6px solid rgba(0,0,0,0.12); }
 
 /* NEW! sticker on members you've never met before */
 .member.is-new .avatar { position: relative; }
@@ -504,23 +509,25 @@ button { -webkit-tap-highlight-color: transparent; }
 .msg.speaking .say-ico .w2 { animation: wave 0.6s 0.3s steps(2) infinite; }
 @keyframes wave { 50% { opacity: 0.15; } }
 /* loading: the button turns into a little stepping progress bar */
-.msg.voice-loading .say { background: var(--c4); cursor: progress; }
+.msg.voice-loading .say { cursor: progress; }
 .msg.voice-loading .say .say-ico { opacity: 0; }
-.msg.voice-loading .say::after {
+.msg.voice-loading .say::before, .msg.voice-loading .say::after, .say .ld {
   content: '';
   position: absolute;
-  left: 6px; right: 6px; top: 50%;
-  height: 6px; margin-top: -3px;
-  background: linear-gradient(90deg, var(--ink) 0 33%, transparent 33% 100%);
-  background-size: 300% 100%;
-  animation: loadbar 0.6s steps(3) infinite;
-  border: 2px solid var(--ink);
+  top: 50%;
+  width: 6px; height: 6px;
+  margin-top: -3px;
+  background: currentColor;
 }
-@keyframes loadbar { from { background-position: 0 0; } to { background-position: 150% 0; } }
-.say:hover { background: var(--c4); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
+.msg.voice-loading .say::before { left: 8px; animation: ldot 0.9s steps(1) infinite; }
+.msg.voice-loading .say::after { right: 8px; animation: ldot 0.9s 0.6s steps(1) infinite; }
+.say .ld { display: none; left: 50%; margin-left: -3px; }
+.msg.voice-loading .say .ld { display: block; animation: ldot 0.9s 0.3s steps(1) infinite; }
+@keyframes ldot { 0% { transform: translateY(0); } 33% { transform: translateY(-5px); } 66% { transform: translateY(0); } }@keyframes loadbar { from { background-position: 0 0; } to { background-position: 150% 0; } }
+.say:hover { background: var(--paper); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
 .say:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
-.msg.speaking .say { background: var(--c4); }
-.msg.speaking .bubble { animation: none; background: #FFF3A8; }
+.msg.speaking .say, .msg.speaking .say:hover { background: var(--ink); color: var(--white); }
+.msg.speaking .bubble { animation: none; }
 .msg.speaking .msg-av { animation: talk 0.28s ease-in-out infinite alternate; }
 @keyframes talk { from { transform: rotate(-4deg) scale(1); } to { transform: rotate(-2deg) scale(1.08); } }
 .shot-row { gap: 12px; flex-wrap: wrap; padding-top: 6px; }
@@ -725,9 +732,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* Member bubble stamps in, shadow grows after */
 .a-stamp { animation: stamp 560ms cubic-bezier(.2,.9,.25,1.12) both; transform-origin: 20px 40px; }
 .a-stamp .bwrap::before { animation: shadowGrow 320ms 260ms cubic-bezier(.2,.9,.3,1.2) both; }
-.msg.a-stamp .bubble { animation: newFlash 1.6s 200ms ease-out both; }
 @keyframes stamp { from { opacity: 0; transform: translateY(22px) scale(0.92); } to { opacity: 1; transform: none; } }
-@keyframes newFlash { from { background: #FFF3A8; } to { background: var(--white); } }
 @keyframes shadowGrow { from { transform: translate(0, 0); } to { transform: translate(7px, 7px); } }
 
 .a-ghost, .a-sys { animation: fadeUp 220ms ease-out both; }
@@ -789,7 +794,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   .a-boot, .a-launch, .a-stamp, .a-stamp-in, .a-ghost, .a-sys, .a-pop { animation: fadeIn 180ms both !important; }
-  .a-stamp .bwrap::before, .a-unsend .bubble::after, .dots i, .bounce i, .msg.a-stamp .bubble { animation: none !important; }
+  .a-stamp .bwrap::before, .a-unsend .bubble::after, .dots i, .bounce i { animation: none !important; }
   .msg.speaking .msg-av, .msg.speaking .say { animation: none; }
 }
 
@@ -837,7 +842,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .story-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 80;   /* above toasts */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -846,12 +851,12 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
 }
 .story-overlay[hidden] { display: none; }
-.story-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.88); }
+.story-backdrop { position: absolute; inset: 0; background-color: rgba(242, 240, 233, 0.94); background-image: var(--halftone); background-size: 12px 12px; }
 .story-card {
   position: relative;
   background: var(--paper);
   border: var(--B);
-  box-shadow: 10px 10px 0 var(--c4);
+  box-shadow: 10px 10px 0 var(--ink);
   transform-origin: center;
   overflow: hidden;
 }
@@ -869,12 +874,22 @@ button { -webkit-tap-highlight-color: transparent; }
   letter-spacing: 2px;
 }
 .story-actions { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.story-btns { display: flex; border: var(--B); box-shadow: 6px 6px 0 var(--white); }
-.story-btns .blk { min-height: 52px; font-size: 0.85rem; }
-.story-dl { background: var(--c3); border-right: var(--b); }
-.story-share { background: var(--c4); border-right: var(--b); }
+/* 4. same chunky buttons as the rest of the site */
+.story-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.story-btns .kbtn {
+  min-height: 50px;
+  padding: 0 20px;
+  font-family: var(--display);
+  font-weight: 900;
+  font-stretch: 85%;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  word-spacing: 0.1em;
+}
+.story-dl { background: var(--c3); }
+.story-share { background: var(--c4); }
 .story-back { background: var(--white); }
-.story-status { color: var(--white); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; min-height: 1.2em; text-align: center; }
+.story-status { color: var(--ink); font-family: var(--mono); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; min-height: 1.2em; text-align: center; }
 
 /* Off-screen 1080x1920 story: a phone screenshot of the chat in the current UI.
    Kept to CSS that html2canvas draws reliably: no font-stretch, outline, SVG,
@@ -1021,7 +1036,7 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 24px;
   align-items: stretch;
   padding: 30px 56px 150px;   /* bottom stays clear of Instagram's reply bar */
-  background: #000;
+  background: #fff;
   border-top: 8px solid #000;
 }
 .sx-input {
@@ -1031,8 +1046,8 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 20px;
   background: #fff;
   border: 6px solid #000;
-  box-shadow: 10px 10px 0 #FFD600;
-  padding: 16px 22px;
+  box-shadow: 10px 10px 0 #000;
+  padding: 16px 26px;
 }
 .sx-prompt { flex-shrink: 0; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; background: #000; color: #FFD600; font-family: var(--mono); font-weight: 700; font-size: 30px; }
 .sx-cta { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -1043,13 +1058,13 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 0 34px;
   background: #FF3B00;
   border: 6px solid #000;
-  box-shadow: 10px 10px 0 #FFD600;
+  box-shadow: 10px 10px 0 #000;
   font-family: var(--display);
   font-weight: 900;
   font-size: 36px;
   text-transform: uppercase;
 }
-.sx-home { position: absolute; left: 50%; bottom: 46px; width: 300px; height: 10px; margin-left: -150px; background: #fff; }
+.sx-home { position: absolute; left: 50%; bottom: 46px; width: 300px; height: 10px; margin-left: -150px; background: #000; }
 
 
 @media (prefers-reduced-motion: reduce) {
@@ -1078,11 +1093,11 @@ button { -webkit-tap-highlight-color: transparent; }
   .titlebar { min-height: 0; }
   .head-main { padding: 10px 10px 10px 12px; }
   .sound { margin-right: 10px; }
-  .sound-btn { width: 52px; height: 42px; }
+  .sound-btn { width: 54px; height: 42px; }
   .randbox { border-right: none; border-top: var(--B); padding: 10px 0 12px 10px; background: var(--paper); }
   .squad-name { font-size: 1.15rem; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .head-sub { font-size: 0.68rem; margin-top: 4px; }
-  .viz { width: 32px; height: 22px; }
+  .viz { width: 34px; height: 22px; }
 
   .rail { border-right: none; border-bottom: var(--b); }
   .rail-head { display: none; }
@@ -1124,7 +1139,8 @@ button { -webkit-tap-highlight-color: transparent; }
   .rand-btn .ico { font-size: 1.4rem; margin: 0; }
   .send-btn { min-width: 74px; min-height: 50px; padding: 0 12px; font-size: 0.95rem; }
   .input-wrap { padding: 4px 10px; }
-  .story-btns .blk { padding: 0 12px; font-size: 0.75rem; }
+  .story-btns .kbtn { padding: 0 12px; font-size: 0.78rem; min-height: 44px; }
+  .story-btns { gap: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1200,9 +1216,9 @@ button { -webkit-tap-highlight-color: transparent; }
   </div>
   <div class="story-actions" id="storyActions">
     <div class="story-btns">
-      <button class="blk story-dl" id="storyDownload" type="button">Download</button>
-      <button class="blk story-share" id="storyShare" type="button">Share</button>
-      <button class="blk story-back" id="storyBack" type="button">Back to chat</button>
+      <button class="kbtn story-dl" id="storyDownload" type="button">Download</button>
+      <button class="kbtn story-share" id="storyShare" type="button">Share</button>
+      <button class="kbtn story-back" id="storyBack" type="button">Back to chat</button>
     </div>
     <div class="story-status" id="storyStatus" aria-live="polite"></div>
   </div>
@@ -1811,7 +1827,7 @@ function makeMember(m, slot) {
       <div class="msg-head"><span class="msg-tag">${escHtml(m.name)}</span><span class="msg-vibe">${escHtml(m.vibe)}</span></div>
       <div class="brow">
         <div class="bwrap"><div class="bubble">${escHtml(m.response)}<span class="btime">${clock().slice(0, 5)}</span></div>${TAIL}</div>
-        <button class="say" type="button" aria-label="Play voice" title="Hear it">${SPEAKER_ICON}</button>
+        <button class="say" type="button" aria-label="Play voice" title="Hear it">${SPEAKER_ICON}<i class="ld" aria-hidden="true"></i></button>
       </div>
     </div>`;
   return el;
@@ -2138,40 +2154,51 @@ async function randomize(announce = true) {
   setBusy(false);
 }
 
-// Slot machine: each card becomes a reel of random faces that rolls and lands on the new member.
-// Reels stop left-to-right (top-to-bottom), each a bit later than the last.
+// Slot machine: each card becomes a reel of random faces that drops downward with motion blur,
+// kicks up first (anticipation), then stops with a bounce. Reels stop one after another.
 async function slotRail(prev, next) {
   if (REDUCED) return;
   const cards = [...els.rail.querySelectorAll('.member')];
   const face = (p, i) => `<div class="slot-face" style="--accent:${ACCENTS[i % ACCENTS.length].bg}">
       <div class="avatar" aria-hidden="true">${escHtml(p.emoji)}</div><div class="member-name">${escHtml(p.name)}</div></div>`;
+  playSfx('lever');
   await Promise.all(cards.map(async (card, i) => {
     if (!next[i]) return;
     const h = card.offsetHeight;
-    const filler = shuffle(ROSTER.filter(p => p !== next[i] && p !== prev[i])).slice(0, 12);
-    const faces = [prev[i] || filler[0], ...filler, next[i]];
+    const filler = shuffle(ROSTER.filter(p => p !== next[i] && p !== prev[i])).slice(0, 14);
+    // final face on top, old face at the bottom: the strip slides DOWN like a real reel
+    const faces = [next[i], ...filler, prev[i] || filler[0]];
     card.classList.add('slotting');
     card.style.height = `${h}px`;
-    card.innerHTML = `<div class="slot-strip" style="--h:${h}px">${faces.map(p => face(p, i)).join('')}</div>`;
+    card.innerHTML = `<div class="slot-strip" style="--h:${h}px">${faces.map(p => face(p, i)).join('')}</div><i class="slot-glass" aria-hidden="true"></i>`;
     const strip = card.firstElementChild;
     const dist = (faces.length - 1) * h;
-    const anim = strip.animate([
-      { transform: 'translateY(0)' },
-      { transform: `translateY(${-dist - 12}px)`, offset: 0.93 },
+    const dur = 1150 + i * 330;
+    const spin = strip.animate([
       { transform: `translateY(${-dist}px)` },
-    ], { duration: 1000 + i * 320, easing: 'cubic-bezier(.25,.6,.2,1)', fill: 'forwards' });
-    let last = 0;
+      { transform: `translateY(${-dist - 14}px)`, offset: 0.06 },      // kick up
+      { transform: `translateY(${10}px)`, offset: 0.9 },               // overshoot past the face
+      { transform: 'translateY(-4px)', offset: 0.96 },
+      { transform: 'translateY(0)' },
+    ], { duration: dur, easing: 'cubic-bezier(.3,.1,.2,1)', fill: 'forwards' });
+    strip.animate([
+      { filter: 'blur(0)' }, { filter: 'blur(0)', offset: 0.08 }, { filter: 'blur(2.5px)', offset: 0.2 },
+      { filter: 'blur(2.5px)', offset: 0.62 }, { filter: 'blur(0)', offset: 0.85 }, { filter: 'blur(0)' },
+    ], { duration: dur });
+    let last = -1;
     const watch = () => {
-      if (anim.playState !== 'running') return;
+      if (spin.playState !== 'running') return;
       const idx = Math.floor(-new DOMMatrix(getComputedStyle(strip).transform).m42 / h);
       if (idx !== last) { last = idx; if (i === 0 || idx % 2 === 0) playSfx('tick'); }
       requestAnimationFrame(watch);
     };
     requestAnimationFrame(watch);
-    await anim.finished;
+    await spin.finished;
     playSfx('thunk');
+    strip.firstElementChild.querySelector('.avatar').animate(
+      [{ transform: 'scale(1.25) rotate(-6deg)' }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.9,.3,1.4)' });
   }));
-  await wait(220);
+  await wait(260);
 }
 
 function autosize() {
@@ -3065,9 +3092,9 @@ const viz = {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, w, h);
     const fft = live ? music.analyser.getValue() : null;
-    // five solid black slabs, square tops, a hard baseline
-    const n = 5, gap = 3, bw = (w - gap * (n - 1)) / n;
-    g.fillStyle = '#000';
+    // seven solid slabs in the button's colour (white, or black on hover), square tops
+    const n = 7, gap = 2, bw = (w - gap * (n - 1)) / n;
+    g.fillStyle = getComputedStyle($('soundBtn')).color;
     for (let i = 0; i < n; i++) {
       let target = 0.12;
       if (fft) {
@@ -3075,7 +3102,7 @@ const viz = {
         target = Math.max(0.12, Math.min(1, (db + 90) / 60));
       }
       const prev = this.heights[i] ?? 0.12;
-      const v = target > prev ? target : Math.max(target, prev * 0.85);
+      const v = target > prev ? prev + (target - prev) * 0.55 : Math.max(target, prev * 0.88);
       this.heights[i] = v;
       const bh = Math.max(3, Math.round(v * h));
       g.fillRect(Math.round(i * (bw + gap)), h - bh, Math.round(bw), bh);
@@ -3291,7 +3318,7 @@ function setSpeakingUI(el, on) {
   if (!el) return;
   el.classList.toggle('speaking', on);
   const b = el.querySelector('.say');
-  if (b) { b.innerHTML = on ? STOP_ICON : SPEAKER_ICON; b.setAttribute('aria-label', `${on ? 'Stop' : 'Play'} voice`); }
+  if (b) { b.innerHTML = (on ? STOP_ICON : SPEAKER_ICON) + '<i class="ld" aria-hidden="true"></i>'; b.setAttribute('aria-label', `${on ? 'Stop' : 'Play'} voice`); }
   if (!on) el.classList.remove('voice-loading');
 }
 
@@ -3476,7 +3503,6 @@ function buildStoryDOM(round) {
       </span>
     </div>
     <div class="sx-head">
-      <div class="sx-brand">The Council</div>
       <div class="sx-name">${escHtml(round.squadTitle)}</div>
       <div class="sx-sub"><span class="sx-members">${escHtml(names)}</span></div>
     </div>
@@ -3500,7 +3526,7 @@ function buildStoryDOM(round) {
       }).join('')}
     </div>
     <div class="sx-compose">
-      <div class="sx-input"><span class="sx-prompt">&gt;</span><span class="sx-cta"><small>Ask your own council</small><b>${escHtml(SITE_URL)}</b></span></div>
+      <div class="sx-input"><span class="sx-cta"><small>Ask your own council</small><b>${escHtml(SITE_URL)}</b></span></div>
       <div class="sx-send">Send</div>
       <i class="sx-home"></i>
     </div>`;
@@ -3622,7 +3648,7 @@ async function openStory() {
   img.removeAttribute('src');
   $('storyLoading').hidden = false;
   setStoryButtons(false);
-  setStoryStatus('Developing');
+  setStoryStatus('');
 
   // 1. viewfinder flash over the chat
   const from = els.stream.getBoundingClientRect();
@@ -3668,7 +3694,7 @@ async function openStory() {
     img.hidden = false;
     img.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220 });
     setStoryButtons(true);
-    setStoryStatus('1080 × 1920 // Ready for your story');
+    setStoryStatus('');
   } catch (err) {
     if (token !== story.token) return;
     round.story = null;
@@ -3907,6 +3933,8 @@ function gameRound(round) {
   probeCloudVoice();
   window.speechSynthesis?.getVoices();   // start loading browser voices early
   $('soundBtn').addEventListener('click', toggleSound);
+  $('soundBtn').addEventListener('mouseenter', () => viz.kick());
+  $('soundBtn').addEventListener('mouseleave', () => viz.kick());
   $('storyDownload').addEventListener('click', downloadStory);
   $('storyShare').addEventListener('click', shareStory);
   $('storyBack').addEventListener('click', closeStory);
