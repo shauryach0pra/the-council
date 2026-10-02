@@ -1853,6 +1853,7 @@ function postWelcome() {
       `<button class="kbtn w-chip" type="button" style="--accent:${ACCENTS[i % ACCENTS.length].bg}"><span class="e" aria-hidden="true">${e}</span><span class="q">${escHtml(q)}</span></button>`).join('')}</div>`;
   el.querySelectorAll('.w-chip').forEach(b => b.addEventListener('click', () => {
     if (state.busy) return;
+    sound('pop', 2);
     els.input.value = b.querySelector('.q').textContent;
     send();
   }));
@@ -2162,7 +2163,6 @@ async function pullLever() {
   placeReel();
   const win = $('reelWin');
   win.classList.remove('jackpot'); void win.offsetWidth; win.classList.add('jackpot');
-  playSfx('ding');
   reel.spinning = false;
   setLevel(target);
 }
@@ -2199,6 +2199,7 @@ function initChaosMachine() {
 
 function setLevel(v) {
   if (state.busy || v === state.level) return;
+  playSfx(`lvl${v}`);
   state.level = v;
   syncLevels();
   applyIntensity(v);
@@ -2316,7 +2317,7 @@ function showSkip() {
   b.type = 'button';
   b.className = 'skip-chip a-sys';
   b.textContent = 'Reading too slow? Skip ⏩';
-  b.addEventListener('click', () => { state.skip = true; b.remove(); });
+  b.addEventListener('click', () => { state.skip = true; playSfx('zip'); b.remove(); });
   els.stream.appendChild(b);
   return b;
 }
@@ -2383,7 +2384,7 @@ const flipIn = (el, delay) => el.animate(
 
 async function randomize(announce = true) {
   if (state.busy) return;
-  if (announce) unlockAudio();
+  if (announce) sound('dice');
   const prev = state.members;
   const squad = pickSquad(prev, state.squadTitle);
   cancelResummon();
@@ -2851,6 +2852,24 @@ function sfxInit() {
   sfx.scratch = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.005, decay: 0.24, sustain: 0 }, volume: 4 }).connect(sfx.scratchF);
   sfx.bone = new Tone.MonoSynth({ oscillator: { type: 'sawtooth' }, filter: { type: 'lowpass', Q: 1 }, envelope: { attack: 0.05, decay: 0.2, sustain: 0.8, release: 0.25 },
     filterEnvelope: { attack: 0.05, decay: 0.3, sustain: 0.6, baseFrequency: 300, octaves: 2 }, volume: -10 }).connect(out);
+  // button sounds
+  sfx.diceF = new Tone.Filter({ type: 'bandpass', frequency: 2500, Q: 3 }).connect(out);
+  sfx.dice = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.02, sustain: 0 }, volume: 4 }).connect(sfx.diceF);
+  sfx.thud = new Tone.MembraneSynth({ pitchDecay: 0.02, octaves: 2, envelope: { attack: 0.001, decay: 0.12, sustain: 0 }, volume: -6 }).connect(out);
+  sfx.bell = new Tone.FMSynth({ harmonicity: 3.01, modulationIndex: 10, envelope: { attack: 0.001, decay: 1.1, sustain: 0, release: 0.4 },
+    modulationEnvelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.2 }, volume: -12 }).connect(out);
+  sfx.kazooF = new Tone.Filter({ type: 'bandpass', frequency: 1100, Q: 2.5 }).connect(out);
+  sfx.kazoo = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.02, decay: 0.05, sustain: 0.9, release: 0.06 }, volume: -2 }).connect(sfx.kazooF);
+  sfx.theremin = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.08, decay: 0, sustain: 1, release: 0.25 }, volume: -10 }).connect(out);
+  sfx.organ = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'fatsawtooth', count: 3, spread: 20 }, envelope: { attack: 0.01, decay: 0.4, sustain: 0.5, release: 0.6 }, volume: -20 })
+    .connect(new Tone.Filter(1600, 'lowpass').connect(out));
+  sfx.laughF = new Tone.Filter({ type: 'bandpass', frequency: 750, Q: 3 }).connect(out);
+  sfx.laugh = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.08, sustain: 0, release: 0.03 }, volume: 2 }).connect(sfx.laughF);
+  sfx.thunder = new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.05, decay: 1.2, sustain: 0 }, volume: -3 }).connect(new Tone.Filter(260, 'lowpass').connect(out));
+  sfx.horn = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.05, sustain: 0.9, release: 0.08 }, volume: -16 })
+    .connect(new Tone.Filter(3200, 'lowpass').connect(out));
+  sfx.sweep = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0, sustain: 1, release: 0.05 }, volume: -12 })
+    .connect(new Tone.Filter(2200, 'lowpass').connect(out));
   sfx.ready = true;
 }
 
@@ -2870,6 +2889,7 @@ const SFX = {
   },
   // reaction sticker: boing
   boing(t) {
+    sfx.boing.frequency.cancelScheduledValues(t);
     sfx.boing.triggerAttack(220, t);
     sfx.boing.frequency.setValueCurveAtTime([220, 560, 330, 480, 370, 440, 400], t + 0.005, 0.4);
     sfx.boing.triggerRelease(t + 0.42);
@@ -2888,6 +2908,79 @@ const SFX = {
   ding(t) {
     sfx.pop.triggerAttack(1319, t); sfx.pop.triggerRelease(t + 0.08);
     sfx.whistle.triggerAttack(1760, t + 0.09); sfx.whistle.triggerRelease(t + 0.35);
+  },
+  // Randomize: dice rattling in a cup, then two landing clunks
+  dice(t) {
+    let at = t;
+    for (let i = 0; i < 9; i++) {
+      sfx.diceF.frequency.setValueAtTime(1800 + Math.random() * 2600, at);
+      sfx.dice.triggerAttackRelease(0.015, at, 0.5 + Math.random() * 0.5);
+      at += 0.035 + i * 0.008 + Math.random() * 0.02;
+    }
+    sfx.thud.triggerAttackRelease('A3', 0.1, at + 0.03);
+    sfx.thud.triggerAttackRelease('E3', 0.1, at + 0.13, 0.7);
+  },
+  // Chaos levels, one signature sound each
+  lvl1(t) { sfx.bell.triggerAttackRelease('E6', 0.5, t); sfx.bell.triggerAttackRelease('C6', 0.8, t + 0.28); },          // polite ding-dong
+  lvl2(t) {                                                                                                              // kazoo "doodle-oo"
+    [['G4', 0.09], ['B4', 0.09], ['D5', 0.28]].reduce((at, [n, d]) => { sfx.kazoo.triggerAttackRelease(n, d, at); return at + d + 0.03; }, t);
+  },
+  lvl3(t) {                                                                                                              // wobbly theremin
+    const d = 0.95, n = 40;
+    sfx.theremin.frequency.cancelScheduledValues(t);
+    sfx.theremin.triggerAttack(480, t);
+    sfx.theremin.frequency.setValueCurveAtTime([...Array(n)].map((_, i) => (480 + 420 * i / n) * (1 + 0.07 * Math.sin(i * 1.7))), t + 0.01, d);
+    sfx.theremin.triggerRelease(t + d);
+  },
+  lvl4(t) {                                                                                                              // evil organ + "mwa-ha-ha" + thunder
+    sfx.organ.triggerAttackRelease(['D3', 'F3', 'G#3', 'B3'], 0.7, t);
+    ['A3', 'F3', 'D3', 'A2'].forEach((n, i) => sfx.laugh.triggerAttackRelease(n, 0.09, t + 0.18 + i * 0.13));
+    sfx.thunder.triggerAttackRelease(1, t + 0.1);
+  },
+  lvl5(t) {                                                                                                              // air horn: BWAP BWAP BWAAAAP
+    const chord = ['A#4', 'C#5', 'E5', 'A#5'];
+    sfx.horn.triggerAttackRelease(chord, 0.13, t);
+    sfx.horn.triggerAttackRelease(chord, 0.13, t + 0.19);
+    sfx.horn.triggerAttackRelease(chord, 0.55, t + 0.38);
+  },
+  // Sound switch: power up / CRT power down
+  powerOn(t) {
+    sfx.sweep.frequency.cancelScheduledValues(t);
+    sfx.sweep.triggerAttack(110, t);
+    sfx.sweep.frequency.exponentialRampToValueAtTime(880, t + 0.22);
+    sfx.sweep.triggerRelease(t + 0.24);
+    sfx.bell.triggerAttackRelease('A6', 0.3, t + 0.24);
+  },
+  powerOff(t) {
+    sfx.click.triggerAttackRelease(0.02, t);
+    sfx.sweep.frequency.cancelScheduledValues(t);
+    sfx.sweep.triggerAttack(1400, t + 0.02);
+    sfx.sweep.frequency.exponentialRampToValueAtTime(55, t + 0.34);
+    sfx.sweep.triggerRelease(t + 0.36);
+  },
+  // Story buttons
+  register(t) {                                                                                                          // ka-ching
+    sfx.thud.triggerAttackRelease('G2', 0.08, t);
+    for (let i = 0; i < 3; i++) sfx.click.triggerAttackRelease(0.012, t + 0.04 + i * 0.03, 0.6);
+    sfx.bell.triggerAttackRelease('C7', 0.6, t + 0.15);
+    sfx.bell.triggerAttackRelease('G7', 0.8, t + 0.22);
+  },
+  share(t) {                                                                                                             // whoop up
+    sfx.pop.triggerAttack(380, t);
+    sfx.pop.frequency.exponentialRampToValueAtTime(1500, t + 0.14);
+    sfx.pop.triggerRelease(t + 0.16);
+  },
+  rewind(t) {                                                                                                            // tape rewind warble
+    const d = 0.42, n = 24;
+    sfx.sweep.frequency.cancelScheduledValues(t);
+    sfx.sweep.triggerAttack(1300, t);
+    sfx.sweep.frequency.setValueCurveAtTime([...Array(n)].map((_, i) => (1300 - 1000 * i / n) * (i % 2 ? 0.8 : 1.15)), t + 0.01, d);
+    sfx.sweep.triggerRelease(t + d);
+  },
+  zip(t) {                                                                                                               // fast-forward
+    sfx.whooshF.frequency.setValueAtTime(600, t);
+    sfx.whooshF.frequency.exponentialRampToValueAtTime(7000, t + 0.16);
+    sfx.whoosh.triggerAttackRelease(0.16, t);
   },
   // card flick (randomize), camera shutter (screenshot)
   flick(t) { sfx.click.triggerAttackRelease(0.02, t, 0.7); },
@@ -2909,6 +3002,9 @@ const SFX = {
   },
 };
 
+// From a click handler: unlock audio first, then play
+function sound(name, ...args) { unlockAudio().then(() => playSfx(name, ...args)); }
+
 function playSfx(name, ...args) {
   if (!window.Tone || !music.enabled || Tone.context.state !== 'running') return;
   try { sfxInit(); SFX[name](Tone.now() + 0.01, ...args); } catch (e) { /* never let a sound break the chat */ }
@@ -2921,12 +3017,13 @@ function unlockAudio() {
 }
 
 async function toggleSound() {
+  if (music.enabled) playSfx('powerOff');   // play it before the switch mutes effects
   music.enabled = !music.enabled;
   if (window.Tone) {
     if (music.enabled) {
       await Tone.start();
       ensureMaster();
-      playSfx('pop', 2);
+      playSfx('powerOn');
       if (music.wanted && (music.wanted !== music.mood || !music.playing)) playMood(music.wanted);
       else if (music.mood) {
         Tone.Transport.start('+0.05');
@@ -3265,6 +3362,7 @@ async function openStory() {
 
 async function closeStory() {
   if (!story.open) return;
+  playSfx('rewind');
   story.open = false;
   story.token++;
   const overlay = $('storyOverlay');
@@ -3285,8 +3383,9 @@ async function closeStory() {
   (story.lastFocus?.isConnected ? story.lastFocus : els.input).focus();
 }
 
-function downloadStory() {
+function downloadStory(e) {
   if (!story.url || !story.file) return;
+  if (e) playSfx('register');
   const a = document.createElement('a');
   a.href = story.url;
   a.download = story.file.name;
@@ -3299,6 +3398,7 @@ function downloadStory() {
 async function shareStory() {
   const file = story.file;
   if (!file) return;
+  playSfx('share');
   // navigator.share must be the first await so the click still counts as a gesture
   if (navigator.canShare?.({ files: [file] })) {
     try {
