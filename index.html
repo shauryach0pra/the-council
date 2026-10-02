@@ -789,6 +789,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .react small { font-size: 0.7rem; }
 .msg:has(.react) { margin-bottom: 10px; }
+.msg:has(.react) .bubble { padding-bottom: 16px; }
 .a-pop { animation: pop 260ms cubic-bezier(.2,.9,.3,1.5) both; }
 @keyframes pop { from { opacity: 0; transform: scale(0.4) rotate(-14deg); } to { opacity: 1; transform: rotate(-4deg); } }
 
@@ -887,7 +888,9 @@ button { -webkit-tap-highlight-color: transparent; }
   text-transform: uppercase;
   word-spacing: 0.1em;
 }
-.story-dl { background: var(--ink); color: var(--white); }
+.story-dl { background: var(--ink); color: var(--white); min-width: 150px; }
+.story-dl.is-busy { cursor: progress; }
+.story-dl.is-busy:hover, .story-dl.is-busy:active { transform: none; box-shadow: 4px 4px 0 var(--sh); }
 .story-back { background: var(--white); }
 .story-status { color: var(--ink); font-family: var(--mono); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; min-height: 1.2em; text-align: center; }
 
@@ -1010,6 +1013,7 @@ button { -webkit-tap-highlight-color: transparent; }
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.sx-bub.has-react { padding-bottom: 46px; }
 .sx-me .sx-bub { background: #fff; color: #000; box-shadow: 14px 14px 0 #000; font-weight: 600; }
 .sx-time { float: right; margin: 18px -4px -6px 22px; font-family: var(--mono); font-weight: 700; font-size: 22px; line-height: 1; color: #777; }
 .sx-me .sx-time { color: #AAA; }
@@ -1056,7 +1060,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .sx-send {
   display: flex; align-items: center; justify-content: center;
   padding: 0 34px;
-  background: #FF3B00;
+  background: #000;
+  color: #fff;
   border: 6px solid #000;
   box-shadow: 10px 10px 0 #000;
   font-family: var(--display);
@@ -1753,7 +1758,7 @@ function postUser(text, into) {
   el.className = 'msg me a-launch';
   el.innerHTML = `
     <div class="msg-col">
-      <div class="bwrap"><div class="bubble">${escHtml(text)}<span class="btime">${clock().slice(0, 5)}</span></div>${TAIL}</div>
+      <div class="bwrap"><div class="bubble">${escHtml(text)}</div>${TAIL}</div>
     </div>`;
   return appendToStream(el, into);
 }
@@ -1807,7 +1812,7 @@ function makeMember(m, slot) {
     <div class="msg-col">
       <div class="msg-head"><span class="msg-tag">${escHtml(m.name)}</span><span class="msg-vibe">${escHtml(m.vibe)}</span></div>
       <div class="brow">
-        <div class="bwrap"><div class="bubble">${escHtml(m.response)}<span class="btime">${clock().slice(0, 5)}</span></div>${TAIL}</div>
+        <div class="bwrap"><div class="bubble">${escHtml(m.response)}</div>${TAIL}</div>
         <button class="say" type="button" aria-label="Play voice" title="Hear it">${SPEAKER_ICON}<i class="ld" aria-hidden="true"></i></button>
       </div>
     </div>`;
@@ -3022,6 +3027,11 @@ const STINGS = {
   },
   // movie trailer: BRAAAM plus a sub boom
   trailer(t) { STINGS.braam(t); k.boom.triggerAttackRelease('C1', 1.2, t + 0.02); },
+  // old gramophone crackle
+  vinyl(t) {
+    let at = t;
+    for (let i = 0; i < 26; i++) { at += 0.04 + Math.random() * 0.09; k.nf.frequency.setValueAtTime(2500 + Math.random() * 3500, at); k.noise.triggerAttackRelease(0.004, at, 0.15 + Math.random() * 0.35); }
+  },
 };
 
 // Which sting each member gets (anything unlisted falls back to their role)
@@ -3182,62 +3192,68 @@ const VOICE_ROLE = {
   DESI:            { sp: 'hera',    hsp: 'roopa',  rate: 1.0,  pace: 1.1,  fx: null,   pitch: 1.2, brate: 1.1, lang: 'en-IN', hi: true },
   UNHINGED_OBJECT: { sp: 'iris',    hsp: 'rohan',  rate: 1.12, pace: 1.25, fx: null,   pitch: 1.7, brate: 1.25 },
 };
+// Every English member has their OWN Deepgram voice (no sharing), every desi member their own
+// Sarvam voice. Character comes from: the voice, playback speed (cartoon pitch: >1 squeaky,
+// <1 big and slow), and one "colour" effect:
+//   old = gramophone (historical figures)   nasal = cartoon nose voice   tiny = small squeaky creature
+//   boom = big chesty voice   hall = echo   ghost = spooky reverb   robot = ring-mod robot
+//   radio = phone/podcast   megaphone = stadium mic   pa = station tannoy   speaker = smart speaker
 const VOICE_FOR = {
   // SAGE
-  'Socrates':            { sp: 'odysseus', rate: 1.0, fx: null },
-  'Buddha':              { sp: 'pluto',    rate: 0.95, fx: 'hall', pitch: 0.6, brate: 0.75 },
-  'Nature Doc Narrator': { sp: 'draco',    rate: 1.0, fx: null, lang: 'en-GB', brate: 0.85 },
-  'Your Future Self':    { sp: 'orion',    rate: 1.0, fx: 'ghost' },
-  'Movie Trailer Voice': { sp: 'zeus',     rate: 0.92, fx: 'hall', pitch: 0.2, brate: 0.8 },
+  'Socrates':            { sp: 'saturn',   rate: 0.96, fx: 'old',   pitch: 0.7 },
+  'Buddha':              { sp: 'pluto',    rate: 0.9,  fx: 'hall',  pitch: 0.6, brate: 0.75 },
+  'Nature Doc Narrator': { sp: 'draco',    rate: 0.97, fx: null,    lang: 'en-GB', brate: 0.85 },
+  'Your Future Self':    { sp: 'orion',    rate: 0.94, fx: 'ghost' },
+  'Movie Trailer Voice': { sp: 'zeus',     rate: 0.85, fx: 'boom',  pitch: 0.1, brate: 0.8 },
   // MENACE
-  'Sherlock Holmes':     { sp: 'draco',    rate: 1.0,  fx: null, lang: 'en-GB', brate: 1.25 },
-  'Cleopatra':           { sp: 'pandora',  rate: 1.0, fx: null, lang: 'en-GB' },
-  'Napoleon Bonaparte':  { sp: 'atlas',    rate: 1.0,  fx: null, pitch: 1.5, brate: 1.2 },
-  'A Pirate Captain':    { sp: 'zeus',     rate: 1.0, fx: null, pitch: 0.5 },
-  'Your Ex':             { sp: 'delia',    rate: 1.0, fx: null, brate: 0.9 },
-  'The Grim Reaper':     { sp: 'pluto',    rate: 0.9,  fx: 'ghost', pitch: 0.1, brate: 0.75 },
-  'Bollywood Villain':   { hsp: 'kabir', hi: true, pace: 0.85, rate: 1.0, fx: null, sp: 'zeus', pitch: 0.3 },
-  'A Mosquito':          { sp: 'hermes',   rate: 1.2, fx: null, pitch: 2.0, brate: 1.4 },
-  'A Cat':               { sp: 'cordelia', rate: 1.0, fx: null, pitch: 1.3 },
+  'Sherlock Holmes':     { sp: 'arcas',    rate: 1.12, fx: 'old',   lang: 'en-GB', brate: 1.3 },
+  'Cleopatra':           { sp: 'pandora',  rate: 0.97, fx: 'hall',  lang: 'en-GB' },
+  'Napoleon Bonaparte':  { sp: 'atlas',    rate: 1.18, fx: 'nasal', pitch: 1.6, brate: 1.25 },
+  'A Pirate Captain':    { sp: 'jupiter',  rate: 0.9,  fx: 'boom',  pitch: 0.4 },
+  'Your Ex':             { sp: 'delia',    rate: 0.98, fx: null,    brate: 0.9 },
+  'The Grim Reaper':     { sp: 'mars',     rate: 0.78, fx: 'ghost', pitch: 0.1, brate: 0.75 },
+  'Bollywood Villain':   { hsp: 'kabir', hi: true, pace: 0.85, rate: 0.9, fx: 'boom', sp: 'zeus', pitch: 0.3 },
+  'A Mosquito':          { sp: 'iris',     rate: 1.45, fx: 'tiny',  pitch: 2.0, brate: 1.5 },
+  'A Cat':               { sp: 'andromeda',rate: 1.08, fx: 'nasal', pitch: 1.4 },
   // WHOLESOME
-  'A Golden Retriever':  { sp: 'phoebe',   rate: 1.12, fx: null, pitch: 2.0, brate: 1.4 },
-  'Your Dad':            { sp: 'neptune',  rate: 1.0,  fx: null, pitch: 0.8 },
-  'Tired Therapist':     { sp: 'harmonia', rate: 1.0,  fx: null, pitch: 0.9, brate: 0.85 },
-  'A Capybara':          { sp: 'pluto',    rate: 0.9, fx: null, pitch: 0.6, brate: 0.7 },
-  'Kindergarten Teacher':{ sp: 'aurora',   rate: 1.0,  fx: null, pitch: 1.4 },
+  'A Golden Retriever':  { sp: 'phoebe',   rate: 1.3,  fx: null,    pitch: 2.0, brate: 1.45 },
+  'Your Dad':            { sp: 'neptune',  rate: 0.97, fx: null,    pitch: 0.8 },
+  'Tired Therapist':     { sp: 'harmonia', rate: 0.9,  fx: null,    pitch: 0.9, brate: 0.85 },
+  'A Capybara':          { sp: 'odysseus', rate: 0.82, fx: null,    pitch: 0.5, brate: 0.7 },
+  'Kindergarten Teacher':{ sp: 'aurora',   rate: 1.06, fx: null,    pitch: 1.5 },
   // DELULU
-  'William Shakespeare': { sp: 'draco',    rate: 1.0, fx: null, lang: 'en-GB' },
-  'Astrology Girl':      { sp: 'luna',     rate: 1.0, fx: null, pitch: 1.4 },
-  'Crypto Bro':          { sp: 'apollo',   rate: 1.0, fx: null },
-  'Sigma Podcaster':     { sp: 'mars',     rate: 1.0, fx: 'radio', pitch: 0.5 },
-  'Gym Bro':             { sp: 'atlas',    rate: 1.0, fx: null, pitch: 0.6, brate: 1.15 },
-  'Conspiracy Theorist': { sp: 'arcas',    rate: 1.0, fx: 'radio', brate: 1.35 },
-  'Alien on a Gap Year': { sp: 'orion',    rate: 1.0, fx: 'robot', pitch: 1.6 },
+  'William Shakespeare': { sp: 'hermes',   rate: 0.95, fx: 'old',   lang: 'en-GB' },
+  'Astrology Girl':      { sp: 'luna',     rate: 1.1,  fx: null,    pitch: 1.5 },
+  'Crypto Bro':          { sp: 'apollo',   rate: 1.12, fx: null },
+  'Sigma Podcaster':     { sp: 'aries',    rate: 0.96, fx: 'radio', pitch: 0.5 },
+  'Gym Bro':             { sp: 'hyperion', rate: 1.0,  fx: 'boom',  pitch: 0.6, brate: 1.15 },
+  'Conspiracy Theorist': { sp: 'janus',    rate: 1.18, fx: 'radio', brate: 1.4 },
+  'Alien on a Gap Year': { sp: 'orpheus',  rate: 1.25, fx: 'robot', pitch: 1.8 },
   // CORPORATE
-  'LinkedIn Guru':       { sp: 'apollo',   rate: 1.0, fx: null },
+  'LinkedIn Guru':       { sp: 'vesta',    rate: 1.04, fx: null },
   'Corporate HR':        { sp: 'athena',   rate: 1.0,  fx: null },
-  'Gen Z Intern':        { sp: 'delia',    rate: 1.0, fx: null, pitch: 1.3 },
+  'Gen Z Intern':        { sp: 'ophelia',  rate: 1.06, fx: null,    pitch: 1.3 },
   'Customer Care':       { hsp: 'shreya', hi: true, hlang: 'en', pace: 1.05, rate: 1.0, fx: 'radio', sp: 'electra', lang: 'en-IN' },
-  'Motivational Poster': { sp: 'thalia',   rate: 1.0,  fx: null },
+  'Motivational Poster': { sp: 'thalia',   rate: 1.0,  fx: 'hall' },
   'Your Smart Speaker':  { sp: 'asteria',  rate: 1.0,  fx: 'speaker' },
-  // DESI
+  // DESI (Sarvam voices, all different)
   'Your Indian Mom':     { hsp: 'roopa',   hi: true, pace: 1.15, pitch: 1.3, brate: 1.2 },
-  'WhatsApp Uncle':      { hsp: 'ratan',   hi: true, pace: 0.95, fx: null, sp: 'neptune', pitch: 0.8 },
-  'Sharma Ji Ka Beta':   { hsp: 'aditya',  hi: true, pace: 1.1,  sp: 'apollo' },
+  'WhatsApp Uncle':      { hsp: 'ratan',   hi: true, pace: 0.95, fx: 'radio', sp: 'neptune', pitch: 0.8 },
+  'Sharma Ji Ka Beta':   { hsp: 'aditya',  hi: true, pace: 1.1,  fx: 'nasal', sp: 'apollo' },
   'Delhi Auto Driver':   { hsp: 'mani',    hi: true, pace: 1.15, sp: 'mars', pitch: 0.8, brate: 1.25 },
-  'Rishta Aunty':        { hsp: 'kavitha', hi: true, pace: 1.1,  pitch: 1.5 },
+  'Rishta Aunty':        { hsp: 'kavitha', hi: true, pace: 1.1,  rate: 1.05, pitch: 1.5 },
   'Prime-Time Anchor':   { hsp: 'rahul',   hi: true, pace: 1.3,  fx: 'radio', sp: 'mars', brate: 1.4 },
   'Cricket Commentator': { hsp: 'sunny',   hi: true, pace: 1.25, fx: 'megaphone', sp: 'atlas', brate: 1.35 },
   'Railway Announcer':   { hsp: 'ritu',    hi: true, pace: 0.9,  fx: 'pa', sp: 'electra', brate: 0.9 },
   // UNHINGED OBJECT
-  'Samosa':              { hsp: 'rohan',   hi: true, pace: 1.3, rate: 1.08, sp: 'iris', pitch: 1.8 },
-  'Your 1% Battery':     { sp: 'phoebe',   rate: 1.05, fx: 'robot', brate: 1.5 },
-  'A Fortune Cookie':    { sp: 'cora',     rate: 1.0, fx: 'hall' },
-  'The Stock Market':    { sp: 'neptune',  rate: 1.0, fx: 'radio', brate: 1.5 },
-  'The Haunted Doll':    { sp: 'ophelia',  rate: 0.95,  fx: 'ghost', pitch: 1.8, brate: 0.8 },
-  'The Algorithm':       { sp: 'orion',    rate: 1.0, fx: 'robot', pitch: 0.4 },
-  'A Pigeon':            { sp: 'hermes',   rate: 1.12, fx: null, pitch: 1.8 },
-  'The Hostel Ghost':    { hsp: 'rehan',   hi: true, pace: 0.85, rate: 1.0, fx: 'ghost', sp: 'pluto', pitch: 0.4 },
+  'Samosa':              { hsp: 'rohan',   hi: true, pace: 1.3, rate: 1.15, fx: 'tiny', sp: 'iris', pitch: 1.8 },
+  'Your 1% Battery':     { sp: 'cora',     rate: 1.1,  fx: 'robot', brate: 1.5 },
+  'A Fortune Cookie':    { sp: 'theia',    rate: 0.95, fx: 'hall' },
+  'The Stock Market':    { sp: 'electra',  rate: 1.15, fx: 'radio', brate: 1.5 },
+  'The Haunted Doll':    { sp: 'juno',     rate: 1.1,  fx: 'ghost', pitch: 1.8, brate: 0.8 },
+  'The Algorithm':       { sp: 'minerva',  rate: 0.95, fx: 'robot', pitch: 0.4 },
+  'A Pigeon':            { sp: 'helena',   rate: 1.35, fx: 'nasal', pitch: 1.8 },
+  'The Hostel Ghost':    { hsp: 'rehan',   hi: true, pace: 0.85, rate: 0.95, fx: 'ghost', sp: 'pluto', pitch: 0.4 },
 };
 // Background bed under the voice (sting name from STINGS, repeated)
 const BED_FOR = {
@@ -3246,10 +3262,11 @@ const BED_FOR = {
   'Nature Doc Narrator': 'birds', 'A Capybara': 'bubbles', 'Corporate HR': 'typing', 'The Stock Market': 'openingBell',
   'WhatsApp Uncle': 'forwards', 'A Golden Retriever': 'bark', 'The Algorithm': 'glitch', 'A Mosquito': 'buzz',
   'Cricket Commentator': 'crowd', 'Customer Care': 'holdMusic', 'The Hostel Ghost': 'wind', 'Alien on a Gap Year': 'ufo',
+  'Socrates': 'vinyl', 'Sherlock Holmes': 'vinyl', 'William Shakespeare': 'vinyl',
 };
 const BED_PERIOD = { sizzle: 1.55, waves: 1.9, honk: 2.4, toll: 2.3, musicBox: 1.7, lowBatt: 1.9, coo: 1.9, birds: 1.5,
   bubbles: 1.6, typing: 1.2, openingBell: 3, forwards: 1.7, bark: 2.5, glitch: 1.3, buzz: 1.7, crowd: 1.7,
-  holdMusic: 1.9, wind: 2.2, ufo: 2.6 };
+  holdMusic: 1.9, wind: 2.2, ufo: 2.6, vinyl: 2.2 };
 
 const voice = { cloud: null, hindi: false, cache: new Map(), cur: null, token: 0, allToken: 0 };
 
@@ -3311,6 +3328,23 @@ function buildVoiceFx(fx, nodes) {
   if (fx === 'radio') {
     const lp = keep(new Tone.Filter(3400, 'lowpass')).connect(out);
     return keep(new Tone.Filter(320, 'highpass')).connect(lp);
+  }
+  if (fx === 'old') {   // gramophone: narrow band, a touch of warmth and grit (crackle plays as the background)
+    const lp = keep(new Tone.Filter(2800, 'lowpass')).connect(out);
+    const grit = keep(new Tone.Distortion({ distortion: 0.08, wet: 0.35 })).connect(lp);
+    return keep(new Tone.Filter(380, 'highpass')).connect(grit);
+  }
+  if (fx === 'nasal') {   // cartoon nose voice: a strong honk around 1.5 kHz, thin lows
+    const peak = keep(new Tone.Filter({ type: 'peaking', frequency: 1500, gain: 9, Q: 1.3 })).connect(out);
+    return keep(new Tone.Filter(260, 'highpass')).connect(peak);
+  }
+  if (fx === 'tiny') {   // small creature: no body, extra bite
+    const peak = keep(new Tone.Filter({ type: 'peaking', frequency: 3200, gain: 6, Q: 1 })).connect(out);
+    return keep(new Tone.Filter(650, 'highpass')).connect(peak);
+  }
+  if (fx === 'boom') {   // big chesty voice: extra low end and a little room
+    const room = keep(new Tone.Reverb({ decay: 1.2, wet: 0.1 })).connect(out);
+    return keep(new Tone.Filter({ type: 'lowshelf', frequency: 220, gain: 7 })).connect(room);
   }
   if (fx === 'speaker') {   // little smart-speaker: thin, bright, slightly boxy
     const lp = keep(new Tone.Filter(5000, 'lowpass')).connect(out);
@@ -3590,7 +3624,7 @@ function buildStoryDOM(round) {
       <div class="sx-day">Today ${now}</div>
       <div class="sx-msg sx-me">
         <div class="sx-col" style="align-items:flex-end">
-          <div class="sx-bub"><img class="sx-tail" alt="" src="${tailSrc('#fff')}"><span class="sx-txt"></span><span class="sx-time">${now}</span></div>
+          <div class="sx-bub"><img class="sx-tail" alt="" src="${tailSrc('#fff')}"><span class="sx-txt"></span></div>
         </div>
       </div>
       ${round.members.map((m, i) => {
@@ -3600,7 +3634,7 @@ function buildStoryDOM(round) {
           <div class="sx-av">${escHtml(m.emoji)}</div>
           <div class="sx-col">
             <div class="sx-tag">${escHtml(m.name)}</div>
-            <div class="sx-bub"><img class="sx-tail" alt="" src="${tailSrc('#fff')}"><span class="sx-txt" data-i="${i}"></span><span class="sx-time">${now}</span>${reactFor(i)}</div>
+            <div class="sx-bub${reactFor(i) ? ' has-react' : ''}"><img class="sx-tail" alt="" src="${tailSrc('#fff')}"><span class="sx-txt" data-i="${i}"></span>${reactFor(i)}</div>
           </div>
         </div>`;
       }).join('')}
@@ -3694,7 +3728,10 @@ function sizeStoryCard() {
 
 function setStoryStatus(text) { $('storyStatus').textContent = text; }
 function setStoryButtons(enabled) {
-  $('storyDownload').disabled = !enabled;
+  const b = $('storyDownload');
+  b.classList.toggle('is-busy', !enabled);
+  b.setAttribute('aria-disabled', String(!enabled));
+  b.textContent = enabled ? 'Download' : 'Preparing…';
 }
 
 // Where the card would sit if it were fitted inside the chat area, same proportions.
