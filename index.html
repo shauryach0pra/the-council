@@ -1671,6 +1671,7 @@ async function dropReactions(round) {
     tag.title = `${reactor.name} reacted`;
     tag.innerHTML = `${pickOne(REACTIONS)}<small>${escHtml(reactor.emoji)}</small>`;
     round.memberEls[to].querySelector('.bwrap')?.appendChild(tag);
+    playSfx('boing');
   }
 }
 
@@ -1687,6 +1688,7 @@ async function collapseAway(el) {
 }
 
 async function unsendAll(msgEls) {
+  playSfx('scratch');
   await Promise.all(msgEls.map(async (el, i) => {
     await wait(i * T.unsendGap);
     el.classList.remove('pending', 'a-stamp');
@@ -1728,6 +1730,8 @@ function syncLevels() {
 
 function setLevel(v) {
   if (state.busy || v === state.level) return;
+  const up = v > state.level;
+  unlockAudio().then(() => playSfx('slide', up));
   state.level = v;
   syncLevels();
   applyIntensity(v);
@@ -1782,6 +1786,7 @@ async function runCouncil(question, userEl) {
     setAllStatus('idle');
     setReceipt(userEl, 'Not delivered');
     postSystem(err.message || 'Request failed. Send again.', true);
+    playSfx('sad');
     setBusy(false);
     return;
   }
@@ -1809,6 +1814,7 @@ async function runCouncil(question, userEl) {
     await wait(typingTime(m.response));
     const msgEl = makeMember(m, slot);
     ghost.replaceWith(msgEl);
+    playSfx('pop', slot);
     scrollToBottom();
     round.memberEls.push(msgEl);
     setStatus(slot, 'replied');
@@ -1834,7 +1840,7 @@ async function send() {
   if (!question) { postSystem('Type a message before sending.', true); els.input.focus(); return; }
 
   cancelResummon();
-  startMusicFor(question);   // must stay before any await: Tone.start() needs the user gesture
+  startMusicFor(question).then(() => playSfx('send'));   // must stay before any await: audio needs the user gesture
 
   els.input.value = '';
   autosize();
@@ -1866,6 +1872,7 @@ const flipIn = (el, delay) => el.animate(
 
 async function randomize(announce = true) {
   if (state.busy) return;
+  if (announce) unlockAudio();
   const prev = state.members;
   const squad = pickSquad(prev, state.squadTitle);
   cancelResummon();
@@ -1888,9 +1895,10 @@ async function randomize(announce = true) {
       { duration: 160, delay: i * 40, easing: 'ease-in', fill: 'forwards' }));
     // each card turns away, staggered, like dealing a new hand
     await Promise.all(oldCards.map((el, i) =>
-      wait(i * T.flipGap).then(() => flipOut(el).finished)));
+      wait(i * T.flipGap).then(() => { playSfx('flick'); return flipOut(el).finished; })));
   }
   swapTitle(squad.title);
+  playSfx('slide', true);
   renderRail(false);
   if (!REDUCED) {
     els.rail.querySelectorAll('.member:not(.you)').forEach((el, i) => flipIn(el, i * T.flipGap));
@@ -1909,13 +1917,19 @@ function autosize() {
 }
 
 // ================================================================
-//  MUSIC  (Tone.js)
+//  MUSIC + SOUND EFFECTS  (Tone.js)
 // ================================================================
-// Mood routing: keyword pre-checks first (the emotion model can't spot
-// romance, careers or exams), then the HuggingFace emotion label.
+// Mood routing: keyword checks first (the emotion model can't tell an
+// exam from a breakup), then the HuggingFace emotion label.
+// Order matters: the first list that matches wins.
+const MOOD_ORDER = ['desi', 'romantic', 'exam', 'money', 'gym', 'food', 'career'];
 const MOOD_KEYWORDS = {
-  romantic: /\b(love|crush|ex|exes|relationship|dating|date|dates|marry|marriage|married|breakup|break up|broke up|girlfriend|boyfriend|gf|bf|bae|flirt|flirting|romance|romantic|heartbreak|situationship|propose|proposal|divorce|cheat|cheated|cheating|feelings for|likes me|like him|like her|text him|text her|ghosted|ghosting|tinder|hinge|bumble|rizz|wedding|shaadi|shadi|pyaar|pyar|ishq|mohabbat|rishta|jaanu|babu|dil)\b/,
-  anxious:  /\b(exam|exams|padhai|padhna|study|studying|boards|board exam|jee|neet|upsc|gate|marks|result|results|grades|gpa|cgpa|assignment|deadline|viva|semester|backlog|kota|tuition|coaching|revision|syllabus|finals|midterms)\b/,
+  desi:     /\b(mom|mummy|mumma|mummyji|papa|dad|daddy|parents|family|relatives|rishta|rishtey|shaadi|shadi|sharma|sharmaji|aunty|aunties|uncle|chacha|chachi|mausi|bua|beta|ghar|saas|bahu|in-laws|in laws|diwali|cousin|cousins|dadi|nani)\b/,
+  romantic: /\b(love|crush|ex|exes|relationship|dating|date|dates|marry|marriage|married|breakup|break up|broke up|girlfriend|boyfriend|gf|bf|bae|flirt|flirting|romance|romantic|heartbreak|situationship|propose|proposal|divorce|cheat|cheated|cheating|feelings for|likes me|like him|like her|text him|text her|ghosted|ghosting|tinder|hinge|bumble|rizz|pyaar|pyar|ishq|mohabbat|jaanu|babu|dil)\b/,
+  exam:     /\b(exam|exams|padhai|padhna|study|studying|boards|board exam|jee|neet|upsc|gate|marks|result|results|grades|gpa|cgpa|assignment|homework|deadline|viva|semester|backlog|kota|tuition|coaching|revision|syllabus|finals|midterms|college|class|classes|lecture|lectures|attendance|bunk|school|professor|teacher)\b/,
+  money:    /\b(money|paisa|paise|crypto|bitcoin|btc|stock|stocks|invest|investing|investment|loan|emi|rich|broke|rent|bank|savings|sip|mutual fund|trading|trade|scam|bet|betting|lottery|budget|credit card|debt)\b/,
+  gym:      /\b(gym|workout|diet|protein|fitness|weight|abs|run|running|marathon|cricket|football|sport|sports|exercise|bulk|bulking|cut|cutting|creatine|lift|lifting|yoga)\b/,
+  food:     /\b(food|eat|eating|pizza|pineapple|biryani|samosa|maggi|chai|coffee|dinner|lunch|breakfast|cook|cooking|recipe|restaurant|swiggy|zomato|momos|burger|hungry|dessert|cake|paneer|dosa)\b/,
   career:   /\b(job|jobs|work|boss|salary|career|office|resign|resignation|quit|promotion|interview|fired|layoff|laid off|workplace|coworker|colleague|manager|hr|hire|hiring|startup|business|freelance|internship|intern|appraisal|increment|hustle|naukri|naukari|kaam|placement|placements|package|ctc|notice period|linkedin|corporate|wfh)\b/,
 };
 
@@ -1926,7 +1940,7 @@ const HF_TO_MOOD = {
 
 async function classifyMood(text) {
   const t = text.toLowerCase();
-  for (const mood of ['romantic', 'anxious', 'career']) {
+  for (const mood of MOOD_ORDER) {
     if (MOOD_KEYWORDS[mood].test(t)) return mood;
   }
   try {
@@ -1942,151 +1956,298 @@ async function classifyMood(text) {
   }
 }
 
-const FADE_OUT = 0.5;   // seconds; crossfade = fade out, swap, fade in
-const FADE_IN = 0.8;
+const FADE_OUT = 0.45;  // seconds; crossfade = fade music bus out, swap, fade in
+const FADE_IN = 0.9;
 
 const music = {
-  enabled: true,        // the [ SOUND ] toggle
+  enabled: true,        // the sound toggle (music + effects)
   mood: null,           // mood currently built
   wanted: null,         // latest mood asked for (played when sound turns on)
   playing: false,
   token: 0,             // cancels stale crossfades
-  master: null, limiter: null,
+  master: null, comp: null, limiter: null, sfxBus: null,
   parts: [], nodes: [], fx: null,
 };
 
-// ---------- small builders ----------
+// ---------- instrument helpers ----------
 const track = node => { music.nodes.push(node); return node; };
-const syn  = (opts, out) => track(new Tone.Synth(opts).connect(out));
-const poly = (opts, out) => track(new Tone.PolySynth(Tone.Synth, opts).connect(out));
+const syn   = (opts, out) => track(new Tone.Synth(opts).connect(out));
+const mono  = (opts, out) => track(new Tone.MonoSynth(opts).connect(out));
+const poly  = (opts, out) => track(new Tone.PolySynth(Tone.Synth, opts).connect(out));
+const keys  = (vol, out) => track(new Tone.PolySynth(Tone.FMSynth, {
+  harmonicity: 3, modulationIndex: 1.6,
+  oscillator: { type: 'sine' }, modulation: { type: 'sine' },
+  envelope: { attack: 0.005, decay: 1.4, sustain: 0.25, release: 1.2 },
+  modulationEnvelope: { attack: 0.005, decay: 0.4, sustain: 0.1, release: 0.5 },
+  volume: vol,
+}).connect(out));
+// Plucked strings (harp, sitar, pizzicato, upright bass) built from a filtered
+// saw/triangle with a fast filter decay. Tone's PluckSynth needs an AudioWorklet,
+// which some browsers refuse to load, so we avoid it.
+const pluck = (vol, out, bright = 3800, wave = 'sawtooth') => mono({
+  oscillator: { type: wave },
+  filter: { type: 'lowpass', Q: 2, rolloff: -24 },
+  envelope: { attack: 0.002, decay: 0.45, sustain: 0, release: 0.25 },
+  filterEnvelope: { attack: 0.001, decay: 0.18, sustain: 0, release: 0.2, baseFrequency: Math.max(120, bright / 8), octaves: 3 },
+  volume: vol,
+}, out);
+const lowpass = (freq, out, q = 1) => track(new Tone.Filter({ frequency: freq, type: 'lowpass', Q: q }).connect(out));
+const membrane = (opts, out) => track(new Tone.MembraneSynth(opts).connect(out));
 
-// events: [time, note(s), duration?]
+// events: [time, note(s), duration?, velocity?]
 function loopPart(synth, events, loopEnd, dur) {
-  const p = new Tone.Part((t, e) => synth.triggerAttackRelease(e.n, e.d || dur, t),
-    events.map(([time, n, d]) => ({ time, n, d })));
+  const p = new Tone.Part((t, e) => synth.triggerAttackRelease(e.n, e.d || dur, t, e.v ?? 1),
+    events.map(([time, n, d, v]) => ({ time, n, d, v })));
   p.loop = true; p.loopEnd = loopEnd; p.start(0);
   music.parts.push(p);
 }
-// notes: flat array, null = rest
-function stepSeq(synth, notes, sub, dur) {
-  const s = new Tone.Sequence((t, n) => { if (n) synth.triggerAttackRelease(n, dur, t); }, notes, sub);
+// events: [time, anything] -> fn(t, value)
+function loopFn(fn, events, loopEnd) {
+  const p = new Tone.Part((t, e) => fn(t, e.v), events.map(([time, v]) => ({ time, v })));
+  p.loop = true; p.loopEnd = loopEnd; p.start(0);
+  music.parts.push(p);
+}
+// notes: flat array of single notes, null = rest
+function stepSeq(synth, notes, sub, dur, vel = 1) {
+  const s = new Tone.Sequence((t, n) => { if (n) synth.triggerAttackRelease(n, dur, t, vel); }, notes, sub);
   s.start(0);
   music.parts.push(s);
 }
 
 function drumKit(out, vol = {}) {
-  const kick = track(new Tone.MembraneSynth({
-    pitchDecay: 0.03, octaves: 5, envelope: { attack: 0.001, decay: 0.32, sustain: 0 }, volume: vol.kick ?? -12,
-  }).connect(out));
-  const snare = track(new Tone.NoiseSynth({
-    noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.15, sustain: 0 }, volume: vol.snare ?? -24,
-  }).connect(out));
-  const hatFilter = track(new Tone.Filter(7500, 'highpass').connect(out));
-  const hat = track(new Tone.NoiseSynth({
-    noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.035, sustain: 0 }, volume: vol.hat ?? -30,
-  }).connect(hatFilter));
+  const kick = membrane({ pitchDecay: 0.035, octaves: 5, envelope: { attack: 0.001, decay: 0.32, sustain: 0 }, volume: vol.kick ?? -10 }, out);
+  const snareF = track(new Tone.Filter(1800, 'highpass').connect(out));
+  const snare = track(new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: vol.snareDecay ?? 0.14, sustain: 0 }, volume: vol.snare ?? -20 }).connect(snareF));
+  const hatF = track(new Tone.Filter(8000, 'highpass').connect(out));
+  const hat = track(new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.03, sustain: 0 }, volume: vol.hat ?? -28 }).connect(hatF));
   return { kick, snare, hat };
 }
-// 16-step patterns per bar: 'x' = hit
+// 16-step patterns per bar; 'x' = hit, 'o' = soft hit
 function drumPattern(kit, pat) {
   const s = new Tone.Sequence((t, i) => {
-    if (pat.kick?.[i] === 'x')  kit.kick.triggerAttackRelease(pat.kickNote || 'C1', '8n', t);
-    if (pat.snare?.[i] === 'x') kit.snare.triggerAttackRelease('16n', t);
-    if (pat.hat?.[i] === 'x')   kit.hat.triggerAttackRelease('32n', t);
+    const v = c => (c === 'x' ? 1 : c === 'o' ? 0.45 : 0);
+    if (v(pat.kick?.[i]))  kit.kick.triggerAttackRelease(pat.kickNote || 'C1', '8n', t, v(pat.kick[i]));
+    if (v(pat.snare?.[i])) kit.snare.triggerAttackRelease('16n', t, v(pat.snare[i]));
+    if (v(pat.hat?.[i]))   kit.hat.triggerAttackRelease('32n', t, v(pat.hat[i]));
   }, [...Array(16).keys()], '16n');
   s.start(0);
   music.parts.push(s);
 }
 
 // ---------- moods ----------
-// Each build gets: bus (dry), reverb, delay, lead (lead chain with level-driven grit)
+// build({ bus, reverb, delay, lead }): bus = dry, lead = lead line (gets grit at levels 4-5)
 const MOODS = {
-  neutral: { label: '🛋️ Lounge mode', bpm: 84, build({ bus, reverb, lead }) {
-    const pad = poly({ oscillator: { type: 'triangle' }, envelope: { attack: 0.4, decay: 0.6, sustain: 0.5, release: 1.6 }, volume: -22 }, reverb);
-    loopPart(pad, [['0:0', ['C3','E3','G3','B3']], ['1:0', ['A2','C3','E3','G3']], ['2:0', ['D3','F3','A3','C4']], ['3:0', ['G2','B2','D3','F3']]], '4m', '1m');
-    const bass = syn({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.3, release: 0.4 }, volume: -14 }, bus);
-    stepSeq(bass, ['C2','E2','G2','A2', 'A1','C2','E2','G2', 'D2','F2','A2','C3', 'G1','B1','D2','F2'], '4n', '8n');
-    const mel = syn({ oscillator: { type: 'triangle' }, envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 0.9 }, volume: -22 }, lead);
-    stepSeq(mel, ['E4',null,'G4',null,null,null,'B4',null, 'C5',null,null,'A4',null,null,null,null,
-                  'F4',null,'A4',null,'C5',null,null,null, 'B4',null,null,'G4',null,null,null,null], '8n', '8n');
-    drumPattern(drumKit(bus, { kick: -16, snare: -30, hat: -34 }),
-      { kick: 'x-------x-------', snare: '----x-------x---', hat: 'x-x-x-x-x-x-x-x-' });
+  // Lo-fi boom-bap: dusty electric piano, swung drums, vinyl crackle
+  neutral: { label: '📻 Lo-fi lounge', bpm: 84, gain: 0.6, build({ bus, reverb, lead }) {
+    Tone.Transport.swing = 0.28; Tone.Transport.swingSubdivision = '16n';
+    const chorus = track(new Tone.Chorus(2.5, 3, 0.4).start().connect(reverb));
+    const ep = keys(-15, lowpass(2600, chorus));
+    const ch = [['D3','F3','A3','C4','E4'], ['G2','F3','B3','E4'], ['C3','E3','B3','D4'], ['A2','G3','C#4','F4']];
+    loopPart(ep, ch.flatMap((c, b) => [[`${b}:0`, c, '2n', 0.8], [`${b}:2:2`, c, '4n', 0.55]]), '4m');
+    const bass = mono({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0.6, release: 0.3 }, filterEnvelope: { baseFrequency: 300, octaves: 1 }, volume: -8 }, bus);
+    loopPart(bass, [['0:0','D2'],['0:2:2','A1'],['1:0','G1'],['1:2:2','D2'],['2:0','C2'],['2:2:2','G1'],['3:0','A1'],['3:2:2','E2']], '4m', '4n');
+    const vib = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.6, sustain: 0, release: 0.4 }, volume: -18 }, lead);
+    stepSeq(vib, [null,null,'A4',null,'C5',null,null,'E5', null,null,'D5',null,null,'B4',null,null,
+                  null,null,'G4',null,'B4',null,'D5',null, null,'C#5',null,null,'A4',null,null,null], '8n', '8n');
+    drumPattern(drumKit(lowpass(5000, bus), { kick: -9, snare: -18, hat: -30 }),
+      { kick: 'x-------x-x-----', snare: '----x-------x--o', hat: 'x-o-x-o-x-o-x-ox' });
+    const vinyl = track(new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.5, decay: 0, sustain: 1, release: 0.5 }, volume: -42 }).connect(lowpass(4000, bus)));
+    Tone.Transport.schedule(t => vinyl.triggerAttack(t), 0);
   }},
 
-  anxious: { label: '😱 DUN DUN DUN', bpm: 112, build({ bus, reverb, lead }) {
-    const stab = syn({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.005, decay: 0.45, sustain: 0, release: 0.3 }, volume: -16 }, reverb);
-    loopPart(stab, [['0:0','C2'],['0:2','C2'],['1:1','Ab1'],['2:0','Bb1'],['2:2','C2'],['3:0','G1'],['3:2','G1']], '4m', '8n');
-    const shriek = syn({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.06, sustain: 0.12, release: 0.15 }, volume: -28 }, lead);
-    stepSeq(shriek, ['C4','D4','Eb4','F4','G4','Ab4','Bb4','C5','D5','Eb5','F5','G5','Ab5','G5','F5','Eb5'], '16n', '32n');
-    drumPattern(drumKit(bus, { kick: -11, snare: -24, hat: -33 }),
-      { kick: 'x--x------x--x--', snare: '----x-------x--x', hat: 'xxxxxxxxxxxxxxxx' });
+  // Melodramatic "dun dun DUNNN" with a ticking pulse underneath
+  anxious: { label: '😱 DUN DUN DUNNN', bpm: 100, gain: 1.2, build({ bus, reverb, lead }) {
+    const brass = mono({ oscillator: { type: 'fatsawtooth', count: 3, spread: 18 }, filter: { Q: 1, type: 'lowpass' },
+      envelope: { attack: 0.01, decay: 0.3, sustain: 0.7, release: 0.6 }, filterEnvelope: { attack: 0.01, decay: 0.4, sustain: 0.4, baseFrequency: 180, octaves: 3.2 }, volume: -8 }, reverb);
+    loopPart(brass, [['0:0','G2','8n'],['0:1','G2','8n'],['0:2','Eb2','2n'],['2:0','F2','8n'],['2:1','F2','8n'],['2:2','D2','2n']], '4m');
+    const pulse = mono({ oscillator: { type: 'sawtooth' }, filter: { type: 'lowpass', Q: 2 }, envelope: { attack: 0.005, decay: 0.15, sustain: 0.2, release: 0.1 },
+      filterEnvelope: { baseFrequency: 120, octaves: 2 }, volume: -16 }, bus);
+    stepSeq(pulse, ['C2','C2','C2','C2','C2','C2','C2','C2', 'C2','C2','C2','C2','Db2','Db2','B1','B1'], '8n', '16n');
+    const trem = syn({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.05, sustain: 0.3, release: 0.05 }, volume: -26 }, lead);
+    stepSeq(trem, ['C5','Db5','C5','Db5','C5','Db5','C5','Db5','C5','Db5','C5','Db5','C5','Db5','C5','Db5'], '16n', '32n');
+    const timp = membrane({ pitchDecay: 0.06, octaves: 2.5, envelope: { attack: 0.002, decay: 0.6, sustain: 0 }, volume: -10 }, reverb);
+    loopPart(timp, [['3:2','C2','16n',0.4],['3:2:1','C2','16n',0.5],['3:2:2','C2','16n',0.6],['3:2:3','C2','16n',0.7],['3:3','C2','16n',0.8],['3:3:1','C2','16n',0.9],['3:3:2','C2','16n',1]], '4m');
+    drumPattern(drumKit(bus, { kick: -8 }), { kick: 'x--x------------' });
   }},
 
-  sad: { label: '😭 Soap opera mode', bpm: 60, build({ bus, reverb, lead }) {
-    const pad = poly({ oscillator: { type: 'triangle' }, envelope: { attack: 1.8, decay: 1.5, sustain: 0.7, release: 4 }, volume: -18 }, reverb);
-    loopPart(pad, [['0:0', ['A2','E3','A3','C4']], ['2:0', ['F2','C3','F3','A3']], ['4:0', ['G2','D3','G3','B3']], ['6:0', ['E2','B2','E3','G#3']]], '8m', '2m');
-    const cry = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.4, decay: 0.8, sustain: 0.5, release: 2.5 }, volume: -18 }, lead);
-    stepSeq(cry, ['A4',null,'G4','A4', 'F4',null,'E4',null, 'D4',null,'E4','F4', 'E4',null,null,null], '2n', '2n');
-    drumPattern(drumKit(bus, { kick: -20 }), { kick: 'x---------------', kickNote: 'A0' });
+  // Clock ticking, heartbeat, creeping pizzicato
+  exam: { label: '⏰ Exam hall panic', bpm: 116, gain: 0.95, build({ bus, reverb, lead }) {
+    const block = membrane({ pitchDecay: 0.008, octaves: 1.5, envelope: { attack: 0.001, decay: 0.06, sustain: 0 }, volume: -16 }, bus);
+    stepSeq(block, ['E6','B5','E6','B5','E6','B5','E6','B5'], '4n', '32n');
+    const pizz = pluck(-15, reverb, 2600);
+    stepSeq(pizz, ['C4','C#4','D4','C#4','C4','B3','C4','D#4', 'E4','D#4','D4','C#4','C4','B3','A#3','B3'], '8n', '8n');
+    const pad = poly({ oscillator: { type: 'fatsine', count: 3, spread: 30 }, envelope: { attack: 1, decay: 0.5, sustain: 0.8, release: 1.5 }, volume: -24 }, reverb);
+    loopPart(pad, [['0:0', ['C3','F#3','B3'], '2m']], '2m');
+    const alarm = syn({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.05, sustain: 0.6, release: 0.05 }, volume: -30 }, lead);
+    loopPart(alarm, [['1:3','A5','16n'],['1:3:1','A5','16n'],['1:3:2','A5','16n']], '2m');
+    drumPattern(drumKit(bus, { kick: -9 }), { kick: 'x--x------x--x--' });
   }},
 
-  romantic: { label: '💃 Telenovela hours', bpm: 72, build({ bus, reverb, delay, lead }) {
-    const pad = poly({ oscillator: { type: 'sine' }, envelope: { attack: 0.8, decay: 0.8, sustain: 0.7, release: 2.5 }, volume: -20 }, reverb);
-    loopPart(pad, [['0:0', ['C3','G3','D4','E4']], ['1:0', ['B2','G3','D4']], ['2:0', ['A2','E3','C4','E4']], ['3:0', ['F2','C3','A3','E4']]], '4m', '1m');
-    const arp = syn({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.25, sustain: 0.1, release: 0.6 }, volume: -26 }, delay);
-    stepSeq(arp, ['C4','G4','E5','G4','C4','G4','E5','G4', 'B3','G4','D5','G4','B3','G4','D5','G4',
-                  'A3','E4','C5','E4','A3','E4','C5','E4', 'F3','C4','A4','C4','F3','C4','A4','C4'], '8n', '16n');
-    const mel = syn({ oscillator: { type: 'triangle' }, envelope: { attack: 0.15, decay: 0.4, sustain: 0.7, release: 1.8 }, volume: -19 }, lead);
-    stepSeq(mel, ['G4',null,'E5','D5', 'C5',null,null,null, 'D5',null,'B4',null, 'C5',null,'A4',null], '4n', '4n');
-    drumPattern(drumKit(bus, { kick: -18, snare: -32, hat: -36 }),
-      { kick: 'x-------x-------', snare: '------x-------x-', hat: '--x---x---x---x-' });
+  // Soap opera: weepy violin, harp, swelling organ
+  sad: { label: '😭 Soap opera mode', bpm: 64, gain: 0.8, build({ bus, reverb, lead }) {
+    const vib = track(new Tone.Vibrato(5.5, 0.14).connect(reverb));
+    const organ = poly({ oscillator: { type: 'fatsine', count: 3, spread: 14 }, envelope: { attack: 0.8, decay: 0.6, sustain: 0.8, release: 2 }, volume: -18 }, vib);
+    loopPart(organ, [['0:0', ['A2','E3','A3','C4'], '1m'], ['1:0', ['F2','C3','F3','A3'], '1m'], ['2:0', ['D3','F3','A3','D4'], '1m'], ['3:0', ['E2','B2','E3','G#3'], '1m']], '4m');
+    const harp = pluck(-15, reverb, 5000);
+    stepSeq(harp, ['A3','C4','E4','A4','E4','C4','A3','E4', 'F3','A3','C4','F4','C4','A3','F3','C4',
+                   'D3','F3','A3','D4','A3','F3','D3','A3', 'E3','G#3','B3','E4','B3','G#3','E3','B3'], '8n', '8n');
+    const violinVib = track(new Tone.Vibrato(6, 0.18).connect(lead));
+    const violin = mono({ oscillator: { type: 'sawtooth' }, filter: { type: 'lowpass', Q: 1 }, envelope: { attack: 0.25, decay: 0.3, sustain: 0.85, release: 0.8 },
+      filterEnvelope: { attack: 0.3, decay: 0.5, sustain: 0.8, baseFrequency: 900, octaves: 1.5 }, volume: -16 }, violinVib);
+    loopPart(violin, [['0:0','E5','2n'],['0:2','C5','4n'],['0:3','A4','4n'],['1:0','F5','2n.'],['1:3','E5','4n'],
+                      ['2:0','D5','4n'],['2:1','E5','4n'],['2:2','F5','4n'],['2:3','A5','4n'],['3:0','G#5','1m']], '4m');
   }},
 
-  playful: { label: '🎪 Circus is in town', bpm: 132, build({ bus, reverb, lead }) {
-    const mel = syn({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.35, release: 0.15 }, volume: -24 }, lead);
-    stepSeq(mel, ['C5','B4','C5','E5','G5',null,'E5',null, 'F5','E5','F5','A5','C6',null,'A5',null,
-                  'G5','F#5','G5','B5','D6',null,'B5',null, 'C6','G5','E5','G5','C5',null,null,null], '8n', '16n');
-    const bass = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.02, decay: 0.15, sustain: 0.2, release: 0.2 }, volume: -12 }, bus);
-    stepSeq(bass, ['C2','G2','C2','G2', 'F2','C3','F2','C3', 'G2','D3','G2','D3', 'C2','G2','C2','G2'], '4n', '8n');
-    const pah = poly({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.08, sustain: 0, release: 0.05 }, volume: -32 }, reverb);
-    const pahChords = [['E3','G3'], ['F3','A3'], ['F3','B3'], ['E3','G3']];
-    loopPart(pah, pahChords.flatMap((c, b) => [[`${b}:1`, c], [`${b}:3`, c]]), '4m', '16n');
-    drumPattern(drumKit(bus, { kick: -14, snare: -26, hat: -34 }),
-      { kick: 'x---x---x---x---', snare: '--x---x---x---x-' });
+  // Tango telenovela: 3-3-2 bass stabs, accordion, castanets
+  romantic: { label: '💃 Telenovela hours', bpm: 108, gain: 1.25, build({ bus, reverb, lead }) {
+    const bass = mono({ oscillator: { type: 'square' }, filter: { type: 'lowpass', Q: 2 }, envelope: { attack: 0.005, decay: 0.2, sustain: 0.1, release: 0.1 },
+      filterEnvelope: { baseFrequency: 150, octaves: 2.2 }, volume: -10 }, bus);
+    const roots = ['D2','A1','Bb1','A1'];
+    loopPart(bass, roots.flatMap((r, b) => [[`${b}:0`, r], [`${b}:1:2`, r], [`${b}:3`, r]]), '4m', '8n');
+    const trem = track(new Tone.Tremolo(7, 0.35).start().connect(lead));
+    const acc = mono({ oscillator: { type: 'fatsquare', count: 2, spread: 12 }, filter: { type: 'lowpass', Q: 1 }, envelope: { attack: 0.03, decay: 0.2, sustain: 0.8, release: 0.3 },
+      filterEnvelope: { baseFrequency: 900, octaves: 1.4 }, volume: -18 }, trem);
+    loopPart(acc, [['0:0','A4','4n.'],['0:1:2','Bb4','8n'],['0:2','A4','8n'],['0:2:2','G4','8n'],['0:3','F4','4n'],['1:0','E4','2n'],['1:2','A4','2n'],
+                   ['2:0','Bb4','4n.'],['2:1:2','C5','8n'],['2:2','Bb4','8n'],['2:2:2','A4','8n'],['2:3','G4','4n'],['3:0','A4','1m']], '4m');
+    const strings = poly({ oscillator: { type: 'fatsawtooth', count: 3, spread: 20 }, envelope: { attack: 0.4, decay: 0.5, sustain: 0.7, release: 1 }, volume: -28 }, lowpass(1300, reverb));
+    loopPart(strings, [['0:0',['D3','F3','A3'],'1m'],['1:0',['C#3','E3','G3','A3'],'1m'],['2:0',['D3','F3','Bb3'],'1m'],['3:0',['C#3','E3','A3'],'1m']], '4m');
+    drumPattern(drumKit(bus, { kick: -12, snare: -24, hat: -30, snareDecay: 0.05 }),
+      { kick: 'x-------x-------', snare: '--------x-xx-x-x' });
   }},
 
-  philosophical: { label: '🌌 Epic reveal', bpm: 60, build({ bus, reverb, lead }) {
-    const warm = track(new Tone.Filter(1400, 'lowpass').connect(reverb));
-    const grand = poly({ oscillator: { type: 'sawtooth' }, envelope: { attack: 1.2, decay: 1.5, sustain: 0.8, release: 4 }, volume: -26 }, warm);
-    loopPart(grand, [['0:0', ['C2','G2','C3','E3','G3']], ['4:0', ['F2','C3','F3','A3','C4']], ['6:0', ['G2','D3','G3','B3','D4']]], '8m', '2m');
-    const fan = syn({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.06, decay: 0.3, sustain: 0.7, release: 1.5 }, volume: -24 }, lead);
+  // Circus: calliope, oom-pah tuba, snare
+  playful: { label: '🎪 Circus is in town', bpm: 140, gain: 1.3, build({ bus, reverb, lead }) {
+    const callio = syn({ oscillator: { type: 'fatsquare', count: 2, spread: 14 }, envelope: { attack: 0.005, decay: 0.12, sustain: 0.4, release: 0.1 }, volume: -22 }, lowpass(3000, lead));
+    stepSeq(callio, ['C5','B4','C5','E5','G5',null,'E5',null, 'F5','E5','F5','A5','C6',null,'A5',null,
+                     'G5','F#5','G5','B5','D6',null,'B5',null, 'C6','G5','E5','G5','C5',null,null,null], '8n', '16n');
+    const tuba = mono({ oscillator: { type: 'sawtooth' }, filter: { type: 'lowpass', Q: 1 }, envelope: { attack: 0.02, decay: 0.2, sustain: 0.3, release: 0.15 },
+      filterEnvelope: { baseFrequency: 140, octaves: 2 }, volume: -8 }, bus);
+    loopPart(tuba, [['0:0','C2'],['0:2','G1'],['1:0','F1'],['1:2','C2'],['2:0','G1'],['2:2','D2'],['3:0','C2'],['3:2','G1']], '4m', '8n');
+    const pah = poly({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.05 }, volume: -20 }, reverb);
+    const pc = [['E3','G3','C4'], ['F3','A3','C4'], ['F3','B3','D4'], ['E3','G3','C4']];
+    loopPart(pah, pc.flatMap((c, b) => [[`${b}:1`, c], [`${b}:3`, c]]), '4m', '16n');
+    drumPattern(drumKit(bus, { kick: -12, snare: -22 }), { kick: 'x-------x-------', snare: '----x-------x-oo' });
+  }},
+
+  // 2001-style fanfare with timpani
+  philosophical: { label: '🌌 Epic reveal', bpm: 56, gain: 1.3, build({ bus, reverb, lead }) {
+    const choir = poly({ oscillator: { type: 'fatsine', count: 3, spread: 25 }, envelope: { attack: 1.5, decay: 1, sustain: 0.8, release: 3 }, volume: -20 }, reverb);
+    loopPart(choir, [['0:0', ['C3','G3','C4','E4'], '4m'], ['4:0', ['F3','C4','F4','A4'], '2m'], ['6:0', ['G3','D4','G4','B4'], '2m']], '8m');
+    const fan = mono({ oscillator: { type: 'fatsawtooth', count: 2, spread: 10 }, filter: { type: 'lowpass', Q: 1 }, envelope: { attack: 0.06, decay: 0.3, sustain: 0.8, release: 1.2 },
+      filterEnvelope: { attack: 0.08, decay: 0.6, sustain: 0.6, baseFrequency: 400, octaves: 2.5 }, volume: -14 }, lead);
     loopPart(fan, [['0:0','C4','2n'],['1:0','G4','2n'],['2:0','C5','1m'],['3:2','E5','8n'],['3:3','Eb5','2n'],
                    ['4:0','C4','2n'],['5:0','G4','2n'],['6:0','C5','1m'],['7:2','Eb5','8n'],['7:3','E5','2n']], '8m');
-    const timp = track(new Tone.MembraneSynth({ pitchDecay: 0.08, octaves: 3, envelope: { attack: 0.002, decay: 0.8, sustain: 0 }, volume: -12 }).connect(reverb));
+    const timp = membrane({ pitchDecay: 0.08, octaves: 3, envelope: { attack: 0.002, decay: 0.9, sustain: 0 }, volume: -8 }, reverb);
     loopPart(timp, [['3:0','C2'],['3:1','G1'],['3:2','C2'],['3:3','G1'],['7:0','C2'],['7:1','G1'],['7:2','C2'],['7:3','G1']], '8m', '4n');
   }},
 
-  career: { label: '🏢 Elevator music', bpm: 96, build({ bus, reverb, lead }) {
-    const keys = poly({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0.2, release: 0.6 }, volume: -22 }, reverb);
-    const chords = [['C3','E3','G3','B3'], ['D3','F3','A3','C4'], ['E3','G3','B3','D4'], ['F3','A3','C4','E4']];
-    loopPart(keys, chords.flatMap((c, b) => [[`${b}:0`, c], [`${b}:1:2`, c], [`${b}:3`, c]]), '4m', '8n');
-    const bass = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.4, release: 0.3 }, volume: -14 }, bus);
-    loopPart(bass, [['0:0','C2'],['0:2','G2'],['1:0','D2'],['1:2','A2'],['2:0','E2'],['2:2','B2'],['3:0','F2'],['3:2','C3']], '4m', '4n');
-    const mel = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.08, decay: 0.3, sustain: 0.5, release: 0.8 }, volume: -20 }, lead);
-    stepSeq(mel, ['E4',null,'G4',null,'B4','A4','G4',null, 'F4',null,'A4',null,'C5',null,null,null,
-                  'G4',null,'B4',null,'D5','C5','B4',null, 'A4',null,'C5',null,'E5',null,null,null], '8n', '8n');
-    drumPattern(drumKit(bus, { kick: -18, snare: -32, hat: -35 }),
-      { kick: 'x------x--x-----', snare: '----x-------x---', hat: 'x-xxx-xxx-xxx-xx' });
+  // Hold music: bossa electric piano, vibes, shaker
+  career: { label: '🏢 Please hold', bpm: 100, gain: 0.55, build({ bus, reverb, lead }) {
+    const ep = keys(-16, track(new Tone.Chorus(3, 2.5, 0.5).start().connect(reverb)));
+    const ch = [['C3','E3','G3','B3'], ['A2','E3','G3','C4'], ['D3','F3','A3','C4'], ['G2','F3','B3','D4']];
+    loopPart(ep, ch.flatMap((c, b) => [[`${b}:0`, c, '8n'], [`${b}:1:2`, c, '8n', 0.7], [`${b}:2:2`, c, '8n', 0.7], [`${b}:3:2`, c, '8n', 0.6]]), '4m');
+    const bass = mono({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.5, release: 0.2 }, filterEnvelope: { baseFrequency: 400, octaves: 1 }, volume: -8 }, bus);
+    loopPart(bass, [['0:0','C2','4n.'],['0:1:2','G2','8n'],['0:2','C2','4n.'],['0:3:2','G2','8n'],['1:0','A1','4n.'],['1:1:2','E2','8n'],['1:2','A1','4n.'],['1:3:2','E2','8n'],
+                    ['2:0','D2','4n.'],['2:1:2','A2','8n'],['2:2','D2','4n.'],['2:3:2','A2','8n'],['3:0','G1','4n.'],['3:1:2','D2','8n'],['3:2','G1','4n.'],['3:3:2','D2','8n']], '4m');
+    const vibes = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.8, sustain: 0, release: 0.5 }, volume: -16 }, track(new Tone.Tremolo(5, 0.4).start().connect(lead)));
+    stepSeq(vibes, ['E5',null,'G5',null,'B5',null,'A5','G5', 'E5',null,null,null,'C5',null,'D5',null,
+                    'F5',null,'A5',null,'C6',null,'B5','A5', 'G5',null,null,null,null,null,null,null], '8n', '4n');
+    drumPattern(drumKit(bus, { kick: -16, snare: -26, hat: -31, snareDecay: 0.04 }),
+      { kick: 'x------xx-------', snare: 'x--x--x---x--x--', hat: 'xoxoxoxoxoxoxoxo' });
   }},
 
-  chaotic: { label: '🤡 Cartoon chaos', bpm: 152, build({ bus, delay, lead }) {
-    const zany = syn({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.08, sustain: 0.1, release: 0.1 }, volume: -25 }, lead);
-    zany.connect(delay);
-    stepSeq(zany, ['C6','G3','E5','Bb2','F6','D4','Ab5','C3', 'B5','Eb4','A2','F5','C4','G6','E3','Bb5'], '8n', '32n');
-    const tuba = syn({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.04, decay: 0.2, sustain: 0.3, release: 0.3 }, volume: -18 }, bus);
-    loopPart(tuba, [['0:0','C2'],['0:2','Bb1'],['1:0','Ab1'],['1:2','G1'],['2:0','F1'],['2:1','F2'],['2:3','E1'],['3:0','C2']], '4m', '8n');
-    drumPattern(drumKit(bus, { kick: -13, snare: -23, hat: -32 }),
-      { kick: 'x--x-x--x--x-x--', snare: '----x-xx----xxxx', hat: 'x-x-x-x-x-x-x-x-' });
+  // Cartoon: xylophone, tuba, slide whistle, crash
+  chaotic: { label: '🤡 Cartoon chaos', bpm: 156, gain: 1.0, build({ bus, reverb, delay, lead }) {
+    const xylo = syn({ oscillator: { type: 'triangle' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.08 }, volume: -12 }, lead);
+    stepSeq(xylo, ['C6','G5','E5','C5','D5','F5','A5','C6', 'B5','G5','E5','B4','C5','E5','G5','C6',
+                   'A5','F5','D5','A4','B4','D5','F5','A5', 'G5','E5','C5','G4','C5',null,'C6',null], '8n', '16n');
+    const tuba = mono({ oscillator: { type: 'sawtooth' }, filter: { type: 'lowpass', Q: 2 }, envelope: { attack: 0.03, decay: 0.2, sustain: 0.3, release: 0.2 },
+      filterEnvelope: { baseFrequency: 120, octaves: 2.2 }, volume: -8 }, bus);
+    loopPart(tuba, [['0:0','C2'],['0:2','Bb1'],['1:0','Ab1'],['1:2','G1'],['2:0','F1'],['2:1','F2'],['2:3','E1'],['3:0','C2'],['3:2','G1']], '4m', '8n');
+    const whistle = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.02, decay: 0, sustain: 1, release: 0.06 }, volume: -18 }, delay);
+    loopFn((t, up) => {
+      whistle.triggerAttack(up ? 500 : 1600, t);
+      whistle.frequency.exponentialRampToValueAtTime(up ? 1600 : 500, t + 0.3);
+      whistle.triggerRelease(t + 0.32);
+    }, [['1:3', true], ['3:3', false]], '4m');
+    const crash = track(new Tone.MetalSynth({ envelope: { attack: 0.001, decay: 0.9, release: 0.3 }, harmonicity: 5.1, modulationIndex: 32, resonance: 5000, octaves: 1.5, volume: -30 }).connect(reverb));
+    loopFn(t => crash.triggerAttackRelease('C4', '4n', t), [['0:0', 1]], '4m');
+    drumPattern(drumKit(bus, { kick: -11, snare: -20, hat: -30 }),
+      { kick: 'x--x-x--x--x-x--', snare: '----x-oo----xxxx', hat: 'x-x-x-x-x-x-x-x-' });
+  }},
+
+  // Saas-bahu serial: tanpura drone, tabla, sitar, the DHIN DHIN DHIN zoom-in
+  desi: { label: '📺 Saas-bahu serial', bpm: 84, gain: 1.2, build({ bus, reverb, lead }) {
+    const drone = poly({ oscillator: { type: 'fatsawtooth', count: 3, spread: 12 }, envelope: { attack: 1.5, decay: 1, sustain: 0.9, release: 2 }, volume: -30 }, lowpass(800, reverb));
+    loopPart(drone, [['0:0', ['C3','G3','C4'], '4m']], '4m');
+    const bayan = membrane({ pitchDecay: 0.12, octaves: 3, envelope: { attack: 0.001, decay: 0.5, sustain: 0 }, volume: -10 }, bus);
+    const dayan = membrane({ pitchDecay: 0.015, octaves: 1.2, envelope: { attack: 0.001, decay: 0.18, sustain: 0 }, volume: -14 }, bus);
+    stepSeq(bayan, ['C2',null,null,null,null,null,'C2',null,'C2',null,null,null,null,null,null,null], '16n', '8n');
+    stepSeq(dayan, [null,null,'D4',null,'D4',null,'D4','G4',null,null,'D4',null,'D4','G4','D4',null], '16n', '16n');
+    const sitar = pluck(-13, track(new Tone.Chorus(4, 2, 0.3).start().connect(lead)), 5000);
+    stepSeq(sitar, ['C4',null,'Db4','E4','F4',null,'E4','Db4', 'C4',null,null,null,'G4','Ab4','G4',null,
+                    'F4','E4','Db4','E4','F4',null,'G4','Ab4', null,null,null,null,null,null,null,null], '8n', '8n');
+    // the zoom-in: whoosh, then three dramatic hits
+    const stab = mono({ oscillator: { type: 'fatsawtooth', count: 3, spread: 20 }, filter: { type: 'lowpass', Q: 1 }, envelope: { attack: 0.005, decay: 0.3, sustain: 0.4, release: 0.5 },
+      filterEnvelope: { baseFrequency: 300, octaves: 3 }, volume: -10 }, reverb);
+    const zoomF = track(new Tone.Filter({ type: 'bandpass', frequency: 400, Q: 1.2 }).connect(reverb));
+    const zoom = track(new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.3, decay: 0.1, sustain: 0, release: 0.1 }, volume: -14 }).connect(zoomF));
+    const hit = membrane({ pitchDecay: 0.05, octaves: 3, envelope: { attack: 0.001, decay: 0.7, sustain: 0 }, volume: -6 }, reverb);
+    loopFn((t, kind) => {
+      if (kind === 'zoom') {
+        zoomF.frequency.setValueAtTime(300, t);
+        zoomF.frequency.exponentialRampToValueAtTime(5000, t + 0.4);
+        zoom.triggerAttackRelease(0.4, t);
+      } else {
+        stab.triggerAttackRelease('C3', '8n', t);
+        hit.triggerAttackRelease('C2', '8n', t);
+      }
+    }, [['3:0', 'zoom'], ['3:1', 'hit'], ['3:2', 'hit'], ['3:3', 'hit']], '4m');
+  }},
+
+  // Spy heist: walking upright bass, surf guitar, finger snaps, muted trumpet
+  money: { label: '🕶️ Heist mode', bpm: 112, gain: 1.1, build({ bus, reverb, delay, lead }) {
+    const upright = pluck(-9, lowpass(1400, bus), 1600);
+    stepSeq(upright, ['E2',null,'E2','G2','A2',null,'A#2','B2', 'E2',null,'E2','G2','A2',null,'G2','F#2'], '8n', '8n');
+    const surf = pluck(-17, delay, 4500);
+    stepSeq(surf, [null,null,'E4',null,null,'G4',null,null, null,null,'B4',null,'A#4',null,'B4',null,
+                   null,null,'E4',null,null,'G4',null,null, null,'D5',null,'B4',null,null,null,null], '8n', '8n');
+    const tpt = mono({ oscillator: { type: 'square' }, filter: { type: 'lowpass', Q: 3 }, envelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.15 },
+      filterEnvelope: { baseFrequency: 500, octaves: 1.5 }, volume: -18 }, lead);
+    loopPart(tpt, [['3:0','B4','8n'],['3:0:2','A#4','8n'],['3:1','A4','8n'],['3:1:2','G4','8n'],['3:2','E4','4n']], '4m');
+    drumPattern(drumKit(bus, { kick: -14, snare: -18, hat: -30, snareDecay: 0.05 }),
+      { kick: 'x-------x-------', snare: '----x-------x---', hat: '--x---x---x---x-' });
+  }},
+
+  // 80s training montage: power chords, driving bass, gated snare
+  gym: { label: '🥊 Training montage', bpm: 126, gain: 0.7, build({ bus, reverb, lead }) {
+    const grit = track(new Tone.Distortion(0.35).connect(lowpass(2600, reverb)));
+    grit.wet.value = 0.6;
+    const power = poly({ oscillator: { type: 'fatsawtooth', count: 3, spread: 25 }, envelope: { attack: 0.005, decay: 0.3, sustain: 0.6, release: 0.3 }, volume: -18 }, grit);
+    const pw = [['E3','B3','E4'], ['C3','G3','C4'], ['D3','A3','D4'], ['B2','F#3','B3']];
+    loopPart(power, pw.flatMap((c, b) => [[`${b}:0`, c, '2n'], [`${b}:1:2`, c, '8n', 0.8], [`${b}:2:2`, c, '4n', 0.9]]), '4m');
+    const bass = mono({ oscillator: { type: 'sawtooth' }, filter: { type: 'lowpass', Q: 2 }, envelope: { attack: 0.005, decay: 0.15, sustain: 0.4, release: 0.1 },
+      filterEnvelope: { baseFrequency: 160, octaves: 2 }, volume: -12 }, bus);
+    stepSeq(bass, [...Array(8).fill('E2'), ...Array(8).fill('C2'), ...Array(8).fill('D2'), ...Array(8).fill('B1')], '8n', '16n');
+    const hero = mono({ oscillator: { type: 'fatsquare', count: 2, spread: 10 }, envelope: { attack: 0.02, decay: 0.2, sustain: 0.7, release: 0.3 },
+      filterEnvelope: { baseFrequency: 1200, octaves: 1.5 }, volume: -20 }, lead);
+    stepSeq(hero, ['E4','B4','E5',null, 'D5','B4','A4','B4', 'G4',null,'E5','D5', 'F#5',null,'D#5',null], '4n', '4n');
+    drumPattern(drumKit(reverb, { kick: -6, snare: -14, hat: -28, snareDecay: 0.28 }),
+      { kick: 'x---x---x---x---', snare: '----x-------x---', hat: 'x-x-x-x-x-x-x-x-' });
+  }},
+
+  // Cooking show: jaunty bassoon, pizzicato, glockenspiel
+  food: { label: '🍝 Cooking show', bpm: 116, gain: 1.0, build({ bus, reverb, lead }) {
+    const bassoon = mono({ oscillator: { type: 'square' }, filter: { type: 'lowpass', Q: 2 }, envelope: { attack: 0.01, decay: 0.12, sustain: 0.2, release: 0.08 },
+      filterEnvelope: { baseFrequency: 220, octaves: 1.8 }, volume: -10 }, bus);
+    stepSeq(bassoon, ['F2',null,'C3',null,'F2',null,'A2',null,'Bb2',null,'D3',null,'C3',null,'E2',null], '8n', '16n');
+    const pizz = pluck(-15, reverb, 3200);
+    stepSeq(pizz, [null,'A3',null,'C4',null,'A3',null,'F4', null,'D4',null,'F4',null,'E4',null,'G4'], '8n', '8n');
+    const glock = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.3 }, volume: -14 }, lead);
+    stepSeq(glock, ['C6',null,'A5',null,'F5','G5','A5',null, 'Bb5',null,'D6',null,'C6',null,null,null,
+                    'A5',null,'F5',null,'C5','D5','F5',null, 'G5',null,'E5',null,'F5',null,null,null], '8n', '8n');
+    const block = membrane({ pitchDecay: 0.008, octaves: 1.5, envelope: { attack: 0.001, decay: 0.05, sustain: 0 }, volume: -18 }, bus);
+    stepSeq(block, ['G5',null,null,null,'C6',null,null,null,'G5',null,'G5',null,'C6',null,null,null], '16n', '32n');
   }},
 };
 
@@ -2094,48 +2255,54 @@ const MOODS = {
 function ensureMaster() {
   if (music.master) return;
   music.limiter = new Tone.Limiter(-1).toDestination();
-  music.master = new Tone.Gain(0.8).connect(music.limiter);
+  music.comp = new Tone.Compressor({ threshold: -18, ratio: 3, attack: 0.01, release: 0.2 }).connect(music.limiter);
+  music.master = new Tone.Gain(0).connect(music.comp);      // music crossfades here
+  music.sfxBus = new Tone.Gain(0.9).connect(music.limiter); // effects skip the compressor
 }
 
 function cleanupMusic() {
   Tone.Transport.stop();
   Tone.Transport.cancel();
+  Tone.Transport.swing = 0;
   music.parts.forEach(p => { try { p.dispose(); } catch {} });
   music.nodes.forEach(n => { try { n.dispose(); } catch {} });
   music.parts = []; music.nodes = []; music.fx = null;
   music.playing = false;
 }
 
-// Level 1 -> base bpm, level 5 -> +15%. Grit on the lead at 4-5.
+// Level 1 -> base tempo, level 5 -> +15%. Grit on the lead line at 4-5.
 function applyIntensity(level, ramp = 1) {
   if (!music.fx || !music.mood) return;
   const t = Math.max(ramp, 0.01);
   Tone.Transport.bpm.rampTo(MOODS[music.mood].bpm * (1 + 0.15 * (level - 1) / 4), t);
-  music.fx.dist.wet.rampTo(level >= 5 ? 0.55 : level === 4 ? 0.3 : 0, t);
-  music.fx.crunch.wet.rampTo(level >= 5 ? 0.35 : level === 4 ? 0.15 : 0, t);
+  music.fx.dist.wet.rampTo(level >= 5 ? 0.5 : level === 4 ? 0.25 : 0, t);
+  music.fx.crunch.wet.rampTo(level >= 5 ? 0.3 : level === 4 ? 0.12 : 0, t);
 }
+
+const moodGain = mood => MOODS[mood]?.gain ?? 0.9;
 
 async function playMood(mood) {
   if (!window.Tone || !MOODS[mood]) return;
   const token = ++music.token;
+  ensureMaster();
 
   if (music.playing) {
-    Tone.Destination.volume.rampTo(-60, FADE_OUT);
+    music.master.gain.rampTo(0, FADE_OUT);
     await wait(FADE_OUT * 1000);
     if (token !== music.token) return;
   }
   cleanupMusic();
-  Tone.Destination.volume.value = -60;
-  ensureMaster();
+  music.master.gain.cancelScheduledValues(Tone.now());
+  music.master.gain.value = 0;
 
   const bus = track(new Tone.Gain(1).connect(music.master));
-  const reverb = track(new Tone.Reverb({ decay: 3.5, wet: 0.35 }).connect(bus));
+  const reverb = track(new Tone.Reverb({ decay: 3, wet: 0.3 }).connect(bus));
   await reverb.ready;
   if (token !== music.token) return;
-  const delay = track(new Tone.FeedbackDelay('8n', 0.22).connect(reverb));
-  delay.wet.value = 0.3;
-  const dist = track(new Tone.Distortion(0.7));
-  const crunch = track(new Tone.Chebyshev(24));
+  const delay = track(new Tone.FeedbackDelay('8n.', 0.25).connect(reverb));
+  delay.wet.value = 0.35;
+  const dist = track(new Tone.Distortion(0.6));
+  const crunch = track(new Tone.Chebyshev(20));
   dist.wet.value = 0; crunch.wet.value = 0;
   const lead = track(new Tone.Gain(1));
   lead.chain(dist, crunch, reverb);
@@ -2148,8 +2315,87 @@ async function playMood(mood) {
 
   Tone.Transport.start('+0.05');
   music.playing = true;
-  Tone.Destination.volume.rampTo(0, FADE_IN);
+  music.master.gain.rampTo(moodGain(mood), FADE_IN);
   updateMusicUI();
+}
+
+// ---------- sound effects ----------
+const sfx = { ready: false };
+
+function sfxInit() {
+  if (sfx.ready) return;
+  ensureMaster();
+  const out = music.sfxBus;
+  sfx.pop = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.002, decay: 0.12, sustain: 0, release: 0.05 }, volume: -10 }).connect(out);
+  sfx.whooshF = new Tone.Filter({ type: 'bandpass', frequency: 400, Q: 1.4 }).connect(out);
+  sfx.whoosh = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.06, decay: 0.26, sustain: 0 }, volume: 8 }).connect(sfx.whooshF);
+  sfx.boing = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.45, sustain: 0, release: 0.05 }, volume: -8 }).connect(out);
+  sfx.whistle = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.02, decay: 0, sustain: 1, release: 0.06 }, volume: -10 }).connect(out);
+  sfx.clickF = new Tone.Filter(1800, 'highpass').connect(out);
+  sfx.click = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.03, sustain: 0 }, volume: -10 }).connect(sfx.clickF);
+  sfx.scratchF = new Tone.Filter({ type: 'bandpass', frequency: 2000, Q: 4 }).connect(out);
+  sfx.scratch = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.005, decay: 0.24, sustain: 0 }, volume: 4 }).connect(sfx.scratchF);
+  sfx.bone = new Tone.MonoSynth({ oscillator: { type: 'sawtooth' }, filter: { type: 'lowpass', Q: 1 }, envelope: { attack: 0.05, decay: 0.2, sustain: 0.8, release: 0.25 },
+    filterEnvelope: { attack: 0.05, decay: 0.3, sustain: 0.6, baseFrequency: 300, octaves: 2 }, volume: -10 }).connect(out);
+  sfx.ready = true;
+}
+
+const SFX = {
+  // message sent: whoosh up
+  send(t) {
+    sfx.whooshF.frequency.setValueAtTime(350, t);
+    sfx.whooshF.frequency.exponentialRampToValueAtTime(3800, t + 0.3);
+    sfx.whoosh.triggerAttackRelease(0.3, t);
+  },
+  // reply arrived: bloop, pitch per member slot
+  pop(t, slot = 0) {
+    const f = [523, 659, 784, 988][slot % 4];
+    sfx.pop.triggerAttack(f, t);
+    sfx.pop.frequency.exponentialRampToValueAtTime(f * 1.6, t + 0.07);
+    sfx.pop.triggerRelease(t + 0.1);
+  },
+  // reaction sticker: boing
+  boing(t) {
+    sfx.boing.triggerAttack(220, t);
+    sfx.boing.frequency.setValueCurveAtTime([220, 560, 330, 480, 370, 440, 400], t + 0.005, 0.4);
+    sfx.boing.triggerRelease(t + 0.42);
+  },
+  // level up / down: slide whistle
+  slide(t, up = true) {
+    const [a, b] = up ? [480, 1500] : [1500, 480];
+    sfx.whistle.triggerAttack(a, t);
+    sfx.whistle.frequency.exponentialRampToValueAtTime(b, t + 0.3);
+    sfx.whistle.triggerRelease(t + 0.32);
+  },
+  // card flick (randomize), camera shutter (screenshot)
+  flick(t) { sfx.click.triggerAttackRelease(0.02, t, 0.7); },
+  shutter(t) { sfx.click.triggerAttackRelease(0.02, t); sfx.click.triggerAttackRelease(0.05, t + 0.09); },
+  // replies unsent: record scratch
+  scratch(t) {
+    sfx.scratchF.frequency.setValueAtTime(2600, t);
+    sfx.scratchF.frequency.exponentialRampToValueAtTime(450, t + 0.12);
+    sfx.scratchF.frequency.exponentialRampToValueAtTime(1800, t + 0.22);
+    sfx.scratch.triggerAttackRelease(0.24, t);
+  },
+  // error: sad trombone, wobbling on the last note
+  sad(t) {
+    ['G3', 'F#3', 'F3'].forEach((n, i) => sfx.bone.triggerAttackRelease(n, 0.28, t + i * 0.32));
+    const last = t + 0.96;
+    sfx.bone.triggerAttackRelease('E3', 0.95, last);
+    const f = Tone.Frequency('E3').toFrequency();
+    sfx.bone.frequency.setValueCurveAtTime([...Array(16)].map((_, i) => f * (1 + 0.035 * Math.sin(i * 1.3))), last + 0.05, 0.85);
+  },
+};
+
+function playSfx(name, ...args) {
+  if (!window.Tone || !music.enabled || Tone.context.state !== 'running') return;
+  try { sfxInit(); SFX[name](Tone.now() + 0.01, ...args); } catch (e) { /* never let a sound break the chat */ }
+}
+
+// Call inside a click/keypress: browsers only start audio from a user gesture
+function unlockAudio() {
+  if (!window.Tone || !music.enabled) return Promise.resolve();
+  return Tone.context.state === 'running' ? Promise.resolve() : Tone.start();
 }
 
 async function toggleSound() {
@@ -2157,11 +2403,17 @@ async function toggleSound() {
   if (window.Tone) {
     if (music.enabled) {
       await Tone.start();
+      ensureMaster();
+      playSfx('pop', 2);
       if (music.wanted && (music.wanted !== music.mood || !music.playing)) playMood(music.wanted);
-      else if (music.mood) { Tone.Transport.start('+0.05'); music.playing = true; Tone.Destination.volume.rampTo(0, FADE_IN); }
+      else if (music.mood) {
+        Tone.Transport.start('+0.05');
+        music.playing = true;
+        music.master.gain.rampTo(moodGain(music.mood), FADE_IN);
+      }
     } else if (music.playing) {
       const token = ++music.token;
-      Tone.Destination.volume.rampTo(-60, FADE_OUT);
+      music.master.gain.rampTo(0, FADE_OUT);
       await wait(FADE_OUT * 1000);
       if (token === music.token && !music.enabled) { Tone.Transport.pause(); music.playing = false; }
     }
@@ -2169,16 +2421,18 @@ async function toggleSound() {
   updateMusicUI();
 }
 
-// Called from send(): starts audio inside the user gesture, then routes mood
+// Called from send(): starts audio inside the user gesture, then routes mood.
+// Returns the unlock promise so the send whoosh can play once audio is live.
 function startMusicFor(question) {
-  if (!window.Tone) return;
-  const ready = music.enabled ? Tone.start() : Promise.resolve();
+  if (!window.Tone) return Promise.resolve();
+  const ready = unlockAudio();
   classifyMood(question).then(async mood => {
     music.wanted = mood;
     await ready;
     if (music.enabled && (mood !== music.mood || !music.playing)) playMood(mood);
     else updateMusicUI();
   });
+  return ready;
 }
 
 function updateMusicUI() {
@@ -2366,6 +2620,7 @@ async function openStory() {
 
   // 1. viewfinder flash over the chat
   const from = els.stream.getBoundingClientRect();
+  playSfx('shutter');
   if (!REDUCED) {
     const vf = document.createElement('div');
     vf.className = 'viewfinder';
