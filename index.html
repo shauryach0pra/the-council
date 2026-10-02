@@ -2288,6 +2288,7 @@ async function runCouncil(question, userEl) {
     const msgEl = makeMember(m, slot);
     ghost.replaceWith(msgEl);
     playSfx('pop', slot);
+    playSting(m.name);
     scrollToBottom();
     round.memberEls.push(msgEl);
     setStatus(slot, 'replied');
@@ -3014,6 +3015,224 @@ function playSfx(name, ...args) {
 function unlockAudio() {
   if (!window.Tone || !music.enabled) return Promise.resolve();
   return Tone.context.state === 'running' ? Promise.resolve() : Tone.start();
+}
+
+// ---------- character stings: a signature sound under each member's reply ----------
+// Short (1-2 s) synthesized sounds, mapped by persona; the music ducks while one plays.
+const k = { ready: false };
+
+function stingInit() {
+  if (k.ready) return;
+  sfxInit();
+  const out = k.bus = new Tone.Gain(0.85).connect(music.sfxBus);
+  const filt = (type, frequency, Q = 1) => new Tone.Filter({ type, frequency, Q }).connect(out);
+  k.nf = filt('bandpass', 2500, 1.2);
+  k.noise = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.03, sustain: 0 }, volume: 0 }).connect(k.nf);
+  k.hiss = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.15, decay: 0.3, sustain: 0.6, release: 0.5 }, volume: -10 }).connect(filt('highpass', 3500));
+  k.bf = filt('lowpass', 300);
+  k.brown = new Tone.NoiseSynth({ noise: { type: 'brown' }, envelope: { attack: 0.6, decay: 0.4, sustain: 0.7, release: 0.8 }, volume: -3 }).connect(k.bf);
+  k.sine = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.05, sustain: 0.9, release: 0.08 }, volume: -8 }).connect(out);
+  k.vib = new Tone.Vibrato(6, 0.12).connect(out);
+  k.flute = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.04, decay: 0.05, sustain: 0.8, release: 0.1 }, volume: -8 }).connect(k.vib);
+  k.square = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.05, sustain: 0.8, release: 0.05 }, volume: -12 }).connect(filt('lowpass', 2600));
+  k.nasalF = filt('bandpass', 1300, 3);
+  k.nasal = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.02, decay: 0.05, sustain: 0.9, release: 0.06 }, volume: -2 }).connect(k.nasalF);
+  k.saw = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.7, release: 0.08 }, volume: -16 }).connect(filt('lowpass', 1800));
+  k.violin = new Tone.MonoSynth({ oscillator: { type: 'sawtooth' }, filter: { type: 'lowpass', Q: 1 }, envelope: { attack: 0.08, decay: 0.2, sustain: 0.8, release: 0.3 },
+    filterEnvelope: { baseFrequency: 900, octaves: 1.5, attack: 0.1, decay: 0.3, sustain: 0.7 }, volume: -9 }).connect(new Tone.Vibrato(6, 0.15).connect(out));
+  k.pluck = new Tone.PolySynth(Tone.MonoSynth, { oscillator: { type: 'sawtooth' }, filter: { type: 'lowpass', Q: 2 },
+    envelope: { attack: 0.002, decay: 0.6, sustain: 0, release: 0.3 }, filterEnvelope: { attack: 0.001, decay: 0.2, sustain: 0, baseFrequency: 400, octaves: 3 }, volume: -14 }).connect(out);
+  k.drum = new Tone.MembraneSynth({ pitchDecay: 0.05, octaves: 4, envelope: { attack: 0.001, decay: 0.5, sustain: 0 }, volume: -6 }).connect(out);
+  k.boom = new Tone.MembraneSynth({ pitchDecay: 0.25, octaves: 6, envelope: { attack: 0.001, decay: 1.3, sustain: 0 }, volume: -5 }).connect(out);
+  k.metal = new Tone.MetalSynth({ envelope: { attack: 0.001, decay: 0.3, release: 0.1 }, harmonicity: 5.1, modulationIndex: 20, resonance: 3500, octaves: 1.2, volume: -22 }).connect(out);
+  k.gong = new Tone.FMSynth({ harmonicity: 1.41, modulationIndex: 7, envelope: { attack: 0.005, decay: 2.4, sustain: 0, release: 1 },
+    modulationEnvelope: { attack: 0.005, decay: 1.5, sustain: 0, release: 0.5 }, volume: 0 }).connect(out);
+  k.box = new Tone.FMSynth({ harmonicity: 7, modulationIndex: 2, envelope: { attack: 0.001, decay: 0.6, sustain: 0, release: 0.3 },
+    modulationEnvelope: { attack: 0.001, decay: 0.2, sustain: 0 }, volume: 2 }).connect(out);
+  k.chord = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.4, release: 0.4 }, volume: -16 }).connect(out);
+  k.braam = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'fatsawtooth', count: 3, spread: 30 }, envelope: { attack: 0.03, decay: 1.4, sustain: 0, release: 0.6 }, volume: -5 })
+    .connect(filt('lowpass', 500));
+  k.ready = true;
+}
+
+// glide helper on a mono synth: attack at f0, ramp to f1, release
+function glide(s, t, f0, f1, d) {
+  s.frequency.cancelScheduledValues(t);
+  s.triggerAttack(f0, t);
+  s.frequency.exponentialRampToValueAtTime(f1, t + d);
+  s.triggerRelease(t + d);
+}
+const seqNotes = (s, t, notes, step, dur) => notes.forEach((n, i) => n && s.triggerAttackRelease(n, dur ?? step * 0.9, t + i * step));
+
+const STINGS = {
+  sizzle(t) {                     // hot oil: hiss + random crackles
+    k.hiss.triggerAttackRelease(1.4, t);
+    for (let i = 0; i < 22; i++) {
+      const at = t + 0.03 + i * 0.065 + Math.random() * 0.035;
+      k.nf.frequency.setValueAtTime(2500 + Math.random() * 4500, at);
+      k.noise.triggerAttackRelease(0.008, at, 0.3 + Math.random() * 0.7);
+    }
+  },
+  waves(t) {                      // sea swell + two gulls
+    k.bf.frequency.cancelScheduledValues(t);
+    k.bf.frequency.setValueAtTime(220, t);
+    k.bf.frequency.linearRampToValueAtTime(900, t + 0.8);
+    k.bf.frequency.linearRampToValueAtTime(250, t + 1.8);
+    k.brown.triggerAttackRelease(1.3, t);
+    glide(k.sine, t + 0.35, 2000, 1300, 0.18);
+    glide(k.sine, t + 0.6, 1900, 1250, 0.2);
+  },
+  toll(t) { k.gong.triggerAttackRelease('C3', 1.2, t); k.gong.triggerAttackRelease('C3', 1.2, t + 1.0); },
+  bowl(t) { k.gong.triggerAttackRelease('E5', 2, t); },
+  gong(t) { k.gong.triggerAttackRelease('A2', 2, t); k.metal.triggerAttackRelease('C3', 0.4, t + 0.02, 0.3); },
+  strum(t) {                      // lute / guitar: two strums
+    ['G3', 'B3', 'D4', 'G4'].forEach((n, i) => k.pluck.triggerAttackRelease(n, 0.8, t + i * 0.035));
+    ['A3', 'C#4', 'E4', 'A4'].forEach((n, i) => k.pluck.triggerAttackRelease(n, 0.9, t + 0.45 + i * 0.035));
+  },
+  lyre(t) { seqNotes(k.pluck, t, ['C4', 'D4', 'E4', 'G4', 'A4', 'C5', 'D5', 'E5'], 0.05, 0.9); },
+  zap(t) {                        // tesla coil buzz + crackle, twice
+    [t, t + 0.65].forEach((at, j) => {
+      k.saw.frequency.cancelScheduledValues(at);
+      k.saw.triggerAttack(60, at);
+      k.saw.frequency.setValueCurveAtTime([...Array(16)].map(() => 50 + Math.random() * 60), at + 0.005, 0.4);
+      k.saw.triggerRelease(at + 0.42);
+      for (let i = 0; i < 6; i++) {
+        const c = at + 0.02 + i * 0.065 + Math.random() * 0.03;
+        k.nf.frequency.setValueAtTime(4000 + Math.random() * 3000, c);
+        k.noise.triggerAttackRelease(0.006, c, 0.8 - j * 0.3);
+      }
+    });
+  },
+  bark(t) {                       // woof woof
+    [t, t + 0.3].forEach(at => {
+      k.nasalF.frequency.setValueAtTime(900, at);
+      glide(k.nasal, at, 330, 170, 0.12);
+      k.nf.frequency.setValueAtTime(1100, at);
+      k.noise.triggerAttackRelease(0.05, at, 0.6);
+    });
+  },
+  coo(t) {                        // pigeon coo-roo
+    [t, t + 0.75].forEach(at => {
+      k.sine.frequency.cancelScheduledValues(at);
+      k.sine.triggerAttack(320, at);
+      k.sine.frequency.setValueCurveAtTime([320, 360, 300, 270, 330, 290, 260], at + 0.005, 0.55);
+      k.sine.triggerRelease(at + 0.56);
+    });
+  },
+  openingBell(t) {                // stock exchange bell + rally
+    for (let i = 0; i < 6; i++) k.box.triggerAttackRelease('A5', 0.08, t + i * 0.085);
+    seqNotes(k.chord, t + 0.6, ['C5', 'E5', 'G5', 'C6'], 0.08, 0.12);
+  },
+  coins(t) {                      // coins drop, then sad wah
+    for (let i = 0; i < 6; i++) k.metal.triggerAttackRelease(['C6', 'E6', 'G6'][i % 3], 0.1, t + i * 0.07 + Math.random() * 0.02, 0.5);
+    glide(k.square, t + 0.6, 620, 180, 0.6);
+  },
+  taiko(t) { [[0, 1], [0.25, 0.8], [0.5, 1], [0.62, 0.6], [0.75, 1]].forEach(([d, v]) => k.drum.triggerAttackRelease('C2', 0.4, t + d, v)); },
+  bugle(t) {                      // snare roll + bugle call
+    for (let i = 0; i < 14; i++) { k.nf.frequency.setValueAtTime(2200, t + i * 0.03); k.noise.triggerAttackRelease(0.02, t + i * 0.03, 0.2 + i * 0.05); }
+    seqNotes(k.square, t + 0.5, ['G4', 'C5', 'E5', 'G5', null, 'E5', 'G5'], 0.12);
+  },
+  evil(t) { SFX.lvl4(t); },
+  musicBox(t) { seqNotes(k.box, t, ['A5', 'C6', 'E6', 'D#6', 'E6', 'B5'], 0.22, 0.5); },
+  glitch(t) { for (let i = 0; i < 10; i++) k.square.triggerAttackRelease(200 + Math.random() * 1800, 0.035, t + i * 0.05); },
+  ping(t) { k.box.triggerAttackRelease('E6', 0.2, t); k.box.triggerAttackRelease('B6', 0.4, t + 0.12); },
+  seen(t) {                       // two "seen" ticks, then the heart drops
+    k.box.triggerAttackRelease('G6', 0.05, t); k.box.triggerAttackRelease('G6', 0.05, t + 0.12);
+    glide(k.square, t + 0.45, 500, 140, 0.7);
+  },
+  lowBatt(t) { seqNotes(k.square, t, ['A5', 'E5', 'A4'], 0.18, 0.12); glide(k.saw, t + 0.6, 400, 40, 0.5); },
+  honk(t) {                       // auto-rickshaw: putt-putt engine + meep meep
+    for (let i = 0; i < 12; i++) k.drum.triggerAttackRelease('C1', 0.05, t + i * 0.07, 0.35);
+    [[0.15, 0.12], [0.35, 0.3]].forEach(([d, l]) => k.square.triggerAttackRelease(560, l, t + d));
+  },
+  cooker(t) {                     // pressure cooker whistle, twice
+    [t, t + 0.9].forEach(at => {
+      glide(k.flute, at, 1900, 2500, 0.7);
+      k.hiss.triggerAttackRelease(0.6, at + 0.01);
+    });
+  },
+  forwards(t) { for (let i = 0; i < 5; i++) glide(k.sine, t + i * 0.13, 600 + i * 90, 950 + i * 90, 0.07); },
+  shehnai(t) { seqNotes(k.nasal, t, ['C5', 'Db5', 'E5', 'F5', 'G5', 'F5', 'E5', 'Db5'], 0.13, 0.14); },
+  applause(t) {
+    let at = t;
+    for (let i = 0; i < 40; i++) { at += 0.02 + Math.random() * 0.03; k.nf.frequency.setValueAtTime(1200 + Math.random() * 1500, at); k.noise.triggerAttackRelease(0.02, at, 0.3 + Math.random() * 0.6); }
+  },
+  sparkle(t) { seqNotes(k.box, t, ['C6', 'E6', 'G6', 'B6', 'D7', 'G7'], 0.05, 0.4); },
+  bubbles(t) {
+    let at = t;
+    for (let i = 0; i < 9; i++) { at += 0.07 + Math.random() * 0.08; const f = 350 + Math.random() * 500; glide(k.sine, at, f, f * 1.8, 0.05); }
+  },
+  birds(t) { [0, 0.09, 0.18, 0.7, 0.79].forEach(d => glide(k.sine, t + d, 3000, 4300, 0.05)); },
+  violin(t) { seqNotes(k.violin, t, ['D4', 'D4', 'A4'], 0.28, 0.24); k.violin.triggerAttackRelease('G#4', 0.6, t + 0.85); },
+  snake(t) { seqNotes(k.flute, t, ['E5', 'F5', 'G#5', 'A5', 'G#5', 'F5', 'E5'], 0.13, 0.12); },
+  timewarp(t) {
+    sfx.whooshF.frequency.cancelScheduledValues(t);
+    sfx.whooshF.frequency.setValueAtTime(6000, t);
+    sfx.whooshF.frequency.exponentialRampToValueAtTime(300, t + 0.5);
+    sfx.whoosh.triggerAttackRelease(0.5, t);
+    for (let i = 0; i < 4; i++) { k.nf.frequency.setValueAtTime(5000, t + 0.6 + i * 0.25); k.noise.triggerAttackRelease(0.01, t + 0.6 + i * 0.25, 0.8); }
+  },
+  spooky(t) { SFX.lvl3(t); },
+  clank(t) { k.metal.triggerAttackRelease('C2', 0.5, t, 1); k.drum.triggerAttackRelease('G1', 0.3, t + 0.01); },
+  braam(t) { k.braam.triggerAttackRelease(['C1', 'C2', 'G2'], 1.2, t); },
+  tada(t) { k.chord.triggerAttackRelease(['C5', 'E5', 'G5'], 0.1, t); k.chord.triggerAttackRelease(['C5', 'E5', 'G5', 'C6'], 0.6, t + 0.16); },
+  sigh(t) { k.box.triggerAttackRelease('G5', 0.6, t); k.hiss.triggerAttackRelease(0.7, t + 0.3); },
+  xylo(t) { seqNotes(k.box, t, ['C5', 'E5', 'G5', 'C6', 'E6'], 0.08, 0.2); },
+  rimshot(t) {                    // ba-dum-tss
+    k.drum.triggerAttackRelease('G2', 0.2, t);
+    k.drum.triggerAttackRelease('C2', 0.3, t + 0.17);
+    k.metal.triggerAttackRelease('C4', 0.6, t + 0.36, 0.8);
+  },
+  crack(t) { k.nf.frequency.setValueAtTime(3000, t); k.noise.triggerAttackRelease(0.03, t); k.noise.triggerAttackRelease(0.02, t + 0.05, 0.6); k.box.triggerAttackRelease('E5', 0.8, t + 0.25); },
+  trash(t) { for (let i = 0; i < 5; i++) k.metal.triggerAttackRelease(['C3', 'F3', 'A2'][i % 3], 0.2, t + i * 0.11 + Math.random() * 0.04, 0.6); },
+  typing(t) {
+    for (let i = 0; i < 10; i++) { const at = t + i * 0.06 + Math.random() * 0.02; k.nf.frequency.setValueAtTime(4000, at); k.noise.triggerAttackRelease(0.01, at, 0.5); }
+    k.box.triggerAttackRelease('E6', 0.3, t + 0.75);
+  },
+  vineBoom(t) { k.boom.triggerAttackRelease('C1', 1.2, t); },
+  startup(t) { seqNotes(k.chord, t, ['C5', 'E5', 'G5', 'B5', 'D6'], 0.06, 0.6); },
+};
+
+// Which sting each member gets (anything unlisted falls back to their role)
+const STING_FOR = {
+  'Socrates': 'lyre', 'Buddha': 'bowl', 'Sun Tzu': 'taiko', 'Confucius': 'gong', 'Charles Darwin': 'birds',
+  'Albert Einstein': 'bubbles', 'Aristotle': 'lyre', 'Leonardo da Vinci': 'strum', 'Your Future Self': 'timewarp',
+  'Cleopatra': 'snake', 'Napoleon Bonaparte': 'bugle', 'Sherlock Holmes': 'violin', 'A Pirate Captain': 'waves',
+  'Edgy Redditor': 'typing', 'Your Ex (Seen 2:14 AM)': 'seen', 'A Raccoon': 'trash', 'A Bollywood Villain': 'evil',
+  'The Grim Reaper (On Probation)': 'toll', 'An Angry Celebrity Chef': 'sizzle',
+  'A Golden Retriever': 'bark', 'A Medieval Peasant': 'strum', 'Your Dad': 'rimshot', 'Therapist Who Is Clearly Tired': 'sigh',
+  'A Capybara': 'bubbles', 'Your Kindergarten Teacher': 'xylo',
+  'William Shakespeare': 'strum', 'Nikola Tesla': 'zap', 'A Flat Earther': 'spooky', 'Astrology Girl': 'sparkle',
+  'Crypto Bro Down 94%': 'coins', 'Sigma Grindset Podcaster': 'braam', 'Gym Bro': 'clank', 'A Conspiracy Theorist': 'spooky',
+  'A Motivational Poster': 'tada', 'LinkedIn Thought Leader': 'ping', 'Corporate HR': 'typing', 'Gen Z Intern': 'vineBoom',
+  'A Silicon Valley Founder': 'startup',
+  'Your Indian Mom': 'cooker', 'WhatsApp Forward Uncle': 'forwards', 'Sharma Ji Ka Beta': 'applause',
+  'Delhi Auto Driver': 'honk', 'Rishta Aunty': 'shehnai',
+  'A Fortune Cookie': 'crack', 'The Stock Market': 'openingBell', 'Samosa': 'sizzle', "Your Phone's 1% Battery": 'lowBatt',
+  'A Haunted Victorian Doll': 'musicBox', 'The Algorithm': 'glitch', 'A Pigeon': 'coo',
+};
+const STING_BY_ROLE = { SAGE: 'lyre', MENACE: 'evil', WHOLESOME: 'xylo', DELULU: 'sparkle', CORPORATE: 'ping', DESI: 'shehnai', UNHINGED_OBJECT: 'glitch' };
+
+// Lower the music briefly so the sting (and later, voices) sit on top
+function duckMusic(seconds, level = 0.4) {
+  if (!music.master || !music.playing || !music.mood) return;
+  const g = music.master.gain, full = moodGain(music.mood), now = Tone.now();
+  g.cancelScheduledValues(now);
+  g.setValueAtTime(g.value, now);
+  g.linearRampToValueAtTime(full * level, now + 0.08);
+  g.setValueAtTime(full * level, now + seconds);
+  g.linearRampToValueAtTime(full, now + seconds + 0.5);
+}
+
+function playSting(name) {
+  if (!window.Tone || !music.enabled || Tone.context.state !== 'running') return;
+  const persona = ROSTER_BY_NAME.get(name);
+  const key = STING_FOR[name] || STING_BY_ROLE[persona?.role] || 'ping';
+  try {
+    stingInit();
+    duckMusic(1.8);
+    STINGS[key](Tone.now() + 0.15);
+  } catch (e) { /* a sound must never break the chat */ }
 }
 
 async function toggleSound() {
