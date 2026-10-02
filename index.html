@@ -3298,8 +3298,10 @@ async function probeCloudVoice() {
 
 const hasDevanagari = t => /[\u0900-\u097F]/.test(t || '');
 // Hindi voice when the character is desi (or a Hindi transcript came back) and the worker has Sarvam set up
+// Only characters cast as Indian (prof.hi) use the Hindi voice. Others keep their own voice even when
+// their reply slips into Hinglish (so Sherlock stays British instead of switching to an Indian voice).
 function wantsHindi(m, prof) {
-  return !!voice.hindi && (!!prof.hi || hasDevanagari(m.speak));
+  return !!voice.hindi && !!prof.hi;
 }
 
 async function fetchCloudVoice(text, prof, hindi) {
