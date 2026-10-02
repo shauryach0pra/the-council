@@ -430,6 +430,28 @@ button { -webkit-tap-highlight-color: transparent; }
 .sc-cell.out .sc-chip .n { text-decoration: line-through; text-decoration-thickness: 2px; }
 .sc-cell.out .sc-chip .e { filter: grayscale(1); opacity: 0.6; }
 
+/* A question and its replies */
+.round { display: flex; flex-direction: column; gap: 16px; transition: zoom 0.45s cubic-bezier(.2,.8,.3,1); }
+
+/* Skip chip while replies are arriving */
+.skip-chip {
+  position: sticky;
+  bottom: 0;
+  align-self: center;
+  z-index: 3;
+  margin-top: auto;
+  border: 2.5px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  background: var(--white);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.skip-chip:hover { background: var(--c4); }
+
 /* Messages */
 .msg { display: flex; align-items: flex-start; gap: 12px; max-width: min(640px, 86%); }
 .msg.me { align-self: flex-end; margin-right: 14px; }
@@ -720,13 +742,15 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* User bubble launches up from the input */
-.a-launch { animation: launch 440ms cubic-bezier(.2,.9,.25,1.12) both; transform-origin: bottom right; }
+.a-launch { animation: launch 600ms cubic-bezier(.2,.9,.25,1.12) both; transform-origin: bottom right; }
 @keyframes launch { from { opacity: 0; transform: translateY(48px) scale(0.96); } to { opacity: 1; transform: none; } }
 
 /* Member bubble stamps in, shadow grows after */
-.a-stamp { animation: stamp 380ms cubic-bezier(.2,.9,.25,1.15) both; transform-origin: 20px 40px; }
-.a-stamp .bwrap::before { animation: shadowGrow 260ms 160ms cubic-bezier(.2,.9,.3,1.2) both; }
-@keyframes stamp { from { opacity: 0; transform: translateY(10px) scale(0.94); } to { opacity: 1; transform: none; } }
+.a-stamp { animation: stamp 560ms cubic-bezier(.2,.9,.25,1.12) both; transform-origin: 20px 40px; }
+.a-stamp .bwrap::before { animation: shadowGrow 320ms 260ms cubic-bezier(.2,.9,.3,1.2) both; }
+.msg.a-stamp .bubble { animation: newFlash 1.6s 200ms ease-out both; }
+@keyframes stamp { from { opacity: 0; transform: translateY(22px) scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes newFlash { from { background: #FFF3A8; } to { background: var(--white); } }
 @keyframes shadowGrow { from { transform: translate(0, 0); } to { transform: translate(7px, 7px); } }
 
 .a-ghost, .a-sys { animation: fadeUp 220ms ease-out both; }
@@ -787,7 +811,8 @@ button { -webkit-tap-highlight-color: transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   .a-boot, .a-launch, .a-stamp, .a-stamp-in, .a-ghost, .a-sys, .a-pop { animation: fadeIn 180ms both !important; }
-  .a-stamp .bwrap::before, .a-unsend .bubble::after, .dots i, .bounce i { animation: none !important; }
+  .a-stamp .bwrap::before, .a-unsend .bubble::after, .dots i, .bounce i, .msg.a-stamp .bubble { animation: none !important; }
+  .round { transition: none; }
 }
 
 /* ================================================================
@@ -1707,7 +1732,20 @@ const T = {
 // Each reply waits 700-1600ms, scaled by its length, slightly randomised
 function typingTime(text) {
   const len = String(text || '').length;
-  return Math.round(Math.min(1600, Math.max(700, 620 + len * 6 + rand(-120, 180))));
+  return Math.round(Math.min(1500, Math.max(850, 700 + len * 4 + rand(-100, 160))));
+}
+// Time to read a reply before the next member starts typing (~27 ms per character)
+function readTime(text) {
+  const len = String(text || '').length;
+  return Math.round(Math.min(3900, Math.max(1300, 500 + len * 27)));
+}
+// A wait that ends early (but not instantly) when the user taps "skip"
+async function pace(ms) {
+  const end = performance.now() + ms;
+  while (performance.now() < end) {
+    if (state.skip) { await wait(140); return; }
+    await wait(50);
+  }
 }
 
 async function typeOut(el, text) {
@@ -1730,17 +1768,17 @@ function scrollToBottom() {
     els.stream.scrollTo({ top: els.stream.scrollHeight, behavior: REDUCED ? 'auto' : 'smooth' }));
 }
 
-function appendToStream(el) {
-  els.stream.appendChild(el);
+function appendToStream(el, into = els.stream) {
+  into.appendChild(el);
   scrollToBottom();
   return el;
 }
 
-function postSystem(text, isError = false, { typed = false } = {}) {
+function postSystem(text, isError = false, { typed = false, into } = {}) {
   const el = document.createElement('div');
   el.className = 'sys a-sys' + (isError ? ' err' : '');
   el.setAttribute('role', isError ? 'alert' : 'status');
-  appendToStream(el);
+  appendToStream(el, into);
   if (typed && !REDUCED) typeOut(el, text);
   else el.textContent = text;
   return el;
@@ -1771,7 +1809,14 @@ function postSquadChange(prev, next, title) {
   return appendToStream(el);
 }
 
-function postUser(text) {
+// Each question and its replies live in one .round so the finished round can be fitted to the screen
+function newRound() {
+  const el = document.createElement('div');
+  el.className = 'round';
+  return appendToStream(el);
+}
+
+function postUser(text, into) {
   const el = document.createElement('div');
   el.className = 'msg me a-launch';
   el.innerHTML = `
@@ -1779,7 +1824,7 @@ function postUser(text) {
       <div class="bwrap"><div class="bubble">${escHtml(text)}</div>${TAIL}</div>
       <div class="msg-meta"><span>${nextId()}</span><span>${clock().slice(0, 5)}</span><span class="receipt">Sending</span></div>
     </div>`;
-  return appendToStream(el);
+  return appendToStream(el, into);
 }
 
 function setReceipt(userEl, text) {
@@ -2118,8 +2163,10 @@ function setBusy(on) {
 async function runCouncil(question, userEl) {
   setBusy(true);
   removeShotButton();
+  const roundEl = userEl.parentElement;
+  unfitRound(roundEl);
   setAllStatus('typing');
-  const groupGhost = appendToStream(makeGhost(null));
+  const groupGhost = appendToStream(makeGhost(null), roundEl);
   setReceipt(userEl, 'Delivered');
 
   let members;
@@ -2129,7 +2176,7 @@ async function runCouncil(question, userEl) {
     groupGhost.remove();
     setAllStatus('idle');
     setReceipt(userEl, 'Not delivered');
-    postSystem(err.message || 'Request failed. Send again.', true);
+    postSystem(err.message || 'Request failed. Send again.', true, { into: roundEl });
     playSfx('sad');
     setBusy(false);
     return;
@@ -2146,23 +2193,27 @@ async function runCouncil(question, userEl) {
   };
   state.round = round;
 
-  // Sequential reveal: each member types, then their bubble stamps in
+  // Sequential reveal: each member types, their bubble lands, then you get time to read it
+  state.skip = false;
+  const skipBtn = members.length > 1 ? showSkip() : null;
   for (let i = 0; i < members.length; i++) {
     const m = members[i];
     const slot = slotFor(m, i);
     setStatus(slot, 'typing');
     const ghost = makeGhost(slot, m);
     if (i === 0) groupGhost.replaceWith(ghost);
-    else els.stream.appendChild(ghost);
+    else roundEl.appendChild(ghost);
     scrollToBottom();
-    await wait(typingTime(m.response));
+    await pace(typingTime(m.response));
     const msgEl = makeMember(m, slot);
     ghost.replaceWith(msgEl);
     playSfx('pop', slot);
     scrollToBottom();
     round.memberEls.push(msgEl);
     setStatus(slot, 'replied');
+    if (i < members.length - 1) await pace(readTime(m.response));
   }
+  skipBtn?.remove();
   if (!members.length) groupGhost.remove();
 
   const missing = state.members.length - members.length;
@@ -2170,13 +2221,49 @@ async function runCouncil(question, userEl) {
     state.members.forEach((p, i) => {
       if (!members.some(m => m.name === p.name)) setStatus(i, 'left');
     });
-    postSystem(`${missing} member${missing > 1 ? 's' : ''} left you on read`);
+    postSystem(`${missing} member${missing > 1 ? 's' : ''} left you on read`, false, { into: roundEl });
   }
 
   await dropReactions(round);
   setBusy(false);
-  if (members.length) showShotButton();
+  if (members.length) showShotButton(roundEl);
+  await wait(REDUCED ? 0 : 500);
+  fitRound(roundEl);
 }
+
+// "Skip" chip, pinned to the bottom of the chat while replies are coming in
+function showSkip() {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'skip-chip a-sys';
+  b.textContent = 'Reading too slow? Skip ⏩';
+  b.addEventListener('click', () => { state.skip = true; b.remove(); });
+  els.stream.appendChild(b);
+  return b;
+}
+
+// ---------- fit the finished round on screen ----------
+// Shrinks the whole round (question + replies) with CSS zoom until it fits the chat area,
+// then scrolls so your question sits at the top. Older rounds keep whatever size they had.
+const roundZoom = el => parseFloat(el.style.zoom || '1') || 1;
+function unfitRound(el) { if (el) el.style.zoom = '1'; }
+
+async function fitRound(el) {
+  if (!el?.isConnected) return;
+  const avail = els.stream.clientHeight - 36;
+  const natural = el.getBoundingClientRect().height / roundZoom(el);
+  const min = window.innerWidth <= 720 ? 0.68 : 0.62;
+  const z = Math.max(min, Math.min(1, Math.floor((avail / natural) * 100) / 100));
+  el.style.zoom = String(z);
+  await wait(REDUCED ? 0 : 480);
+  const top = el.getBoundingClientRect().top - els.stream.getBoundingClientRect().top + els.stream.scrollTop - 14;
+  els.stream.scrollTo({ top, behavior: REDUCED ? 'auto' : 'smooth' });
+}
+let fitTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(() => { if (!state.busy && state.round) fitRound(state.round.userEl.parentElement); }, 250);
+});
 
 async function send() {
   if (state.busy) return;
@@ -2189,7 +2276,7 @@ async function send() {
   els.input.value = '';
   autosize();
 
-  const userEl = postUser(question);
+  const userEl = postUser(question, newRound());
   await runCouncil(question, userEl);
   els.input.focus();
 }
@@ -2857,13 +2944,13 @@ function removeShotButton() {
   els.stream.querySelectorAll('.shot-row').forEach(el => el.remove());
 }
 
-function showShotButton() {
+function showShotButton(into) {
   removeShotButton();
   const row = document.createElement('div');
   row.className = 'shot-row';
   row.innerHTML = '<button class="kbtn shot-btn a-slam" type="button"><span class="ico" aria-hidden="true">📸</span>Screenshot this chat</button>';
   row.querySelector('button').addEventListener('click', openStory);
-  appendToStream(row);
+  appendToStream(row, into);
 }
 
 // ---------- off-screen story layout ----------
@@ -3174,6 +3261,7 @@ function storyKeydown(e) {
   randomize(false);
 
   els.send.addEventListener('click', send);
+  els.stream.addEventListener('click', e => { if (state.busy && !e.target.closest('button')) state.skip = true; });
   els.rand.addEventListener('click', () => randomize(true));
   initChaosMachine();
   $('soundBtn').addEventListener('click', toggleSound);
