@@ -49,8 +49,8 @@ button, textarea { font: inherit; color: inherit; }
   inset: calc(14px + env(safe-area-inset-top, 0px)) calc(22px + env(safe-area-inset-right, 0px))
          calc(22px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px));
   display: grid;
-  grid-template-columns: var(--rail-w) 1fr;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   grid-template-areas:
     "title  title"
     "ticker ticker"
@@ -158,6 +158,7 @@ button, textarea { font: inherit; color: inherit; }
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   background: var(--paper);
 }
 .rail-head {
@@ -270,8 +271,8 @@ button, textarea { font: inherit; color: inherit; }
 .msg.me .msg-tag { background: var(--ink); color: var(--white); align-self: flex-end; }
 
 .bubble {
+  position: relative;
   border: var(--b);
-  box-shadow: var(--shadow-sm);
   background: var(--white);
   padding: 10px 12px;
   font-size: 0.9rem;
@@ -297,7 +298,7 @@ button, textarea { font: inherit; color: inherit; }
   grid-area: bar;
   border-top: var(--B);
   display: grid;
-  grid-template-columns: auto auto 1fr auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   grid-template-areas: "rand level input send";
   align-items: stretch;
   background: var(--paper);
@@ -358,6 +359,126 @@ button, textarea { font: inherit; color: inherit; }
 .input-wrap:focus-within { background: var(--white); box-shadow: inset 0 0 0 3px var(--c2); }
 
 /* ================================================================
+   ANIMATION  (transform / opacity / clip-path only)
+   ================================================================ */
+/* Hard shadow lives on a wrapper so it can "grow" with a transform */
+.bwrap { position: relative; }
+.bwrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  transform: translate(4px, 4px);
+}
+
+/* Typing indicator */
+.dots i { font-style: normal; animation: blink 0.9s steps(1) infinite; }
+.dots i:nth-child(2) { animation-delay: 0.15s; }
+.dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.15; } }
+.ghost .bubble { background: var(--paper); border-style: dashed; font-weight: 700; letter-spacing: 2px; }
+.ghost .bwrap::before { display: none; }
+.ghost .msg-tag { background: var(--accent, var(--paper)); color: var(--tag-ink, var(--ink)); border-style: dashed; }
+
+/* Boot: window slams in with a two-frame jitter */
+.a-boot { animation: slam 520ms cubic-bezier(.2,.9,.3,1) both; }
+@keyframes slam {
+  0%   { opacity: 0; transform: scale(1.04); }
+  55%  { opacity: 1; transform: scale(0.996); }
+  62%  { transform: translate(3px, -2px); }
+  69%  { transform: translate(-3px, 2px); }
+  76%, 100% { transform: none; }
+}
+
+/* User bubble launches up from the input */
+.a-launch { animation: launch 420ms cubic-bezier(.3,1.45,.5,1) both; transform-origin: bottom right; }
+@keyframes launch { from { opacity: 0; transform: translateY(70px) scale(0.94); } to { opacity: 1; transform: none; } }
+
+/* Member bubble stamps in, shadow grows after */
+.a-stamp { animation: stamp 300ms cubic-bezier(.2,.9,.3,1.25) both; transform-origin: top left; }
+.a-stamp .bwrap::before { animation: shadowGrow 220ms 140ms cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes stamp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes shadowGrow { from { transform: translate(0, 0); } to { transform: translate(4px, 4px); } }
+
+.a-ghost, .a-sys, .a-stubin { animation: fadeIn 160ms both; }
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* Rail cards: glitch out, stamp in */
+.a-stamp-in { animation: railStamp 260ms cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes railStamp {
+  0%   { opacity: 0; transform: scale(1.18) rotate(-1.5deg); }
+  70%  { opacity: 1; transform: scale(0.97); }
+  100% { opacity: 1; transform: none; }
+}
+.a-glitch-out { animation: glitchOut 420ms steps(1) both; pointer-events: none; }
+@keyframes glitchOut {
+  0%   { clip-path: inset(0 0 0 0);     transform: none; }
+  15%  { clip-path: inset(8% 0 58% 0);  transform: translateX(-7px); }
+  30%  { clip-path: inset(48% 0 18% 0); transform: translateX(9px); }
+  45%  { clip-path: inset(20% 0 44% 0); transform: translateX(-4px); }
+  60%  { clip-path: inset(66% 0 6% 0);  transform: translateX(5px); }
+  75%  { clip-path: inset(40% 0 40% 0); transform: translateX(-10px); opacity: 0.6; }
+  100% { clip-path: inset(50% 0 50% 0); opacity: 0; }
+}
+
+/* Level change: dim, strike, shred, stub, collapse */
+.msg.pending { opacity: 0.45; transition: opacity 0.2s; }
+.a-unsend .bubble::after {
+  content: '';
+  position: absolute;
+  left: 8px; right: 8px; top: 50%;
+  height: 3px;
+  background: var(--ink);
+  transform-origin: left;
+  animation: strike 160ms ease-out both;
+}
+@keyframes strike { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.a-unsend { animation: shred 520ms 160ms steps(1) both; }
+@keyframes shred {
+  0%   { clip-path: inset(0);               transform: none; }
+  20%  { clip-path: inset(0 12% 0 0);       transform: translateX(4px) skewX(-4deg); }
+  40%  { clip-path: inset(0 0 0 30%);       transform: translateX(-6px); }
+  60%  { clip-path: inset(30% 20% 10% 0);   transform: translateX(8px) skewX(6deg); }
+  80%  { clip-path: inset(55% 0 25% 40%);   opacity: 0.5; }
+  100% { clip-path: inset(50%);             opacity: 0; }
+}
+.stub {
+  border: 3px dashed var(--ink);
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-style: italic;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+.a-collapse { animation: collapse 260ms ease-in both; transform-origin: top left; }
+@keyframes collapse { to { opacity: 0; transform: scaleY(0); } }
+
+/* Reaction tags */
+.react {
+  position: absolute;
+  top: -13px;
+  right: -8px;
+  z-index: 2;
+  background: var(--white);
+  border: var(--b);
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 1px 6px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  transform: rotate(-4deg);
+}
+.a-pop { animation: pop 260ms cubic-bezier(.2,.9,.3,1.5) both; }
+@keyframes pop { from { opacity: 0; transform: scale(0.4) rotate(-14deg); } to { opacity: 1; transform: rotate(-4deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .a-boot, .a-launch, .a-stamp, .a-stamp-in, .a-ghost, .a-sys, .a-stubin, .a-pop { animation: fadeIn 180ms both !important; }
+  .a-glitch-out, .a-unsend, .a-collapse { animation: fadeOut 200ms both !important; }
+  .a-stamp .bwrap::before, .a-unsend .bubble::after, .dots i { animation: none !important; }
+}
+
+/* ================================================================
    MOBILE
    ================================================================ */
 @media (max-width: 720px) {
@@ -367,8 +488,8 @@ button, textarea { font: inherit; color: inherit; }
     box-shadow: none;
     padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
              env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
     grid-template-areas: "title" "ticker" "rail" "stream" "bar";
   }
   .winctl, .titlebar-np .np-text { display: none; }
@@ -393,7 +514,7 @@ button, textarea { font: inherit; color: inherit; }
   .msg { max-width: 90%; }
 
   .bar {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas: "level level level" "rand input send";
   }
   .levels { border-right: none; border-bottom: var(--b); }
@@ -856,6 +977,8 @@ const state = {
   busy: false,
   msgId: 41,       // message counter, displayed as #0042, #0043…
   lastQuestion: '',
+  round: null,          // { question, userEl, members, memberEls } for the latest reply set
+  resummonTimer: null,
 };
 
 const $ = id => document.getElementById(id);
@@ -897,49 +1020,122 @@ async function fetchCouncil(question) {
 }
 
 // ================================================================
-//  CHAT RENDER
+//  ANIMATION
 // ================================================================
-function scrollToBottom() {
-  els.stream.scrollTo({ top: els.stream.scrollHeight, behavior: 'smooth' });
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const rand = (a, b) => a + Math.random() * (b - a);
+
+// Durations in ms; keep in sync with the CSS keyframes
+const T = {
+  boot: 520,       // window slam
+  glitch: 420,     // rail card glitch-out
+  glitchGap: 60,   // stagger between glitching cards
+  stampGap: 110,   // stagger between stamping-in cards
+  unsend: 700,     // strike (160) + shred (520)
+  unsendGap: 90,
+  stubHold: 650,   // how long "deleted" stubs stay
+  collapse: 260,
+  debounce: 900,   // level change -> re-summon
+};
+
+// Each reply waits 700-1600ms, scaled by its length, slightly randomised
+function typingTime(text) {
+  const len = String(text || '').length;
+  return Math.round(Math.min(1600, Math.max(700, 620 + len * 6 + rand(-120, 180))));
 }
 
-function postSystem(text, isError = false) {
-  const el = document.createElement('div');
-  el.className = 'sys' + (isError ? ' err' : '');
-  el.textContent = (isError ? '! ERROR: ' : '> ') + text;
+async function typeOut(el, text) {
+  el.textContent = '';
+  for (const ch of text) {
+    el.textContent += ch;
+    await wait(ch === ' ' ? 10 : 24);
+  }
+}
+
+// ================================================================
+//  CHAT RENDER
+// ================================================================
+const DOTS = '<span class="dots" aria-hidden="true"><i>▮</i><i>▮</i><i>▮</i></span>';
+
+function scrollToBottom() {
+  requestAnimationFrame(() =>
+    els.stream.scrollTo({ top: els.stream.scrollHeight, behavior: REDUCED ? 'auto' : 'smooth' }));
+}
+
+function appendToStream(el) {
   els.stream.appendChild(el);
   scrollToBottom();
+  return el;
+}
+
+function postSystem(text, isError = false, { typed = false } = {}) {
+  const el = document.createElement('div');
+  el.className = 'sys a-sys' + (isError ? ' err' : '');
+  const full = (isError ? '! ERROR: ' : '> ') + text;
+  appendToStream(el);
+  if (typed && !REDUCED) typeOut(el, full);
+  else el.textContent = full;
   return el;
 }
 
 function postUser(text) {
   const el = document.createElement('div');
-  el.className = 'msg me';
+  el.className = 'msg me a-launch';
   el.innerHTML = `
     <div class="msg-tag">You</div>
-    <div class="bubble">${escHtml(text)}</div>
-    <div class="msg-meta"><span>${nextId()}</span><span>${clock()}</span><span class="receipt">Delivered</span></div>`;
-  els.stream.appendChild(el);
-  scrollToBottom();
+    <div class="bwrap"><div class="bubble">${escHtml(text)}</div></div>
+    <div class="msg-meta"><span>${nextId()}</span><span>${clock()}</span><span class="receipt">Sending</span></div>`;
+  return appendToStream(el);
+}
+
+function setReceipt(userEl, text) {
+  const r = userEl?.querySelector('.receipt');
+  if (r) r.textContent = text;
+}
+
+function applyAccent(el, slot) {
+  const a = ACCENTS[slot % ACCENTS.length];
+  el.style.setProperty('--accent', a.bg);
+  el.style.setProperty('--tag-ink', a.ink);
+}
+
+// slot === null -> whole-council ghost shown while waiting for the worker
+function makeGhost(slot, member) {
+  const el = document.createElement('div');
+  el.className = 'msg member-msg ghost a-ghost';
+  el.setAttribute('aria-hidden', 'true');
+  let tag;
+  if (slot === null) {
+    tag = `<span>${state.members.map(p => escHtml(p.emoji)).join('')}</span><span>${state.members.length} typing</span>`;
+  } else {
+    applyAccent(el, slot);
+    tag = `<span>${escHtml(member.emoji)}</span><span>${escHtml(member.name)}</span>`;
+  }
+  el.innerHTML = `<div class="msg-tag">${tag}</div><div class="bwrap"><div class="bubble">${DOTS}</div></div>`;
   return el;
 }
 
-function postMember(m, slot) {
-  const accent = ACCENTS[slot % ACCENTS.length];
+function makeMember(m, slot) {
   const el = document.createElement('div');
-  el.className = 'msg member-msg';
-  el.style.setProperty('--accent', accent.bg);
-  el.style.setProperty('--tag-ink', accent.ink);
+  el.className = 'msg member-msg a-stamp';
+  applyAccent(el, slot);
   el.innerHTML = `
     <div class="msg-tag"><span>${escHtml(m.emoji)}</span><span>${escHtml(m.name)}</span></div>
-    <div class="bubble">${escHtml(m.response)}</div>
+    <div class="bwrap"><div class="bubble">${escHtml(m.response)}</div></div>
     <div class="msg-meta"><span>${nextId()}</span><span>${clock()}</span><span>${escHtml(m.vibe)}</span></div>`;
-  els.stream.appendChild(el);
-  scrollToBottom();
   return el;
 }
 
-function renderRail(typing = false) {
+// ---------- Rail ----------
+const STATUS = {
+  idle:    '● Idle',
+  typing:  `${DOTS} Typing`,
+  replied: '✓ Replied',
+  left:    '○ Left you on read',
+};
+
+function renderRail(animate = false, baseDelay = 0) {
   const you = `
     <div class="member you">
       <div class="avatar">YOU</div>
@@ -951,19 +1147,76 @@ function renderRail(typing = false) {
     </div>`;
   els.rail.innerHTML = you + state.members.map((p, i) => {
     const a = ACCENTS[i % ACCENTS.length];
+    const anim = animate ? ` a-stamp-in" style="--accent:${a.bg};animation-delay:${baseDelay + i * T.stampGap}ms` : `" style="--accent:${a.bg}`;
     return `
-      <div class="member" style="--accent:${a.bg}">
+      <div class="member${anim}" data-slot="${i}">
         <div class="avatar" aria-hidden="true">${escHtml(p.emoji)}</div>
         <div class="member-text">
           <div class="member-name">${escHtml(p.name)}</div>
           <div class="member-arch">${escHtml(p.archetype)}</div>
-          <div class="member-status${typing ? ' typing' : ''}">${typing ? '▮▮▮ Typing' : '● Idle'}</div>
+          <div class="member-status idle">${STATUS.idle}</div>
         </div>
       </div>`;
   }).join('');
   const total = state.members.length + 1;
   els.count.textContent = total;
   els.railCount.textContent = `[${String(total).padStart(2, '0')}]`;
+}
+
+function setStatus(slot, mode) {
+  const s = els.rail.querySelector(`.member[data-slot="${slot}"] .member-status`);
+  if (!s) return;
+  s.className = 'member-status ' + mode;
+  s.innerHTML = STATUS[mode];
+}
+const setAllStatus = mode => state.members.forEach((_, i) => setStatus(i, mode));
+
+// Map a returned member to its rail slot (worker keeps order, name match is a fallback)
+function slotFor(m, i) {
+  const idx = state.members.findIndex(p => p.name === m.name);
+  return idx >= 0 ? idx : i;
+}
+
+// ---------- Reactions (client-side decoration only) ----------
+const REACTIONS = ['💀', '😭', '🤡', '🔥', '😤', '🙏', '🫠', '👀'];
+
+async function dropReactions(round) {
+  const n = round.memberEls.length;
+  if (n < 2) return;
+  const count = Math.random() < 0.5 ? 1 : 2;
+  const used = new Set();
+  for (let k = 0; k < count; k++) {
+    await wait(rand(350, 750));
+    let from, to, tries = 0;
+    do {
+      from = Math.floor(Math.random() * n);
+      to = Math.floor(Math.random() * n);
+    } while ((from === to || used.has(to)) && ++tries < 30);
+    if (from === to || used.has(to)) return;
+    used.add(to);
+    const reactor = round.members[from];
+    const tag = document.createElement('span');
+    tag.className = 'react a-pop';
+    tag.title = `${reactor.name} reacted`;
+    tag.textContent = `${pickOne(REACTIONS)} ${reactor.emoji}`;
+    round.memberEls[to].querySelector('.bwrap')?.appendChild(tag);
+  }
+}
+
+// ---------- Unsend (level change) ----------
+async function unsendAll(msgEls) {
+  await Promise.all(msgEls.map(async (el, i) => {
+    await wait(i * T.unsendGap);
+    el.classList.remove('pending', 'a-stamp');
+    el.classList.add('a-unsend');
+    await wait(T.unsend);
+    el.className = 'msg member-msg deleted a-stubin';
+    el.innerHTML = '<div class="stub">⌫ This message was deleted</div>';
+    await wait(T.stubHold);
+    el.classList.add('a-collapse');
+    await wait(T.collapse);
+    el.remove();
+  }));
 }
 
 // ================================================================
@@ -977,11 +1230,38 @@ function renderLevels() {
     </button>`).join('');
 }
 
+function syncLevels() {
+  els.levels.querySelectorAll('.lvl').forEach(b =>
+    b.setAttribute('aria-checked', String(Number(b.dataset.level) === state.level)));
+}
+
 function setLevel(v) {
   if (state.busy || v === state.level) return;
   state.level = v;
-  renderLevels();
-  // Re-summon with "unsend" animation arrives in step 5
+  syncLevels();
+
+  const round = state.round;
+  if (!round || !round.memberEls.length || !round.userEl.isConnected) return;
+
+  // Debounced re-summon: replies dim while the user is still picking
+  clearTimeout(state.resummonTimer);
+  round.memberEls.forEach(el => el.classList.add('pending'));
+  state.resummonTimer = setTimeout(() => resummon(round), T.debounce);
+}
+
+function cancelResummon() {
+  clearTimeout(state.resummonTimer);
+  state.resummonTimer = null;
+  state.round?.memberEls.forEach(el => el.classList.remove('pending'));
+}
+
+async function resummon(round) {
+  state.resummonTimer = null;
+  if (state.busy || state.round !== round) return;
+  setBusy(true);
+  await unsendAll(round.memberEls);
+  round.memberEls = [];
+  await runCouncil(round.question, round.userEl);
 }
 
 // ================================================================
@@ -992,21 +1272,60 @@ function setBusy(on) {
   els.send.disabled = on;
   els.rand.disabled = on;
   els.levels.querySelectorAll('.lvl').forEach(b => (b.disabled = on));
-  renderRail(on);
 }
 
-function randomize(announce = true) {
-  const prev = state.members;
-  const squad = pickSquad(prev, state.squadTitle);
-  state.members = squad.members;
-  state.squadTitle = squad.title;
-  renderRail();
-  els.squad.textContent = squad.title;
-  if (announce && prev.length) {
-    postSystem(`${listNames(prev)} left`);
-    postSystem(`${listNames(state.members)} joined`);
-    postSystem(`Chat renamed: ${squad.title}`);
+async function runCouncil(question, userEl) {
+  setBusy(true);
+  setAllStatus('typing');
+  const groupGhost = appendToStream(makeGhost(null));
+  setReceipt(userEl, 'Delivered');
+
+  let members;
+  try {
+    members = await fetchCouncil(question);
+  } catch (err) {
+    groupGhost.remove();
+    setAllStatus('idle');
+    setReceipt(userEl, 'Not delivered');
+    postSystem(err.message || 'Request failed. Send again.', true);
+    setBusy(false);
+    return;
   }
+
+  setReceipt(userEl, `Read by ${members.length}`);
+  setAllStatus('idle');
+
+  const round = { question, userEl, members, memberEls: [] };
+  state.round = round;
+
+  // Sequential reveal: each member types, then their bubble stamps in
+  for (let i = 0; i < members.length; i++) {
+    const m = members[i];
+    const slot = slotFor(m, i);
+    setStatus(slot, 'typing');
+    const ghost = makeGhost(slot, m);
+    if (i === 0) groupGhost.replaceWith(ghost);
+    else els.stream.appendChild(ghost);
+    scrollToBottom();
+    await wait(typingTime(m.response));
+    const msgEl = makeMember(m, slot);
+    ghost.replaceWith(msgEl);
+    scrollToBottom();
+    round.memberEls.push(msgEl);
+    setStatus(slot, 'replied');
+  }
+  if (!members.length) groupGhost.remove();
+
+  const missing = state.members.length - members.length;
+  if (missing > 0) {
+    state.members.forEach((p, i) => {
+      if (!members.some(m => m.name === p.name)) setStatus(i, 'left');
+    });
+    postSystem(`${missing} member${missing > 1 ? 's' : ''} left you on read`);
+  }
+
+  await dropReactions(round);
+  setBusy(false);
 }
 
 async function send() {
@@ -1014,25 +1333,44 @@ async function send() {
   const question = els.input.value.trim();
   if (!question) { postSystem('Type a message before sending.', true); els.input.focus(); return; }
 
+  cancelResummon();
+  // Step 6: await Tone.start() goes here, inside the user gesture
+
   state.lastQuestion = question;
   els.input.value = '';
   autosize();
 
-  const userMsg = postUser(question);
+  const userEl = postUser(question);
+  await runCouncil(question, userEl);
+  els.input.focus();
+}
+
+async function randomize(announce = true) {
+  if (state.busy) return;
+  const prev = state.members;
+  const squad = pickSquad(prev, state.squadTitle);
+  cancelResummon();
+  state.round = null;          // a new squad shouldn't rewrite the old squad's replies
+  state.members = squad.members;
+  state.squadTitle = squad.title;
+  els.squad.textContent = squad.title;
+
+  if (!announce || !prev.length) { renderRail(true, announce ? 0 : T.boot - 150); return; }
+
   setBusy(true);
-  try {
-    const members = await fetchCouncil(question);
-    userMsg.querySelector('.receipt').textContent = `Read by ${members.length}`;
-    members.forEach((m, i) => postMember(m, i));
-    if (members.length < state.members.length) {
-      postSystem(`${state.members.length - members.length} member(s) left you on read`);
-    }
-  } catch (err) {
-    postSystem(err.message || 'Request failed. Send again.', true);
-  } finally {
-    setBusy(false);
-    els.input.focus();
-  }
+  postSystem(`${listNames(prev)} left`);
+  const old = [...els.rail.querySelectorAll('.member:not(.you)')];
+  old.forEach((el, i) => {
+    el.style.animationDelay = `${i * T.glitchGap}ms`;
+    el.classList.remove('a-stamp-in');
+    el.classList.add('a-glitch-out');
+  });
+  await wait(T.glitch + old.length * T.glitchGap);
+  renderRail(true);
+  postSystem(`${listNames(state.members)} joined`);
+  await wait(state.members.length * T.stampGap + 260);
+  postSystem(`Chat renamed: ${squad.title}`);
+  setBusy(false);
 }
 
 function autosize() {
@@ -1043,12 +1381,12 @@ function autosize() {
 // ================================================================
 //  INIT
 // ================================================================
-(function init() {
+(async function init() {
   $('tickerTrack').textContent = TICKER_LINES.map(t => `▲ ${t}`).join('     ').repeat(2);
 
   renderLevels();
+  $('app').classList.add('a-boot');
   randomize(false);
-  postSystem(`${state.members.length} members joined the chat`);
 
   els.send.addEventListener('click', send);
   els.rand.addEventListener('click', () => randomize(true));
@@ -1060,6 +1398,9 @@ function autosize() {
   els.input.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
   });
+
+  await wait(T.boot + state.members.length * T.stampGap);
+  postSystem(`${state.members.length} members joined the chat`, false, { typed: true });
 })();
 </script>
 </body>
