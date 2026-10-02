@@ -85,10 +85,9 @@ button { -webkit-tap-highlight-color: transparent; }
          calc(26px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
   display: grid;
   grid-template-columns: var(--rail-w) minmax(0, 1fr);
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   grid-template-areas:
     "brand  head"
-    "rail   ticker"
     "rail   stream"
     "chaos  stream"
     "rand   bar";
@@ -102,6 +101,7 @@ button { -webkit-tap-highlight-color: transparent; }
 /* Sidebar top: the app's name, stretched across the whole sidebar */
 .brand {
   grid-area: brand;
+  border-bottom: var(--B);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -126,6 +126,7 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-area: head;
   display: flex;
   align-items: stretch;
+  border-bottom: var(--B);
   background: var(--ink);
   color: var(--white);
   min-width: 0;
@@ -169,8 +170,8 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--white);
   border: 3px solid var(--c4);
 }
-.viz-wrap { display: flex; align-items: center; }
-.viz { display: block; width: 58px; height: 30px; }
+.viz-wrap { display: flex; align-items: center; background: var(--white); border: 2.5px solid var(--white); padding: 3px 4px; }
+.viz { display: block; width: 52px; height: 26px; }
 .np-txt { display: flex; flex-direction: column; justify-content: center; min-width: 0; width: 150px; line-height: 1.1; }
 .np-k { font-family: var(--mono); font-size: 0.56rem; font-weight: 700; text-transform: uppercase; color: var(--c4); }
 .np-v { font-weight: 800; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
@@ -200,42 +201,6 @@ button { -webkit-tap-highlight-color: transparent; }
 .switch[aria-checked="true"] .switch-track { background: var(--c3); }
 .switch[aria-checked="true"] .switch-knob { transform: translateX(22px); background: var(--ink); }
 .switch:active .switch-knob { width: 17px; }
-
-/* ---------- Ticker ---------- */
-.ticker {
-  grid-area: ticker;
-  border-top: var(--b);
-  border-bottom: var(--b);
-  background: var(--c4);
-  overflow: hidden;
-  white-space: nowrap;
-  font-weight: 800;
-  font-stretch: 85%;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  height: 30px;
-  display: flex;
-  align-items: center;
-}
-.ticker-track {
-  display: inline-block;
-  padding-left: 100%;
-  animation: tick 48s linear infinite;
-}
-@keyframes tick { to { transform: translateX(-100%); } }
-
-/* ---------- Scoreboard (top of the sidebar) ---------- */
-.hud { background: var(--ink); color: var(--white); padding: 8px 14px 10px; border-bottom: var(--B); }
-.hud-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.hud-k { font-family: var(--pixel); font-size: 0.7rem; color: var(--c4); text-transform: uppercase; }
-.hud-score { font-family: var(--pixel); font-weight: 700; font-size: 1.7rem; line-height: 1; letter-spacing: 0.04em; color: var(--white); display: inline-block; }
-.hud-score.bump { animation: bumpScore 0.35s cubic-bezier(.3,1.6,.5,1); }
-@keyframes bumpScore { 40% { transform: scale(1.18); color: var(--c4); } }
-.hud-stats { display: flex; gap: 6px; margin-top: 6px; }
-.hud-chip { flex: 1; text-align: center; font-family: var(--pixel); font-size: 0.62rem; text-transform: uppercase; border: 2px solid #555; padding: 3px 2px; white-space: nowrap; }
-.hud-chip b { color: var(--c4); }
-.hud-chip.hot { border-color: var(--c1); background: var(--c1); color: var(--ink); }
-.hud-chip.hot b { color: var(--ink); }
 
 /* NEW! sticker on members you've never met before */
 .member.is-new .avatar { position: relative; }
@@ -471,12 +436,12 @@ button { -webkit-tap-highlight-color: transparent; }
   background: var(--paper);
 }
 .sc-h.mid { padding: 0; }
-.sc-cell { padding: 8px 10px; border-top: 2px solid var(--ink); display: flex; }
+.sc-cell { padding: 8px 12px; border-top: 2px solid var(--ink); display: flex; align-items: stretch; }
 .sc-arrow {
   border-top: 2px solid var(--ink);
   display: flex; align-items: center; justify-content: center;
   background: var(--white); color: var(--ink);
-  font-weight: 800; font-size: 1.15rem;
+  font-family: var(--mono); font-weight: 700; font-size: 1rem; line-height: 1;
 }
 .sc-chip {
   flex: 1;
@@ -492,8 +457,10 @@ button { -webkit-tap-highlight-color: transparent; }
   background: var(--accent, var(--white));
   color: var(--tag-ink, var(--ink));
 }
-.sc-chip .e { flex-shrink: 0; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: var(--white); border: 2px solid var(--ink); font-size: 0.9rem; }
-.sc-cell.out .sc-chip { background: var(--paper); color: #6A6A6A; border-style: dashed; }
+.sc-chip .e { flex-shrink: 0; width: 28px; height: 28px; display: grid; place-items: center; background: var(--white); border: 2px solid var(--ink); font-size: 1rem; line-height: 1; text-align: center; }
+.sc-chip .n { min-width: 0; }
+.sc-cell.out .sc-chip { background: var(--white); color: #777; border-color: #9A9A9A; }
+.sc-cell.out .sc-chip .e { border-color: #9A9A9A; }
 .sc-cell.out .sc-chip .n { text-decoration: line-through; text-decoration-thickness: 2px; }
 .sc-cell.out .sc-chip .e { filter: grayscale(1); opacity: 0.6; }
 
@@ -524,19 +491,40 @@ button { -webkit-tap-highlight-color: transparent; }
 .brow .bwrap { min-width: 0; }
 .say {
   flex-shrink: 0;
-  width: 34px; height: 34px;
-  display: inline-flex; align-items: center; justify-content: center;
+  position: relative;
+  width: 36px; height: 36px;
+  padding: 0;
+  display: grid; place-items: center;
   background: var(--white);
   color: var(--ink);
   border: var(--b);
   box-shadow: 3px 3px 0 var(--ink);
-  font-size: 0.95rem;
   cursor: pointer;
   transition: transform 90ms ease-out, box-shadow 90ms ease-out;
 }
+.say-ico { width: 20px; height: 20px; display: block; }
+.say-ico path { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: square; }
+.say-ico path:first-child, .say-ico rect { fill: currentColor; stroke: none; }
+.msg.speaking .say-ico .w1 { animation: wave 0.6s steps(2) infinite; }
+.msg.speaking .say-ico .w2 { animation: wave 0.6s 0.3s steps(2) infinite; }
+@keyframes wave { 50% { opacity: 0.15; } }
+/* loading: the button turns into a little stepping progress bar */
+.msg.voice-loading .say { background: var(--c4); cursor: progress; }
+.msg.voice-loading .say .say-ico { opacity: 0; }
+.msg.voice-loading .say::after {
+  content: '';
+  position: absolute;
+  left: 6px; right: 6px; top: 50%;
+  height: 6px; margin-top: -3px;
+  background: linear-gradient(90deg, var(--ink) 0 33%, transparent 33% 100%);
+  background-size: 300% 100%;
+  animation: loadbar 0.6s steps(3) infinite;
+  border: 2px solid var(--ink);
+}
+@keyframes loadbar { from { background-position: 0 0; } to { background-position: 150% 0; } }
 .say:hover { background: var(--c4); transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ink); }
 .say:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
-.msg.speaking .say { background: var(--c4); animation: blink 0.8s steps(1) infinite; }
+.msg.speaking .say { background: var(--c4); }
 .msg.speaking .bubble { animation: none; background: #FFF3A8; }
 .msg.speaking .msg-av { animation: talk 0.28s ease-in-out infinite alternate; }
 @keyframes talk { from { transform: rotate(-4deg) scale(1); } to { transform: rotate(-2deg) scale(1.08); } }
@@ -798,7 +786,7 @@ button { -webkit-tap-highlight-color: transparent; }
   outline-offset: -2.5px;
   transform: translate(7px, 7px);
 }
-.msg.me .bwrap::before { background: var(--l5); }
+.msg.me .bwrap::before { background: var(--c4); }
 
 /* Typing indicators */
 .dots i { font-style: normal; animation: blink 0.9s steps(1) infinite; }
@@ -1185,8 +1173,8 @@ button { -webkit-tap-highlight-color: transparent; }
     padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
              env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
-    grid-template-areas: "head head" "ticker ticker" "rail rail" "stream stream" "chaos chaos" "rand bar";
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "head head" "rail rail" "stream stream" "chaos chaos" "rand bar";
   }
   .brand { display: none; }
   .titlebar { min-height: 0; }
@@ -1199,16 +1187,9 @@ button { -webkit-tap-highlight-color: transparent; }
   .np-txt { display: none; }
   .viz { width: 40px; height: 26px; }
   .switch #soundTxt { display: none; }
-  .ticker { height: 24px; font-size: 0.7rem; border-top-width: 2px; }
 
   .rail { border-right: none; border-bottom: var(--b); }
   .rail-head { display: none; }
-  .hud { padding: 6px 10px; border-bottom: var(--b); display: flex; align-items: center; gap: 10px; }
-  .hud-top { gap: 6px; }
-  .hud-k { font-size: 0.55rem; }
-  .hud-score { font-size: 1.05rem; }
-  .hud-stats { margin-top: 0; flex: 1; }
-  .hud-chip { font-size: 0.5rem; padding: 2px 1px; }
   .toast { min-width: 200px; }
   .rail-list { display: flex; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
   .rail-list::-webkit-scrollbar { display: none; }
@@ -1233,7 +1214,8 @@ button { -webkit-tap-highlight-color: transparent; }
   .ghost-stack span { width: 28px; height: 28px; font-size: 0.85rem; }
   .stub { margin-left: 43px; }
   .bubble { font-size: 0.9rem; padding: 8px 11px 7px; }
-  .say { width: 30px; height: 30px; font-size: 0.85rem; }
+  .say { width: 32px; height: 32px; }
+  .say-ico { width: 17px; height: 17px; }
   .msg-vibe { display: none; }
   .play-btn, .shot-btn { font-size: 0.78rem; padding: 0 12px; min-height: 40px; gap: 6px; }
   .shot-btn .ico { font-size: 1rem; }
@@ -1257,7 +1239,6 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ticker-track { animation: none; padding-left: 12px; }
   .kbtn, .switch-knob { transition: none; }
   * { scroll-behavior: auto !important; }
 }
@@ -1294,21 +1275,9 @@ button { -webkit-tap-highlight-color: transparent; }
     </div>
   </header>
 
-  <!-- TICKER -->
-  <div class="ticker" aria-hidden="true">
-    <span class="ticker-track" id="tickerTrack"></span>
-  </div>
 
   <!-- MEMBER RAIL -->
   <aside class="rail" aria-label="Chat members">
-    <div class="hud" aria-label="Your score">
-      <div class="hud-top"><span class="hud-k">Score</span><span class="hud-score" id="hudScore">000000</span></div>
-      <div class="hud-stats">
-        <span class="hud-chip" title="Ask again within 2 minutes to build a combo">Combo <b id="hudCombo">x1</b></span>
-        <span class="hud-chip" title="Days in a row">🔥 <b id="hudStreak">0</b></span>
-        <span class="hud-chip" title="Members you've met">Met <b id="hudMet">0/50</b></span>
-      </div>
-    </div>
     <div class="rail-head" hidden>In this chat <small id="railCount">05</small></div>
     <div class="rail-list" id="railList"></div>
   </aside>
@@ -1342,7 +1311,7 @@ button { -webkit-tap-highlight-color: transparent; }
       <span class="prompt" aria-hidden="true">💬</span>
       <span class="sr-only">Your message</span>
       <textarea class="input" id="input" rows="1"
-        placeholder="Ask the council anything… four legends will reply. None will agree."></textarea>
+        placeholder="Ask the council anything"></textarea>
     </label>
 
     <button class="kbtn send-btn" id="sendBtn" type="button">Send</button>
@@ -1393,14 +1362,6 @@ const LEVELS = [
   { v: 5, emoji: '💅', name: 'Feral',    desc: 'Total group-chat meltdown' },
 ];
 
-const TICKER_LINES = [
-  'Now accepting bad decisions',
-  'Encryption: none',
-  'Advice quality: not guaranteed',
-  'Members may disagree violently',
-  'Screenshots encouraged',
-  'The council does not accept refunds',
-];
 
 // ================================================================
 //  ROSTER
@@ -1862,6 +1823,8 @@ async function typeOut(el, text) {
 //  CHAT RENDER
 // ================================================================
 const DOTS = '<span class="dots" aria-hidden="true"><i>▮</i><i>▮</i><i>▮</i></span>';
+const SPEAKER_ICON = '<svg class="say-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const STOP_ICON = '<svg class="say-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12"/></svg>';
 const BOUNCE = '<span class="bounce" aria-hidden="true"><i></i><i></i><i></i></span>';
 const TAIL = '<svg class="tail" viewBox="0 0 18 22" aria-hidden="true"><path d="M18 1.5 L1.5 8 L18 20.5"/></svg>';
 
@@ -1978,7 +1941,7 @@ function makeMember(m, slot) {
       <div class="msg-head"><span class="msg-tag">${escHtml(m.name)}</span><span class="msg-vibe">${escHtml(m.vibe)}</span></div>
       <div class="brow">
         <div class="bwrap"><div class="bubble">${escHtml(m.response)}<span class="btime">${clock().slice(0, 5)}</span></div>${TAIL}</div>
-        <button class="say" type="button" aria-label="Play voice" title="Hear it">🔊</button>
+        <button class="say" type="button" aria-label="Play voice" title="Hear it">${SPEAKER_ICON}</button>
       </div>
     </div>`;
   return el;
@@ -2319,7 +2282,7 @@ async function runCouncil(question, userEl) {
     const msgEl = makeMember(m, slot);
     ghost.replaceWith(msgEl);
     playSting(m.name);
-    gameReply(msgEl);   // coin + points (replaces the old bloop)
+    gameReply(msgEl, slot);
     scrollToBottom();
     round.memberEls.push(msgEl);
     setStatus(slot, 'replied');
@@ -3332,22 +3295,23 @@ const viz = {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, w, h);
     const fft = live ? music.analyser.getValue() : null;
-    const n = this.bars, gap = 2, bw = (w - gap * (n - 1)) / n, cell = 4, step = cell + 1;
-    const colors = ['#FF3B00', '#FFD600', '#00E05A', '#0038FF', '#FF4FD8'];
+    // six solid black slabs on white, square tops, a hard baseline
+    const n = 6, gap = 3, bw = (w - gap * (n - 1)) / n;
+    g.fillStyle = '#000';
     for (let i = 0; i < n; i++) {
-      let target = 0.06;
+      let target = 0.12;
       if (fft) {
-        const db = fft[Math.min(fft.length - 1, 1 + Math.floor(i * 1.6))];
-        target = Math.max(0.06, Math.min(1, (db + 92) / 64));
+        const db = fft[Math.min(fft.length - 1, 1 + Math.floor(i * 2.4))];
+        target = Math.max(0.12, Math.min(1, (db + 90) / 60));
       }
-      const prev = this.heights[i] ?? 0.06;
-      const v = target > prev ? target : Math.max(target, prev * 0.88);
+      const prev = this.heights[i] ?? 0.12;
+      const v = target > prev ? target : Math.max(target, prev * 0.85);
       this.heights[i] = v;
-      const blocks = Math.max(1, Math.round((v * h) / step));
-      g.fillStyle = colors[i % colors.length];
-      for (let b = 0; b < blocks; b++) g.fillRect(i * (bw + gap), h - (b + 1) * step + 1, bw, cell);
+      const bh = Math.max(3, Math.round(v * h));
+      g.fillRect(Math.round(i * (bw + gap)), h - bh, Math.round(bw), bh);
     }
     if (live) this.raf = requestAnimationFrame(x => this.frame(x));
+
   },
 };
 document.addEventListener('visibilitychange', () => viz.kick());
@@ -3516,7 +3480,7 @@ function pickBrowserVoice(prof, hindiText = false) {
 
 // Ambience bed + music dip while a voice is speaking
 function startVoiceBed(name, seconds) {
-  duckStart();
+  duckStart(seconds);
   const key = BED_FOR[name];
   if (!key || !music.enabled || !window.Tone) return;
   try {
@@ -3536,10 +3500,16 @@ function endVoiceBed() {
   const back = Math.max(now + 0.35, k.bedEnd || 0);   // leftover bed events play silently, then stings return
   g.setValueAtTime(0, back); g.linearRampToValueAtTime(0.85, back + 0.05);
 }
-function duckStart() {
+// The dip always schedules its own recovery, so music can never get stuck quiet
+// (even if a voice fails silently and no "ended" event ever arrives).
+function duckStart(seconds = 8) {
   if (!music.master || !music.playing || !music.mood) return;
-  const g = music.master.gain, now = Tone.now();
-  g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(moodGain(music.mood) * 0.3, now + 0.15);
+  const g = music.master.gain, now = Tone.now(), full = moodGain(music.mood);
+  const back = now + Math.min(30, Math.max(1, seconds)) + 0.4;
+  g.cancelScheduledValues(now); g.setValueAtTime(g.value, now);
+  g.linearRampToValueAtTime(full * 0.3, now + 0.15);
+  g.setValueAtTime(full * 0.3, back);
+  g.linearRampToValueAtTime(full, back + 0.6);
 }
 function duckEnd() {
   if (!music.master || !music.playing || !music.mood) return;
@@ -3551,7 +3521,8 @@ function setSpeakingUI(el, on) {
   if (!el) return;
   el.classList.toggle('speaking', on);
   const b = el.querySelector('.say');
-  if (b) { b.textContent = on ? '■' : '🔊'; b.setAttribute('aria-label', `${on ? 'Stop' : 'Play'} voice`); }
+  if (b) { b.innerHTML = on ? STOP_ICON : SPEAKER_ICON; b.setAttribute('aria-label', `${on ? 'Stop' : 'Play'} voice`); }
+  if (!on) el.classList.remove('voice-loading');
 }
 
 function finishVoice(cur, cancelSpeech = false) {
@@ -3597,6 +3568,10 @@ async function playVoice(m, el) {
     const est = text.length / (14 * u.rate);
     u.onend = u.onerror = () => finishVoice(cur);
     cur.safety = setTimeout(() => finishVoice(cur), (est * 1.8 + 3) * 1000);  // some browsers never fire onend
+    let started = false;
+    u.onstart = () => { started = true; };
+    // Safari can silently refuse speech that wasn't started by a tap: give up after 2.5 s instead of hanging
+    setTimeout(() => { if (!started && voice.cur === cur) finishVoice(cur, true); }, 2500);
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
     ready.then(() => startVoiceBed(m.name, est));
@@ -3604,6 +3579,7 @@ async function playVoice(m, el) {
 
   if (voice.cloud === false || !window.Tone) { speakBrowser(); return done; }
 
+  el?.classList.add('voice-loading');
   try {
     await ready;
     let buf;
@@ -3621,9 +3597,11 @@ async function playVoice(m, el) {
     cur.nodes.push(player);
     cur.player = player;
     player.onstop = () => finishVoice(cur);
+    el?.classList.remove('voice-loading');
     startVoiceBed(m.name, buf.duration / (prof.rate || 1));
     player.start();
   } catch (e) {
+    el?.classList.remove('voice-loading');
     if (token !== voice.token || voice.cur !== cur) return done;
     voice.cloud = false;   // no route on the worker: use browser voices from now on
     speakBrowser();
@@ -3994,9 +3972,10 @@ function storyKeydown(e) {
 }
 
 // ================================================================
-//  GAME  (score, combos, streaks, collection, achievements, juice)
+//  GAME  (achievements, collection badges, juice)
 // ================================================================
 // Everything here is client-side and saved in this browser (localStorage).
+// Achievements only (no score): a banner, a fanfare and confetti
 const ACHIEVEMENTS = {
   first:    ['First words',      'Asked the council your first question'],
   rounds10: ['Regular',          'Asked 10 questions'],
@@ -4004,7 +3983,6 @@ const ACHIEVEMENTS = {
   shuffle5: ['Shuffle addict',   'Randomized the squad 5 times'],
   spin3:    ['High roller',      'Spun the chaos 3 times'],
   jackpot:  ['Jackpot',          'Spun straight into Feral'],
-  combo5:   ['Unstoppable',      'Hit a x5 combo'],
   story:    ['Story time',       'Took your first screenshot'],
   voice:    ['Hear me out',      'Played a voice'],
   desi:     ['Full filmy',       'Got the saas-bahu treatment'],
@@ -4030,36 +4008,7 @@ function gameLoad() {
 function gameSave() { try { localStorage.setItem('council-game', JSON.stringify(game.data)); } catch {} }
 
 // ---------- HUD ----------
-function renderHud(bump = false) {
-  const d = game.data;
-  $('hudCombo').textContent = `x${game.combo}`;
-  $('hudCombo').parentElement.classList.toggle('hot', game.combo > 1);
-  $('hudStreak').textContent = d.streak || 0;
-  $('hudMet').textContent = `${d.met.length}/${ROSTER.length}`;
-  rollScore(bump);
-}
-function rollScore(bump) {
-  const el = $('hudScore');
-  const from = game.shown, to = game.data.score;
-  const fmt = n => String(Math.round(n)).padStart(6, '0');
-  if (REDUCED || from === to) { el.textContent = fmt(to); game.shown = to; return; }
-  const start = performance.now(), dur = 650;
-  const step = t => {
-    const p = Math.min(1, (t - start) / dur);
-    game.shown = from + (to - from) * (1 - Math.pow(1 - p, 3));
-    el.textContent = fmt(game.shown);
-    if (p < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
-  if (bump) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
-}
-
-function addPoints(n) {
-  game.data.score += n;
-  game.data.best = Math.max(game.data.best, game.data.score);
-  gameSave();
-  renderHud(true);
-}
+function renderHud() {}
 
 // ---------- toasts ----------
 function toast(title, sub = '', kind = 'info') {
@@ -4086,22 +4035,9 @@ function unlock(id) {
   toast(`🏆 ${name}`, desc, 'ach');
   playSfx('fanfare');
   confetti(40);
-  addPoints(250);
 }
 
 // ---------- juice ----------
-function floatPoints(el, n) {
-  if (!el?.isConnected) return;
-  const p = document.createElement('span');
-  p.className = 'pts';
-  p.textContent = `+${n}`;
-  el.querySelector('.bwrap')?.appendChild(p);
-  if (REDUCED) { setTimeout(() => p.remove(), 900); return; }
-  p.animate([{ opacity: 0, transform: 'translateY(6px) scale(0.6)' }, { opacity: 1, transform: 'translateY(-8px) scale(1.15)', offset: 0.25 },
-    { opacity: 0, transform: 'translateY(-36px) scale(1)' }], { duration: 1100, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' })
-    .finished.then(() => p.remove());
-}
-
 function shake(power = 1) {
   if (REDUCED) return;
   const a = 3 * power;
@@ -4138,13 +4074,9 @@ function gameMeet(members, quiet = false) {
   els.rail.querySelectorAll('.member').forEach((card, i) => {
     if (fresh.includes(state.members[i])) card.classList.add('is-new');
   });
-  if (fresh.length && !quiet) {
-    addPoints(fresh.length * 10);
-    toast(`${fresh.length} new member${fresh.length > 1 ? 's' : ''} met`, `+${fresh.length * 10} points`);
-  } else gameSave();
+  gameSave();
   if (game.data.met.length >= 20) unlock('met20');
   if (game.data.met.length >= ROSTER.length) unlock('met50');
-  renderHud();
 }
 
 function gameRandomized(members) {
@@ -4160,45 +4092,27 @@ function gameSpun(level) {
   if (level === 5) unlock('jackpot');
 }
 
-// Each reply landing: points scale with chaos level and combo
-function gameReply(msgEl) {
-  const pts = 20 * state.level * game.combo;
-  floatPoints(msgEl, pts);
-  addPoints(pts);
-  playSfx('coin');
+// Each reply landing: a bloop, and the window shakes on the wild levels
+function gameReply(msgEl, slot = 0) {
+  playSfx('pop', slot);
   if (state.level >= 4) shake(state.level === 5 ? 1.6 : 1);
 }
 
 function gameRound(round) {
   const d = game.data;
-  // combo: keep asking within 2 minutes to build it up (max x5)
-  const now = Date.now();
-  const prevCombo = game.combo;
-  game.combo = now - game.lastRoundAt < 120000 ? Math.min(5, game.combo + 1) : 1;
-  game.lastRoundAt = now;
-  // daily streak
   const t = today();
   if (d.lastDay !== t) {
     const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
     d.streak = d.lastDay === y ? d.streak + 1 : 1;
     d.lastDay = t;
-    if (d.streak > 1) toast(`🔥 ${d.streak}-day streak`, 'Come back tomorrow to keep it alive');
   }
   d.rounds++;
-  const reacts = (round.reactions || []).length;
-  const bonus = 100 * round.level * prevCombo + reacts * 25;
-  addPoints(bonus);
-  toast(`Round clear +${bonus}`, reacts ? `${reacts} reaction${reacts > 1 ? 's' : ''} +${reacts * 25}` + (prevCombo > 1 ? `, combo x${prevCombo}` : '') : (prevCombo > 1 ? `Combo x${prevCombo}` : 'Ask again within 2 minutes to build a combo'), 'clear');
-  if (game.combo > prevCombo) { playSfx('comboUp'); setTimeout(() => toast(`Combo x${game.combo}!`, 'Next round scores more', 'combo'), 500); }
-  if (round.level >= 4 || game.combo >= 3) confetti(round.level === 5 ? 50 : 26);
-  renderHud(true);
+  if (round.level >= 4) confetti(round.level === 5 ? 50 : 26);
   unlock('first');
   if (d.rounds >= 10) unlock('rounds10');
   if (round.level === 5) unlock('feral');
-  if (game.combo >= 5) unlock('combo5');
   if (d.streak >= 3) unlock('streak3');
-  const h = new Date().getHours();
-  if (h < 4) unlock('night');
+  if (new Date().getHours() < 4) unlock('night');
   gameSave();
 }
 
@@ -4206,11 +4120,9 @@ function gameRound(round) {
 //  INIT
 // ================================================================
 (async function init() {
-  if (window.matchMedia('(max-width: 720px)').matches) els.input.placeholder = 'Ask the council…';
-  $('tickerTrack').textContent = TICKER_LINES.map(t => `✸ ${t}`).join('    ').repeat(2);
+  if (window.matchMedia('(max-width: 720px)').matches) els.input.placeholder = 'Ask the council anything';
 
   gameLoad();
-  renderHud();
   renderLevels();
   $('app').classList.add('a-boot');
   randomize(false);
