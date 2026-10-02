@@ -23,6 +23,20 @@ export default {
     // Hindi / Hinglish voices: Sarvam AI Bulbul v3, needs the SARVAM_KEY secret.
     if (body.tts_probe) return json({ tts: !!env.AI, hindi: !!env.SARVAM_KEY });
 
+    // Sarvam Bulbul v3 call, shared by the Hindi route and the English fallback
+    async function sarvamSpeak(text, speaker, pace, langCode) {
+      const res = await fetch('https://api.sarvam.ai/text-to-speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'api-subscription-key': env.SARVAM_KEY },
+        body: JSON.stringify({ text, speaker, pace, language_code: langCode, model: 'bulbul:v3', temperature: 0.9, speech_sample_rate: 24000 }),
+      });
+      if (!res.ok) throw new Error(`sarvam HTTP ${res.status}`);
+      const data = await res.json();
+      const b64 = (data.audios || []).join('');
+      if (!b64) throw new Error('sarvam returned no audio');
+      return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    }
+
     if (body.tts_text) {
       const text = String(body.tts_text).replace(/\s+/g, ' ').trim().slice(0, 700);
       if (!text) return json({ error: 'Nothing to say' }, 400);
@@ -77,7 +91,7 @@ export default {
         }
       }
 
-      if (!env.AI) return json({ error: 'Voices are not set up on this worker' }, 501);
+      if (!env.AI && !env.SARVAM_KEY) return json({ error: 'Voices are not set up on this worker' }, 501);
       const AURA2 = ['amalthea', 'andromeda', 'apollo', 'arcas', 'aries', 'asteria', 'athena', 'atlas', 'aurora', 'callista',
         'cora', 'cordelia', 'delia', 'draco', 'electra', 'harmonia', 'helena', 'hera', 'hermes', 'hyperion', 'iris', 'janus',
         'juno', 'jupiter', 'luna', 'mars', 'minerva', 'neptune', 'odysseus', 'ophelia', 'orion', 'orpheus', 'pandora', 'phoebe',
@@ -93,12 +107,32 @@ export default {
         electra: 'asteria', asteria: 'asteria', thalia: 'asteria', theia: 'athena', juno: 'luna', minerva: 'athena', ophelia: 'stella',
         vesta: 'asteria', amalthea: 'luna',
       };
+      // English fallback #1: Sarvam's Indian-English mode, a different Sarvam voice per character
+      const SARVAM_FOR = {
+        zeus: 'kabir', jupiter: 'vijay', mars: 'rahul', pluto: 'anand', saturn: 'ashutosh', odysseus: 'advait', orion: 'aditya',
+        orpheus: 'dev', draco: 'amit', hermes: 'rohan', arcas: 'varun', apollo: 'tarun', atlas: 'sunny', aries: 'manan',
+        hyperion: 'mohit', janus: 'gokul', neptune: 'sumit',
+        pandora: 'ritu', athena: 'neha', helena: 'pooja', hera: 'roopa', harmonia: 'kavitha', luna: 'simran', iris: 'ishita',
+        phoebe: 'kavya', delia: 'tanya', andromeda: 'shruti', aurora: 'suhani', cordelia: 'priya', callista: 'shreya', cora: 'rupali',
+        electra: 'shreya', asteria: 'priya', thalia: 'kavya', theia: 'neha', juno: 'ishita', minerva: 'rupali', ophelia: 'suhani',
+        vesta: 'tanya', amalthea: 'simran',
+      };
       let note = '';
-      try {
-        const ai = await env.AI.run('@cf/deepgram/aura-2-en', { text, speaker, encoding: 'mp3' }, { returnRawResponse: true });
-        if (ai.ok) return new Response(ai.body, { headers: audioHeaders('audio/mpeg', 'aura-2', speaker) });
-        note = `aura-2 HTTP ${ai.status}`;
-      } catch (e) { note = `aura-2 error: ${String(e.message || e).slice(0, 120)}`; }
+      if (env.AI) {
+        try {
+          const ai = await env.AI.run('@cf/deepgram/aura-2-en', { text, speaker, encoding: 'mp3' }, { returnRawResponse: true });
+          if (ai.ok) return new Response(ai.body, { headers: audioHeaders('audio/mpeg', 'aura-2', speaker) });
+          note = `aura-2 HTTP ${ai.status}`;   // 429 = Workers AI daily free allowance used up
+        } catch (e) { note = `aura-2 error: ${String(e.message || e).slice(0, 120)}`; }
+      }
+      if (env.SARVAM_KEY) {
+        const sv = SARVAM_FOR[speaker] || 'shubh';
+        try {
+          const bytes = await sarvamSpeak(text, sv, 1, 'en-IN');
+          return new Response(bytes, { headers: audioHeaders('audio/wav', 'sarvam-english-fallback', sv, note) });
+        } catch (e) { note += `; ${String(e.message || e).slice(0, 80)}`; }
+      }
+      if (!env.AI) return json({ error: 'Voice generation failed', note }, 502);
       try {
         const fallback = AURA1_FOR[speaker] || 'angus';
         const ai1 = await env.AI.run('@cf/deepgram/aura-1', { text, speaker: fallback, encoding: 'mp3' }, { returnRawResponse: true });
