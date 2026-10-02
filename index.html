@@ -44,9 +44,9 @@
 * { margin: 0; padding: 0; box-sizing: border-box; border-radius: 0; }
 html, body { height: 100%; }
 body {
-  background-color: #E9E5D9;
-  background-image: var(--halftone);
-  background-size: 9px 9px;
+  background-color: var(--c2);
+  background-image: radial-gradient(rgba(0,0,0,0.32) 1.4px, transparent 1.9px);
+  background-size: 10px 10px;
   color: var(--ink);
   font-family: var(--text);
   overflow: hidden;
@@ -55,6 +55,14 @@ body {
 button, textarea { font: inherit; color: inherit; }
 button { -webkit-tap-highlight-color: transparent; }
 :focus-visible { outline: 3px solid var(--c2); outline-offset: 3px; }
+::selection { background: var(--c4); color: var(--ink); }
+
+/* Brutalist scrollbars: a black slab on a paper track */
+* { scrollbar-width: thin; scrollbar-color: var(--ink) transparent; }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ink); border: 3px solid var(--paper); }
+::-webkit-scrollbar-thumb:hover { background: var(--c1); }
 
 /* Shared chunky button: raised on hover, pressed on click */
 .kbtn {
@@ -255,23 +263,23 @@ button { -webkit-tap-highlight-color: transparent; }
 .rail-list { overflow-y: auto; flex: 1; min-height: 0; }
 .member {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
-  padding: 14px 14px 13px;
+  padding: 11px 14px 11px;
   border-bottom: var(--b);
   background: var(--white);
 }
 .avatar {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border: var(--b);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   background: var(--accent, var(--white));
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
   transform: rotate(-3deg);
 }
 .member:nth-child(odd) .avatar { transform: rotate(2.5deg); }
@@ -306,8 +314,10 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
   text-transform: uppercase;
 }
-.member-status.typing { color: var(--c2); }
-.member-status.left { color: #8A8A8A; }
+.member-status { padding: 1px 5px; border: 2px solid transparent; }
+.member-status.typing { background: var(--c2); color: var(--white); border-color: var(--ink); }
+.member-status.replied { background: var(--c3); border-color: var(--ink); }
+.member-status.left { color: #8A8A8A; border: 2px dashed #8A8A8A; }
 .member.you { background: var(--paper); }
 .member.you .avatar { background: var(--ink); color: var(--white); font-weight: 800; font-size: 0.9rem; transform: none; }
 
@@ -429,6 +439,37 @@ button { -webkit-tap-highlight-color: transparent; }
 .sc-cell.out .sc-chip { background: var(--paper); color: #6A6A6A; border-style: dashed; }
 .sc-cell.out .sc-chip .n { text-decoration: line-through; text-decoration-thickness: 2px; }
 .sc-cell.out .sc-chip .e { filter: grayscale(1); opacity: 0.6; }
+
+/* Welcome poster + example questions (shown until the first send) */
+.welcome { align-self: stretch; display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: 18px 4px 6px; }
+.w-line {
+  display: inline-block;
+  background: var(--ink);
+  color: var(--white);
+  font-family: var(--display);
+  font-weight: 800;
+  font-stretch: 78%;
+  font-size: clamp(2rem, 4.6vw, 3.9rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  padding: 6px 14px 4px;
+}
+.w-line:nth-child(2) { margin-left: clamp(18px, 4vw, 56px); background: var(--c1); color: var(--ink); }
+.w-line:nth-child(3) { margin-left: clamp(36px, 8vw, 112px); background: var(--c4); color: var(--ink); }
+.w-sub { margin: 18px 0 14px; max-width: 46ch; font-size: 1rem; line-height: 1.45; }
+.w-chips { display: flex; flex-wrap: wrap; gap: 10px 12px; }
+.w-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: left;
+  padding: 8px 12px 8px 8px;
+}
+.w-chip .e { width: 30px; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--accent); border: 2px solid var(--ink); font-size: 1rem; }
 
 /* A question and its replies */
 .round { display: flex; flex-direction: column; gap: 16px; transition: zoom 0.45s cubic-bezier(.2,.8,.3,1); }
@@ -1131,6 +1172,9 @@ button { -webkit-tap-highlight-color: transparent; }
   .member-foot { margin-top: 3px; }
 
   .stream { padding: 16px 12px 20px; }
+  .w-line { font-size: 1.75rem; }
+  .w-sub { font-size: 0.92rem; margin: 14px 0 12px; }
+  .w-chip { font-size: 0.85rem; }
   .msg { max-width: 94%; gap: 9px; }
   .msg-av { width: 34px; height: 34px; font-size: 1.05rem; margin-top: 24px; }
   .ghost-stack span { width: 28px; height: 28px; font-size: 0.85rem; }
@@ -1784,6 +1828,50 @@ function postSystem(text, isError = false, { typed = false, into } = {}) {
   return el;
 }
 
+const EXAMPLES = [
+  ['💔', 'Should I text my ex at 2 AM?'],
+  ['🍍', 'Is pineapple on pizza a crime?'],
+  ['💍', 'Meri shaadi ka rishta aaya hai. Help.'],
+  ['🎒', 'Should I bunk college tomorrow?'],
+  ['📉', 'Should I put my savings in crypto?'],
+  ['💼', "My boss replied 'ok.' What does it mean?"],
+  ['🏋️', 'Is it too late to start going to the gym?'],
+  ['🌌', 'Why do I exist?'],
+  ['🍜', 'Is Maggi at 3 AM self-care?'],
+  ['👀', 'My friend left me on read for 6 hours. Is it over?'],
+];
+
+function postWelcome() {
+  const el = document.createElement('div');
+  el.className = 'welcome a-sys';
+  el.innerHTML = `
+    <span class="w-line">Ask anything.</span>
+    <span class="w-line">Four legends reply.</span>
+    <span class="w-line">Nobody agrees.</span>
+    <p class="w-sub">Tap a question to start, or type your own below. Feeling brave? Pull the chaos lever first.</p>
+    <div class="w-chips">${shuffle(EXAMPLES).slice(0, window.innerWidth <= 720 ? 4 : 6).map(([e, q], i) =>
+      `<button class="kbtn w-chip" type="button" style="--accent:${ACCENTS[i % ACCENTS.length].bg}"><span class="e" aria-hidden="true">${e}</span><span class="q">${escHtml(q)}</span></button>`).join('')}</div>`;
+  el.querySelectorAll('.w-chip').forEach(b => b.addEventListener('click', () => {
+    if (state.busy) return;
+    els.input.value = b.querySelector('.q').textContent;
+    send();
+  }));
+  state.welcome = el;
+  els.stream.appendChild(el);
+  // keep the poster's headline in view (don't jump to the bottom like a new message)
+  requestAnimationFrame(() => {
+    const top = el.getBoundingClientRect().top - els.stream.getBoundingClientRect().top + els.stream.scrollTop - 12;
+    els.stream.scrollTo({ top: Math.max(0, Math.min(top, els.stream.scrollHeight)), behavior: 'auto' });
+  });
+  return el;
+}
+
+function removeWelcome() {
+  const el = state.welcome;
+  state.welcome = null;
+  if (el?.isConnected) collapseAway(el);
+}
+
 function postDay() {
   const el = document.createElement('div');
   el.className = 'day a-sys';
@@ -1889,16 +1977,7 @@ const ROLE_LABEL = {
 };
 
 function renderRail(animate = false, baseDelay = 0) {
-  const you = `
-    <div class="member you">
-      <div class="avatar">YOU</div>
-      <div class="member-text">
-        <div class="member-name">You</div>
-        <div class="member-arch">Asking for a friend</div>
-        <div class="member-foot"><span class="member-status">● Online</span></div>
-      </div>
-    </div>`;
-  els.rail.innerHTML = you + state.members.map((p, i) => {
+  els.rail.innerHTML = state.members.map((p, i) => {
     const a = ACCENTS[i % ACCENTS.length];
     const anim = animate ? ` a-stamp-in" style="--accent:${a.bg};animation-delay:${baseDelay + i * T.stampGap}ms` : `" style="--accent:${a.bg}`;
     const role = ROLE_LABEL[p.role] ? `<span class="role">${ROLE_LABEL[p.role]}</span>` : '';
@@ -2276,6 +2355,7 @@ async function send() {
   els.input.value = '';
   autosize();
 
+  removeWelcome();
   const userEl = postUser(question, newRound());
   await runCouncil(question, userEl);
   els.input.focus();
@@ -2887,7 +2967,7 @@ function updateMusicUI() {
   if (!window.Tone) text = 'Audio unavailable';
   else if (!music.enabled) text = 'Muted';
   else if (mood && music.playing) text = MOODS[mood].label;
-  else text = 'Silence. Ask something';
+  else text = 'Waiting for you';
   np.textContent = text;
   np.title = text;
   $('soundBox').classList.toggle('playing', !!(music.enabled && music.playing));
@@ -3279,6 +3359,7 @@ function storyKeydown(e) {
   await wait(T.boot + state.members.length * T.stampGap);
   postDay();
   postSystem(`${state.members.length} members joined the chat`, false, { typed: true });
+  postWelcome();
 })();
 </script>
 </body>
