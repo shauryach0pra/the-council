@@ -24,7 +24,7 @@ Simply open `index.html` in a web browser — no build process or dependencies r
 
 1. Type your question or opinion in the text area
 2. Click "Randomize" to select 4 legendary personalities (or use the default selection)
-3. Adjust the "Vibe Level" slider to control personality intensity (Sane → Quirky → Weird → Unhinged → Gay)
+3. Adjust the "Vibe Level" slider to control personality intensity (Sane → Quirky → Weird → Unhinged → Feral)
 4. Click "Summon The Council" to get responses
 5. Enjoy the dynamic background music that matches your question's emotional tone
 

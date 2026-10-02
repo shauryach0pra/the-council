@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Council</title>
+<meta name="description" content="Ask anything. Four legendary minds reply in a group chat, bicker, and spectacularly disagree.">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="The Council">
+<meta property="og:description" content="Ask anything. Four legendary minds reply in a group chat, bicker, and spectacularly disagree.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -1135,7 +1141,6 @@ const state = {
   level: 1,
   busy: false,
   msgId: 41,       // message counter, displayed as #0042, #0043…
-  lastQuestion: '',
   round: null,          // { question, userEl, members, memberEls } for the latest reply set
   resummonTimer: null,
 };
@@ -1504,7 +1509,6 @@ async function send() {
   cancelResummon();
   startMusicFor(question);   // must stay before any await: Tone.start() needs the user gesture
 
-  state.lastQuestion = question;
   els.input.value = '';
   autosize();
 
@@ -1975,7 +1979,7 @@ function flipFrom(rectFrom, card) {
 
 async function openStory() {
   const round = state.round;
-  if (story.open || state.busy || !round?.members.length) return;
+  if (story.open || state.busy || state.resummonTimer || !round?.members.length) return;
   story.open = true;
   story.lastFocus = document.activeElement;
   const token = ++story.token;
@@ -2111,6 +2115,7 @@ function storyKeydown(e) {
 //  INIT
 // ================================================================
 (async function init() {
+  if (window.matchMedia('(max-width: 720px)').matches) els.input.placeholder = 'Ask the council…';
   $('tickerTrack').textContent = TICKER_LINES.map(t => `▲ ${t}`).join('     ').repeat(2);
 
   renderLevels();
