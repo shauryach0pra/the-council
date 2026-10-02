@@ -12,7 +12,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&family=Space+Mono:wght@400;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -34,15 +34,18 @@
   --B: 4px solid var(--ink);
   --shadow: 8px 8px 0 var(--ink);
   --shadow-sm: 4px 4px 0 var(--ink);
-  --display: 'Bricolage Grotesque', 'Arial Black', Impact, sans-serif;
-  --text: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --display: 'Archivo', 'Arial Black', Impact, sans-serif;
+  --text: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'Space Mono', ui-monospace, 'Courier New', monospace;
-  --pixel: 'Silkscreen', 'Space Mono', ui-monospace, monospace;
+  --pixel: var(--mono);
+  --sh: var(--ink);   /* hard-shadow colour; yellow on dark sections */
   --rail-w: 300px;
   --halftone: radial-gradient(rgba(0,0,0,0.11) 1.1px, transparent 1.6px);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; border-radius: 0; }
+/* condensed heavy caps need a little more air between words */
+.brand, .squad-name, .msg-tag, .member-name, .chaos-head, .reel-item .n, .sc-title, .rand-btn, .send-btn, .spin-btn, .shot-btn, .play-btn, .t-title, .rail-head { word-spacing: 0.1em; }
 html, body { height: 100%; }
 body {
   background-color: var(--c2);
@@ -64,16 +67,17 @@ button { -webkit-tap-highlight-color: transparent; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--ink); border: 3px solid var(--paper); }
 ::-webkit-scrollbar-thumb:hover { background: var(--c1); }
+.chaos ::-webkit-scrollbar-thumb { border-color: var(--ink); background: var(--white); }
 
 /* Shared chunky button: raised on hover, pressed on click */
 .kbtn {
   border: var(--b);
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--sh);
   cursor: pointer;
   transition: transform 90ms ease-out, box-shadow 90ms ease-out;
 }
-.kbtn:not(:disabled):hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--ink); }
-.kbtn:not(:disabled):active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink); }
+.kbtn:not(:disabled):hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--sh); }
+.kbtn:not(:disabled):active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--sh); }
 .kbtn:disabled { cursor: not-allowed; opacity: 0.45; }
 
 /* ================================================================
@@ -110,8 +114,8 @@ button { -webkit-tap-highlight-color: transparent; }
   border-right: var(--B);
   padding: 0 18px;
   font-family: var(--display);
-  font-weight: 800;
-  font-stretch: 75%;
+  font-weight: 900;
+  font-stretch: 72%;
   font-size: 1.9rem;
   line-height: 0.9;
   text-transform: uppercase;
@@ -135,8 +139,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .head-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 10px 20px; }
 .squad-name {
   font-family: var(--display);
-  font-weight: 800;
-  font-stretch: 80%;
+  font-weight: 900;
+  font-stretch: 78%;
   font-size: clamp(1.25rem, 2vw, 1.85rem);
   line-height: 1;
   letter-spacing: -0.01em;
@@ -218,7 +222,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ---------- Arcade toasts, floating points, confetti ---------- */
-.toasts { position: fixed; z-index: 70; top: calc(20px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+.toasts { position: fixed; z-index: 70; top: calc(108px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
 .toast {
   min-width: 240px;
   max-width: min(420px, 92vw);
@@ -231,7 +235,7 @@ button { -webkit-tap-highlight-color: transparent; }
   animation: toastIn 0.42s cubic-bezier(.2,.9,.25,1.3) both;
 }
 @keyframes toastIn { from { opacity: 0; transform: translateY(-24px) scale(0.9); } to { opacity: 1; transform: none; } }
-.t-title { font-family: var(--pixel); font-weight: 700; font-size: 1rem; color: var(--c4); text-transform: uppercase; }
+.t-title { font-family: var(--display); font-weight: 900; font-stretch: 80%; font-size: 1.05rem; color: var(--c4); text-transform: uppercase; }
 .t-sub { font-size: 0.8rem; margin-top: 2px; color: #DDD; }
 .toast.ach { background: var(--c4); color: var(--ink); border-color: var(--ink); box-shadow: 6px 6px 0 var(--ink); }
 .toast.ach .t-title { color: var(--ink); font-size: 1.05rem; }
@@ -268,8 +272,8 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   padding: 10px 14px;
   border-bottom: var(--b);
-  font-weight: 800;
-  font-stretch: 80%;
+  font-weight: 900;
+  font-stretch: 78%;
   font-size: 1rem;
   text-transform: uppercase;
   background: var(--paper);
@@ -622,10 +626,12 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: stretch;
   gap: 14px;
   padding: 12px 16px 14px;
-  background: var(--paper);
+  background: var(--ink);
+  --sh: var(--c4);
 }
 /* Randomize lives at the bottom of the sidebar, under the chaos machine */
 .randbox {
+  --sh: var(--c4);
   grid-area: rand;
   display: flex;
   border-top: var(--B);
@@ -645,8 +651,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 0 18px;
   min-height: 58px;
 }
-.rand-btn { background: var(--c3); box-shadow: 4px 4px 0 var(--c4); }
-.rand-btn:not(:disabled):hover { box-shadow: 5px 5px 0 var(--c4); }
+.rand-btn { background: var(--c3); }
 .rand-btn .ico { display: inline-block; margin-right: 4px; }
 .rand-btn:not(:disabled):hover .ico { animation: dice 0.5s ease-in-out; }
 @keyframes dice { 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg); } }
@@ -654,6 +659,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 /* ---------- Chaos machine: a flat vertical slot reel (bottom half of the sidebar) ---------- */
 .chaos {
+  --sh: var(--c4);
   grid-area: chaos;
   display: flex;
   flex-direction: column;
@@ -669,8 +675,8 @@ button { -webkit-tap-highlight-color: transparent; }
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-weight: 800;
-  font-stretch: 80%;
+  font-weight: 900;
+  font-stretch: 78%;
   font-size: 1rem;
   text-transform: uppercase;
   color: var(--c4);
@@ -735,11 +741,8 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 2px;
   font-size: 0.85rem;
   line-height: 1;
-  box-shadow: 3px 3px 0 var(--c4);
 }
 .step small { font-family: var(--mono); font-size: 0.5rem; font-weight: 700; text-transform: uppercase; }
-.step:not(:disabled):hover { box-shadow: 4px 4px 0 var(--c4); }
-.step:not(:disabled):active { box-shadow: 0 0 0 var(--c4); }
 
 .spin-btn {
   background: var(--c4);
@@ -750,14 +753,12 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 1.05rem;
   text-transform: uppercase;
   min-height: 46px;
-  box-shadow: 4px 4px 0 var(--c1);
+  --sh: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
 }
-.spin-btn:not(:disabled):hover { box-shadow: 5px 5px 0 var(--c1); }
-.spin-btn:not(:disabled):active { box-shadow: 0 0 0 var(--c1); }
 .chaos-desc { font-family: var(--mono); font-size: 0.64rem; font-weight: 700; line-height: 1.4; color: #CFCFCF; text-transform: uppercase; min-height: 1.4em; }
 .step:disabled, .spin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -769,12 +770,19 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 8px 14px;
   background: var(--white);
   border: var(--b);
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--sh);
   cursor: text;
   transition: box-shadow 120ms;
 }
-.input-wrap:focus-within { box-shadow: 4px 4px 0 var(--c2); }
-.input-wrap .prompt { font-size: 1.2rem; flex-shrink: 0; }
+.input-wrap:focus-within { box-shadow: 6px 6px 0 var(--white); }
+.input-wrap .prompt {
+  flex-shrink: 0;
+  width: 26px; height: 26px;
+  display: grid; place-items: center;
+  background: var(--ink); color: var(--c4);
+  font-family: var(--mono); font-weight: 700; font-size: 0.95rem;
+}
+.input-wrap:focus-within .prompt { animation: blink 1s steps(1) infinite; }
 .input {
   flex: 1;
   border: none;
@@ -786,7 +794,7 @@ button { -webkit-tap-highlight-color: transparent; }
   outline: none;
   padding: 6px 0;
 }
-.input::placeholder { color: #8A8A8A; }
+.input::placeholder { color: #8A8A8A; font-family: var(--mono); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
 
 /* ================================================================
    ANIMATION  (transform / opacity / clip-path only)
@@ -1196,7 +1204,7 @@ button { -webkit-tap-highlight-color: transparent; }
   .titlebar { min-height: 0; }
   .head-main { padding: 10px 10px 10px 12px; }
   .sound { margin-right: 10px; padding: 6px 8px; gap: 8px; }
-  .randbox { border-right: none; padding: 10px 0 12px 10px; background: var(--paper); }
+  .randbox { border-right: none; border-top: var(--B); padding: 10px 0 12px 10px; background: var(--ink); }
   .squad-name { font-size: 1.15rem; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .head-sub { font-size: 0.68rem; margin-top: 4px; }
   .head-sub .lvl-now { display: none; }
@@ -1238,6 +1246,8 @@ button { -webkit-tap-highlight-color: transparent; }
   .brow { gap: 9px; }
 
   .bar { gap: 10px; padding: 10px 10px 12px; border-top: var(--B); }
+  .input-wrap .prompt { display: grid; width: 22px; height: 22px; font-size: 0.8rem; }
+  .input::placeholder { font-size: 0.68rem; letter-spacing: 0; }
   .chaos { border-right: none; padding: 8px 10px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
   .chaos-head { display: none; }
   .chaos-body { grid-template-columns: minmax(0, 1fr) 36px; gap: 6px; }
@@ -1254,7 +1264,6 @@ button { -webkit-tap-highlight-color: transparent; }
   .rand-btn .ico { font-size: 1.4rem; margin: 0; }
   .send-btn { min-width: 74px; min-height: 50px; padding: 0 12px; font-size: 0.95rem; }
   .input-wrap { padding: 4px 10px; }
-  .input-wrap .prompt { display: none; }
   .story-btns .blk { padding: 0 12px; font-size: 0.75rem; }
 }
 
@@ -1333,7 +1342,7 @@ button { -webkit-tap-highlight-color: transparent; }
   <div class="bar">
 
     <label class="input-wrap" for="input">
-      <span class="prompt" aria-hidden="true">💬</span>
+      <span class="prompt" aria-hidden="true">&gt;</span>
       <span class="sr-only">Your message</span>
       <textarea class="input" id="input" rows="1"
         placeholder="Ask the council anything"></textarea>
@@ -3778,8 +3787,8 @@ async function fontsReady() {
   if (!document.fonts) return;
   try {
     await Promise.all([
-      document.fonts.load('800 60px "Bricolage Grotesque"'),
-      document.fonts.load('500 40px "Bricolage Grotesque"'),
+      document.fonts.load('800 60px "Archivo"'),
+      document.fonts.load('500 40px "Archivo"'),
       document.fonts.load('400 30px "Space Mono"'),
       document.fonts.load('700 30px "Space Mono"'),
     ]);
