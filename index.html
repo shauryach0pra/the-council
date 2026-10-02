@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 <style>
 /* ================================================================
    TOKENS
@@ -117,6 +118,10 @@ button, textarea { font: inherit; color: inherit; }
   cursor: pointer;
 }
 .sound-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.sound-btn[aria-pressed="false"] { background: transparent; color: var(--white); }
+.np-box { width: 240px; overflow: hidden; white-space: nowrap; }
+.np-text { display: inline-block; }
+.np-text.scrolling { padding-left: 100%; animation: tick 12s linear infinite; }
 .winctl { display: flex; }
 .winctl span {
   width: 46px;
@@ -492,7 +497,7 @@ button, textarea { font: inherit; color: inherit; }
     grid-template-rows: auto auto auto minmax(0, 1fr) auto;
     grid-template-areas: "title" "ticker" "rail" "stream" "bar";
   }
-  .winctl, .titlebar-np .np-text { display: none; }
+  .winctl, .titlebar-np .np-box { display: none; }
   .titlebar-np { border-left: none; padding: 0 10px; }
 
   .rail { border-right: none; border-bottom: var(--b); }
@@ -525,6 +530,7 @@ button, textarea { font: inherit; color: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   .ticker-track { animation: none; padding-left: 12px; }
+  .np-text.scrolling { animation: none; padding-left: 0; }
   * { scroll-behavior: auto !important; }
 }
 
@@ -542,8 +548,8 @@ button, textarea { font: inherit; color: inherit; }
       <div class="titlebar-squad" id="squadName">Assembling…</div>
     </div>
     <div class="titlebar-np">
-      <span class="np-text" id="nowPlaying">Now playing: nothing</span>
-      <button class="sound-btn" id="soundBtn" disabled title="Music arrives in a later update">[ Sound: off ]</button>
+      <div class="np-box" aria-live="polite"><span class="np-text" id="nowPlaying">Now playing: nothing yet</span></div>
+      <button class="sound-btn" id="soundBtn" type="button" aria-pressed="true">[ Sound: on ]</button>
     </div>
     <div class="winctl" aria-hidden="true"><span>_</span><span>□</span><span>X</span></div>
   </header>
@@ -1239,6 +1245,7 @@ function setLevel(v) {
   if (state.busy || v === state.level) return;
   state.level = v;
   syncLevels();
+  applyIntensity(v);
 
   const round = state.round;
   if (!round || !round.memberEls.length || !round.userEl.isConnected) return;
@@ -1334,7 +1341,7 @@ async function send() {
   if (!question) { postSystem('Type a message before sending.', true); els.input.focus(); return; }
 
   cancelResummon();
-  // Step 6: await Tone.start() goes here, inside the user gesture
+  startMusicFor(question);   // must stay before any await: Tone.start() needs the user gesture
 
   state.lastQuestion = question;
   els.input.value = '';
@@ -1379,6 +1386,292 @@ function autosize() {
 }
 
 // ================================================================
+//  MUSIC  (Tone.js)
+// ================================================================
+// Mood routing: keyword pre-checks first (the emotion model can't spot
+// romance, careers or exams), then the HuggingFace emotion label.
+const MOOD_KEYWORDS = {
+  romantic: /\b(love|crush|ex|exes|relationship|dating|date|dates|marry|marriage|married|breakup|break up|broke up|girlfriend|boyfriend|gf|bf|bae|flirt|flirting|romance|romantic|heartbreak|situationship|propose|proposal|divorce|cheat|cheated|cheating|feelings for|likes me|like him|like her|text him|text her|ghosted|ghosting|tinder|hinge|bumble|rizz|wedding|shaadi|shadi|pyaar|pyar|ishq|mohabbat|rishta|jaanu|babu|dil)\b/,
+  anxious:  /\b(exam|exams|padhai|padhna|study|studying|boards|board exam|jee|neet|upsc|gate|marks|result|results|grades|gpa|cgpa|assignment|deadline|viva|semester|backlog|kota|tuition|coaching|revision|syllabus|finals|midterms)\b/,
+  career:   /\b(job|jobs|work|boss|salary|career|office|resign|resignation|quit|promotion|interview|fired|layoff|laid off|workplace|coworker|colleague|manager|hr|hire|hiring|startup|business|freelance|internship|intern|appraisal|increment|hustle|naukri|naukari|kaam|placement|placements|package|ctc|notice period|linkedin|corporate|wfh)\b/,
+};
+
+const HF_TO_MOOD = {
+  joy: 'playful', sadness: 'sad', anger: 'anxious', fear: 'anxious',
+  disgust: 'chaotic', surprise: 'philosophical', neutral: 'neutral',
+};
+
+async function classifyMood(text) {
+  const t = text.toLowerCase();
+  for (const mood of ['romantic', 'anxious', 'career']) {
+    if (MOOD_KEYWORDS[mood].test(t)) return mood;
+  }
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emotion_text: text }),
+    });
+    const data = await res.json();
+    return HF_TO_MOOD[data.emotion] ?? 'neutral';
+  } catch {
+    return 'neutral';
+  }
+}
+
+const FADE_OUT = 0.5;   // seconds; crossfade = fade out, swap, fade in
+const FADE_IN = 0.8;
+
+const music = {
+  enabled: true,        // the [ SOUND ] toggle
+  mood: null,           // mood currently built
+  wanted: null,         // latest mood asked for (played when sound turns on)
+  playing: false,
+  token: 0,             // cancels stale crossfades
+  master: null, limiter: null,
+  parts: [], nodes: [], fx: null,
+};
+
+// ---------- small builders ----------
+const track = node => { music.nodes.push(node); return node; };
+const syn  = (opts, out) => track(new Tone.Synth(opts).connect(out));
+const poly = (opts, out) => track(new Tone.PolySynth(Tone.Synth, opts).connect(out));
+
+// events: [time, note(s), duration?]
+function loopPart(synth, events, loopEnd, dur) {
+  const p = new Tone.Part((t, e) => synth.triggerAttackRelease(e.n, e.d || dur, t),
+    events.map(([time, n, d]) => ({ time, n, d })));
+  p.loop = true; p.loopEnd = loopEnd; p.start(0);
+  music.parts.push(p);
+}
+// notes: flat array, null = rest
+function stepSeq(synth, notes, sub, dur) {
+  const s = new Tone.Sequence((t, n) => { if (n) synth.triggerAttackRelease(n, dur, t); }, notes, sub);
+  s.start(0);
+  music.parts.push(s);
+}
+
+function drumKit(out, vol = {}) {
+  const kick = track(new Tone.MembraneSynth({
+    pitchDecay: 0.03, octaves: 5, envelope: { attack: 0.001, decay: 0.32, sustain: 0 }, volume: vol.kick ?? -12,
+  }).connect(out));
+  const snare = track(new Tone.NoiseSynth({
+    noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.15, sustain: 0 }, volume: vol.snare ?? -24,
+  }).connect(out));
+  const hatFilter = track(new Tone.Filter(7500, 'highpass').connect(out));
+  const hat = track(new Tone.NoiseSynth({
+    noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.035, sustain: 0 }, volume: vol.hat ?? -30,
+  }).connect(hatFilter));
+  return { kick, snare, hat };
+}
+// 16-step patterns per bar: 'x' = hit
+function drumPattern(kit, pat) {
+  const s = new Tone.Sequence((t, i) => {
+    if (pat.kick?.[i] === 'x')  kit.kick.triggerAttackRelease(pat.kickNote || 'C1', '8n', t);
+    if (pat.snare?.[i] === 'x') kit.snare.triggerAttackRelease('16n', t);
+    if (pat.hat?.[i] === 'x')   kit.hat.triggerAttackRelease('32n', t);
+  }, [...Array(16).keys()], '16n');
+  s.start(0);
+  music.parts.push(s);
+}
+
+// ---------- moods ----------
+// Each build gets: bus (dry), reverb, delay, lead (lead chain with level-driven grit)
+const MOODS = {
+  neutral: { label: '🛋️ Lounge mode', bpm: 84, build({ bus, reverb, lead }) {
+    const pad = poly({ oscillator: { type: 'triangle' }, envelope: { attack: 0.4, decay: 0.6, sustain: 0.5, release: 1.6 }, volume: -22 }, reverb);
+    loopPart(pad, [['0:0', ['C3','E3','G3','B3']], ['1:0', ['A2','C3','E3','G3']], ['2:0', ['D3','F3','A3','C4']], ['3:0', ['G2','B2','D3','F3']]], '4m', '1m');
+    const bass = syn({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.3, release: 0.4 }, volume: -14 }, bus);
+    stepSeq(bass, ['C2','E2','G2','A2', 'A1','C2','E2','G2', 'D2','F2','A2','C3', 'G1','B1','D2','F2'], '4n', '8n');
+    const mel = syn({ oscillator: { type: 'triangle' }, envelope: { attack: 0.05, decay: 0.3, sustain: 0.4, release: 0.9 }, volume: -22 }, lead);
+    stepSeq(mel, ['E4',null,'G4',null,null,null,'B4',null, 'C5',null,null,'A4',null,null,null,null,
+                  'F4',null,'A4',null,'C5',null,null,null, 'B4',null,null,'G4',null,null,null,null], '8n', '8n');
+    drumPattern(drumKit(bus, { kick: -16, snare: -30, hat: -34 }),
+      { kick: 'x-------x-------', snare: '----x-------x---', hat: 'x-x-x-x-x-x-x-x-' });
+  }},
+
+  anxious: { label: '😱 DUN DUN DUN', bpm: 112, build({ bus, reverb, lead }) {
+    const stab = syn({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.005, decay: 0.45, sustain: 0, release: 0.3 }, volume: -16 }, reverb);
+    loopPart(stab, [['0:0','C2'],['0:2','C2'],['1:1','Ab1'],['2:0','Bb1'],['2:2','C2'],['3:0','G1'],['3:2','G1']], '4m', '8n');
+    const shriek = syn({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.06, sustain: 0.12, release: 0.15 }, volume: -28 }, lead);
+    stepSeq(shriek, ['C4','D4','Eb4','F4','G4','Ab4','Bb4','C5','D5','Eb5','F5','G5','Ab5','G5','F5','Eb5'], '16n', '32n');
+    drumPattern(drumKit(bus, { kick: -11, snare: -24, hat: -33 }),
+      { kick: 'x--x------x--x--', snare: '----x-------x--x', hat: 'xxxxxxxxxxxxxxxx' });
+  }},
+
+  sad: { label: '😭 Soap opera mode', bpm: 60, build({ bus, reverb, lead }) {
+    const pad = poly({ oscillator: { type: 'triangle' }, envelope: { attack: 1.8, decay: 1.5, sustain: 0.7, release: 4 }, volume: -18 }, reverb);
+    loopPart(pad, [['0:0', ['A2','E3','A3','C4']], ['2:0', ['F2','C3','F3','A3']], ['4:0', ['G2','D3','G3','B3']], ['6:0', ['E2','B2','E3','G#3']]], '8m', '2m');
+    const cry = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.4, decay: 0.8, sustain: 0.5, release: 2.5 }, volume: -18 }, lead);
+    stepSeq(cry, ['A4',null,'G4','A4', 'F4',null,'E4',null, 'D4',null,'E4','F4', 'E4',null,null,null], '2n', '2n');
+    drumPattern(drumKit(bus, { kick: -20 }), { kick: 'x---------------', kickNote: 'A0' });
+  }},
+
+  romantic: { label: '💃 Telenovela hours', bpm: 72, build({ bus, reverb, delay, lead }) {
+    const pad = poly({ oscillator: { type: 'sine' }, envelope: { attack: 0.8, decay: 0.8, sustain: 0.7, release: 2.5 }, volume: -20 }, reverb);
+    loopPart(pad, [['0:0', ['C3','G3','D4','E4']], ['1:0', ['B2','G3','D4']], ['2:0', ['A2','E3','C4','E4']], ['3:0', ['F2','C3','A3','E4']]], '4m', '1m');
+    const arp = syn({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.25, sustain: 0.1, release: 0.6 }, volume: -26 }, delay);
+    stepSeq(arp, ['C4','G4','E5','G4','C4','G4','E5','G4', 'B3','G4','D5','G4','B3','G4','D5','G4',
+                  'A3','E4','C5','E4','A3','E4','C5','E4', 'F3','C4','A4','C4','F3','C4','A4','C4'], '8n', '16n');
+    const mel = syn({ oscillator: { type: 'triangle' }, envelope: { attack: 0.15, decay: 0.4, sustain: 0.7, release: 1.8 }, volume: -19 }, lead);
+    stepSeq(mel, ['G4',null,'E5','D5', 'C5',null,null,null, 'D5',null,'B4',null, 'C5',null,'A4',null], '4n', '4n');
+    drumPattern(drumKit(bus, { kick: -18, snare: -32, hat: -36 }),
+      { kick: 'x-------x-------', snare: '------x-------x-', hat: '--x---x---x---x-' });
+  }},
+
+  playful: { label: '🎪 Circus is in town', bpm: 132, build({ bus, reverb, lead }) {
+    const mel = syn({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.35, release: 0.15 }, volume: -24 }, lead);
+    stepSeq(mel, ['C5','B4','C5','E5','G5',null,'E5',null, 'F5','E5','F5','A5','C6',null,'A5',null,
+                  'G5','F#5','G5','B5','D6',null,'B5',null, 'C6','G5','E5','G5','C5',null,null,null], '8n', '16n');
+    const bass = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.02, decay: 0.15, sustain: 0.2, release: 0.2 }, volume: -12 }, bus);
+    stepSeq(bass, ['C2','G2','C2','G2', 'F2','C3','F2','C3', 'G2','D3','G2','D3', 'C2','G2','C2','G2'], '4n', '8n');
+    const pah = poly({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.08, sustain: 0, release: 0.05 }, volume: -32 }, reverb);
+    const pahChords = [['E3','G3'], ['F3','A3'], ['F3','B3'], ['E3','G3']];
+    loopPart(pah, pahChords.flatMap((c, b) => [[`${b}:1`, c], [`${b}:3`, c]]), '4m', '16n');
+    drumPattern(drumKit(bus, { kick: -14, snare: -26, hat: -34 }),
+      { kick: 'x---x---x---x---', snare: '--x---x---x---x-' });
+  }},
+
+  philosophical: { label: '🌌 Epic reveal', bpm: 60, build({ bus, reverb, lead }) {
+    const warm = track(new Tone.Filter(1400, 'lowpass').connect(reverb));
+    const grand = poly({ oscillator: { type: 'sawtooth' }, envelope: { attack: 1.2, decay: 1.5, sustain: 0.8, release: 4 }, volume: -26 }, warm);
+    loopPart(grand, [['0:0', ['C2','G2','C3','E3','G3']], ['4:0', ['F2','C3','F3','A3','C4']], ['6:0', ['G2','D3','G3','B3','D4']]], '8m', '2m');
+    const fan = syn({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.06, decay: 0.3, sustain: 0.7, release: 1.5 }, volume: -24 }, lead);
+    loopPart(fan, [['0:0','C4','2n'],['1:0','G4','2n'],['2:0','C5','1m'],['3:2','E5','8n'],['3:3','Eb5','2n'],
+                   ['4:0','C4','2n'],['5:0','G4','2n'],['6:0','C5','1m'],['7:2','Eb5','8n'],['7:3','E5','2n']], '8m');
+    const timp = track(new Tone.MembraneSynth({ pitchDecay: 0.08, octaves: 3, envelope: { attack: 0.002, decay: 0.8, sustain: 0 }, volume: -12 }).connect(reverb));
+    loopPart(timp, [['3:0','C2'],['3:1','G1'],['3:2','C2'],['3:3','G1'],['7:0','C2'],['7:1','G1'],['7:2','C2'],['7:3','G1']], '8m', '4n');
+  }},
+
+  career: { label: '🏢 Elevator music', bpm: 96, build({ bus, reverb, lead }) {
+    const keys = poly({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0.2, release: 0.6 }, volume: -22 }, reverb);
+    const chords = [['C3','E3','G3','B3'], ['D3','F3','A3','C4'], ['E3','G3','B3','D4'], ['F3','A3','C4','E4']];
+    loopPart(keys, chords.flatMap((c, b) => [[`${b}:0`, c], [`${b}:1:2`, c], [`${b}:3`, c]]), '4m', '8n');
+    const bass = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.4, release: 0.3 }, volume: -14 }, bus);
+    loopPart(bass, [['0:0','C2'],['0:2','G2'],['1:0','D2'],['1:2','A2'],['2:0','E2'],['2:2','B2'],['3:0','F2'],['3:2','C3']], '4m', '4n');
+    const mel = syn({ oscillator: { type: 'sine' }, envelope: { attack: 0.08, decay: 0.3, sustain: 0.5, release: 0.8 }, volume: -20 }, lead);
+    stepSeq(mel, ['E4',null,'G4',null,'B4','A4','G4',null, 'F4',null,'A4',null,'C5',null,null,null,
+                  'G4',null,'B4',null,'D5','C5','B4',null, 'A4',null,'C5',null,'E5',null,null,null], '8n', '8n');
+    drumPattern(drumKit(bus, { kick: -18, snare: -32, hat: -35 }),
+      { kick: 'x------x--x-----', snare: '----x-------x---', hat: 'x-xxx-xxx-xxx-xx' });
+  }},
+
+  chaotic: { label: '🤡 Cartoon chaos', bpm: 152, build({ bus, delay, lead }) {
+    const zany = syn({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.08, sustain: 0.1, release: 0.1 }, volume: -25 }, lead);
+    zany.connect(delay);
+    stepSeq(zany, ['C6','G3','E5','Bb2','F6','D4','Ab5','C3', 'B5','Eb4','A2','F5','C4','G6','E3','Bb5'], '8n', '32n');
+    const tuba = syn({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.04, decay: 0.2, sustain: 0.3, release: 0.3 }, volume: -18 }, bus);
+    loopPart(tuba, [['0:0','C2'],['0:2','Bb1'],['1:0','Ab1'],['1:2','G1'],['2:0','F1'],['2:1','F2'],['2:3','E1'],['3:0','C2']], '4m', '8n');
+    drumPattern(drumKit(bus, { kick: -13, snare: -23, hat: -32 }),
+      { kick: 'x--x-x--x--x-x--', snare: '----x-xx----xxxx', hat: 'x-x-x-x-x-x-x-x-' });
+  }},
+};
+
+// ---------- engine ----------
+function ensureMaster() {
+  if (music.master) return;
+  music.limiter = new Tone.Limiter(-1).toDestination();
+  music.master = new Tone.Gain(0.8).connect(music.limiter);
+}
+
+function cleanupMusic() {
+  Tone.Transport.stop();
+  Tone.Transport.cancel();
+  music.parts.forEach(p => { try { p.dispose(); } catch {} });
+  music.nodes.forEach(n => { try { n.dispose(); } catch {} });
+  music.parts = []; music.nodes = []; music.fx = null;
+  music.playing = false;
+}
+
+// Level 1 -> base bpm, level 5 -> +15%. Grit on the lead at 4-5.
+function applyIntensity(level, ramp = 1) {
+  if (!music.fx || !music.mood) return;
+  const t = Math.max(ramp, 0.01);
+  Tone.Transport.bpm.rampTo(MOODS[music.mood].bpm * (1 + 0.15 * (level - 1) / 4), t);
+  music.fx.dist.wet.rampTo(level >= 5 ? 0.55 : level === 4 ? 0.3 : 0, t);
+  music.fx.crunch.wet.rampTo(level >= 5 ? 0.35 : level === 4 ? 0.15 : 0, t);
+}
+
+async function playMood(mood) {
+  if (!window.Tone || !MOODS[mood]) return;
+  const token = ++music.token;
+
+  if (music.playing) {
+    Tone.Destination.volume.rampTo(-60, FADE_OUT);
+    await wait(FADE_OUT * 1000);
+    if (token !== music.token) return;
+  }
+  cleanupMusic();
+  Tone.Destination.volume.value = -60;
+  ensureMaster();
+
+  const bus = track(new Tone.Gain(1).connect(music.master));
+  const reverb = track(new Tone.Reverb({ decay: 3.5, wet: 0.35 }).connect(bus));
+  await reverb.ready;
+  if (token !== music.token) return;
+  const delay = track(new Tone.FeedbackDelay('8n', 0.22).connect(reverb));
+  delay.wet.value = 0.3;
+  const dist = track(new Tone.Distortion(0.7));
+  const crunch = track(new Tone.Chebyshev(24));
+  dist.wet.value = 0; crunch.wet.value = 0;
+  const lead = track(new Tone.Gain(1));
+  lead.chain(dist, crunch, reverb);
+
+  music.mood = mood;
+  music.fx = { dist, crunch };
+  MOODS[mood].build({ bus, reverb, delay, lead });
+  Tone.Transport.bpm.value = MOODS[mood].bpm;
+  applyIntensity(state.level, 0);
+
+  Tone.Transport.start('+0.05');
+  music.playing = true;
+  Tone.Destination.volume.rampTo(0, FADE_IN);
+  updateMusicUI();
+}
+
+async function toggleSound() {
+  music.enabled = !music.enabled;
+  if (window.Tone) {
+    if (music.enabled) {
+      await Tone.start();
+      if (music.wanted && (music.wanted !== music.mood || !music.playing)) playMood(music.wanted);
+      else if (music.mood) { Tone.Transport.start('+0.05'); music.playing = true; Tone.Destination.volume.rampTo(0, FADE_IN); }
+    } else if (music.playing) {
+      const token = ++music.token;
+      Tone.Destination.volume.rampTo(-60, FADE_OUT);
+      await wait(FADE_OUT * 1000);
+      if (token === music.token && !music.enabled) { Tone.Transport.pause(); music.playing = false; }
+    }
+  }
+  updateMusicUI();
+}
+
+// Called from send(): starts audio inside the user gesture, then routes mood
+function startMusicFor(question) {
+  if (!window.Tone) return;
+  const ready = music.enabled ? Tone.start() : Promise.resolve();
+  classifyMood(question).then(async mood => {
+    music.wanted = mood;
+    await ready;
+    if (music.enabled && (mood !== music.mood || !music.playing)) playMood(mood);
+    else updateMusicUI();
+  });
+}
+
+function updateMusicUI() {
+  const btn = $('soundBtn');
+  const np = $('nowPlaying');
+  btn.textContent = music.enabled ? '[ Sound: on ]' : '[ Sound: off ]';
+  btn.setAttribute('aria-pressed', String(music.enabled));
+  const mood = music.enabled ? (music.mood || music.wanted) : null;
+  if (!window.Tone) np.textContent = 'Now playing: audio unavailable';
+  else if (!music.enabled) np.textContent = 'Now playing: muted';
+  else if (mood && music.playing) np.textContent = `Now playing: ${MOODS[mood].label}`;
+  else np.textContent = 'Now playing: nothing yet';
+  np.classList.toggle('scrolling', !!(music.enabled && music.playing));
+}
+
+// ================================================================
 //  INIT
 // ================================================================
 (async function init() {
@@ -1394,6 +1687,8 @@ function autosize() {
     const b = e.target.closest('.lvl');
     if (b) setLevel(parseInt(b.dataset.level, 10));
   });
+  $('soundBtn').addEventListener('click', toggleSound);
+  updateMusicUI();
   els.input.addEventListener('input', autosize);
   els.input.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
