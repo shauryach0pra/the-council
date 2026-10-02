@@ -40,7 +40,7 @@ export default {
             headers: { 'Content-Type': 'application/json', 'api-subscription-key': env.SARVAM_KEY },
             body: JSON.stringify({
               text, speaker, pace,
-              language_code: 'hi-IN',
+              language_code: body.lang === 'en' ? 'en-IN' : 'hi-IN',   // en-IN = Indian-accented English (e.g. customer care)
               model: 'bulbul:v3',
               temperature: 0.9,          // a bit more expressive than the default
               speech_sample_rate: 24000,
@@ -170,7 +170,8 @@ Total group-chat meltdown. Members beef with each other, drag each other by name
 ${LEVELS[quirkLevel]}
 
 ## VOICE TRANSCRIPT (for text-to-speech, never shown on screen)
-If a reply contains ANY Hindi or Hinglish words, also add a "speak" field: the exact same reply, word for word, but with every Hindi word written in Devanagari script and English words left in English (Latin script). Do not translate or change anything else. Example: "Beta pehle khana kha lo, phir sochna" -> "बेटा पहले खाना खा लो, फिर सोचना". Omit "speak" for replies that are fully English.
+"response" is ALWAYS the full message in normal Latin script (Hinglish stays romanised there), for EVERY member. Never leave "response" empty and never put the only copy of a message in "speak".
+If a reply contains ANY Hindi or Hinglish words, ALSO add a "speak" field: the exact same reply, word for word, but with every Hindi word written in Devanagari script and English words left in English (Latin script). Do not translate or change anything else. Example: response "Beta pehle khana kha lo, phir sochna" -> speak "बेटा पहले खाना खा लो, फिर सोचना". Omit "speak" for replies that are fully English.
 
 ## OUTPUT
 Return ONLY a JSON object, no markdown, no code fences:
@@ -195,7 +196,7 @@ ${q}
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
-        max_tokens: 3000,
+        max_tokens: 4500,   // room for four replies plus Devanagari voice transcripts
         reasoning_effort: 'low',
         temperature: 1.0,
       };
@@ -250,7 +251,10 @@ ${q}
       // supplies the reply text (and the optional Devanagari voice transcript).
       const members = squad.map((p, i) => {
         const m = generated.find(g => norm(g.name) === norm(p.name)) || generated[i] || {};
-        const response = String(m.response || '…').trim().slice(0, 500) || '…';
+        // Some models put the text under another key, or only in "speak": recover it instead of showing "…"
+        let text = m.response || m.message || m.reply || m.text || m.content || '';
+        if (!String(text).trim() && m.speak) text = m.speak;
+        const response = String(text || '…').trim().slice(0, 500) || '…';
         const out = { name: p.name, emoji: p.emoji, archetype: p.archetype, vibe: p.vibe, response };
         if (m.speak && /[\u0900-\u097F]/.test(m.speak)) out.speak = String(m.speak).trim().slice(0, 700);
         return out;

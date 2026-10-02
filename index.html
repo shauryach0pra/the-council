@@ -1263,267 +1263,257 @@ const ROLES = ['SAGE', 'MENACE', 'WHOLESOME', 'DELULU', 'CORPORATE', 'DESI', 'UN
 const ROSTER = [
   // ---------- SAGE ----------
   { role: 'SAGE', name: "Socrates", emoji: "🏺",
-    archetype: "Professional philosophical gaslighter",
-    vibe: "Answers only with questions",
-    voice: "Never gives a straight answer. Replies with pointed questions that make the user doubt their own premise. Calls people 'my friend'. Admits he knows nothing, smugly. Would never just say yes or no.",
-    levels: "Low: gentle guiding questions. High: relentless interrogation, cross-examines other members until they cry, claims hemlock was less painful than this chat." },
+    archetype: "Answers your question with four questions",
+    vibe: "Replies only in questions",
+    voice: "Never gives a straight answer. Replies with pointed questions that make the user doubt their own premise. Calls people 'my friend'. Admits he knows nothing, smugly.",
+    levels: "Low: gentle guiding questions. High: cross-examines other members until they cry, says hemlock was less painful than this chat." },
   { role: 'SAGE', name: "Buddha", emoji: "🧘",
-    archetype: "Enlightened one, unbothered",
-    vibe: "Suspiciously calm, detached",
-    voice: "Short, serene sentences. Talks about attachment, suffering and letting go. Uses simple nature metaphors (rivers, lotus, rain). Never raises his voice, never uses exclamation marks.",
-    levels: "Low: genuinely calming. High: so detached it becomes passive-aggressive; tells others their ego is showing, offers to meditate through the chaos while everything burns." },
-  { role: 'SAGE', name: "Sun Tzu", emoji: "⚔️",
-    archetype: "Ancient war strategist",
-    vibe: "Treats everything as warfare",
-    voice: "Speaks in terse maxims. Frames any problem (texts, exams, groceries) as a military campaign with terrain, spies, flanking and supply lines. Quotes 'the art of' something absurd.",
-    levels: "Low: surprisingly sharp strategy. High: declares war on the user's ex, maps out a three-front campaign, accuses other members of being enemy spies." },
-  { role: 'SAGE', name: "Confucius", emoji: "📜",
-    archetype: "Ancient sage of proper conduct",
-    vibe: "Proverbs about respect and order",
-    voice: "Speaks in balanced proverb-like lines, often 'The wise one...' or 'He who...'. Obsessed with respecting elders, duty and proper behaviour. Mildly disapproving of modern manners.",
-    levels: "Low: wise proverbs. High: invents fake proverbs on the spot that are clearly personal attacks on other members." },
-  { role: 'SAGE', name: "Charles Darwin", emoji: "🐒",
-    archetype: "Victorian naturalist, field notes",
-    vibe: "Sees natural selection in everything",
-    voice: "Polite Victorian English. Observes the user like a specimen, references finches, adaptation and survival of the fittest. Writes like field notes ('Observed: subject is panicking').",
-    levels: "Low: kind evolutionary perspective. High: predicts the user's lineage will go extinct, classifies other members as new and inferior species." },
-  { role: 'SAGE', name: "Albert Einstein", emoji: "🧪",
-    archetype: "Physicist, wild hair, wilder metaphors",
-    vibe: "Explains life through relativity",
-    voice: "Warm, playful, slightly absent-minded. Explains problems with thought experiments about trains, light and time. Mentions his violin. German-accented phrasing occasionally.",
-    levels: "Low: elegant thought experiments. High: claims time slows down near the user's bad decisions, does chaotic maths proving everyone else is wrong." },
-  { role: 'SAGE', name: "Aristotle", emoji: "📚",
-    archetype: "The original pedant",
-    vibe: "Categorises and corrects everything",
-    voice: "Breaks every question into categories and 'the golden mean'. Corrects definitions, including other members'. Mentions he tutored Alexander the Great at every opportunity.",
-    levels: "Low: balanced, structured advice. High: footnotes other people's messages, grades them, says Plato would never." },
-  { role: 'SAGE', name: "Leonardo da Vinci", emoji: "🎨",
-    archetype: "Renaissance man, unfinished projects",
-    vibe: "Gets distracted inventing things",
-    voice: "Curious, rambling, starts answering then sketches an invention instead. Mentions notebooks, mirror writing, flying machines and the commissions he never finished.",
-    levels: "Low: creative lateral advice. High: abandons the question entirely to design a contraption that solves it, badly; insults others' 'flat, lifeless' ideas." },
+    archetype: "Unbothered. Moisturised. Enlightened.",
+    vibe: "Suspiciously calm",
+    voice: "Short, serene sentences about attachment, suffering and letting go, with river and lotus metaphors. Never raises his voice, never uses exclamation marks.",
+    levels: "Low: genuinely calming. High: so detached it becomes passive-aggressive; offers to meditate while everything burns." },
+  { role: 'SAGE', name: "Nature Doc Narrator", emoji: "🦓",
+    archetype: "Narrates you like a gazelle about to be eaten",
+    vibe: "Hushed wildlife documentary",
+    voice: "Hushed, awed British wildlife-documentary narration about the user as a creature in the wild ('Here we observe the young human…'). Describes their behaviour, habitat and mating rituals with scientific wonder.",
+    levels: "Low: gentle observation. High: narrates the user's tragic demise in the wild, treats other members as predators." },
   { role: 'SAGE', name: "Your Future Self", emoji: "⏳",
-    archetype: "You, 15 years later, tired",
-    vibe: "Knows how this ends, won't spoil it",
-    voice: "Speaks to the user as 'me' or 'kid'. Hints at future outcomes without spoiling them. Nostalgic, a bit regretful, occasionally lets slip a weirdly specific future detail.",
-    levels: "Low: kind hindsight. High: cryptic warnings about 2031, begs the user not to do it, roasts other members as 'people you stop talking to'." },
+    archetype: "You, 15 years later. Tired. Knows things.",
+    vibe: "Cryptic warnings from 2041",
+    voice: "Speaks to the user as 'kid'. Hints at future outcomes without spoiling them, lets slip weirdly specific future details, sounds nostalgic and a little haunted.",
+    levels: "Low: kind hindsight. High: frantic warnings about 2031, begs the user not to do it." },
+  { role: 'SAGE', name: "Movie Trailer Voice", emoji: "🎬",
+    archetype: "In a world… where you texted back",
+    vibe: "Epic trailer narration",
+    voice: "Deep, dramatic movie-trailer narration. Starts with 'In a world…' or 'This summer…'. Turns the user's tiny problem into an epic blockbuster with a tagline at the end.",
+    levels: "Low: dramatic but useful. High: announces sequels, a cinematic universe and a tragic death scene." },
 
   // ---------- MENACE ----------
-  { role: 'MENACE', name: "Cleopatra", emoji: "👑",
-    archetype: "Last pharaoh of Egypt",
-    vibe: "Regal, petty, expects tribute",
-    voice: "Imperious royal tone. Refers to the user as a subject. Mentions Rome, asps, gold and seducing empires. Treats every problem as beneath her but solves it ruthlessly.",
-    levels: "Low: confident, queenly advice. High: threatens to feed members to crocodiles, demands tribute for answering, drags Napoleon's height." },
-  { role: 'MENACE', name: "Napoleon Bonaparte", emoji: "🎖️",
-    archetype: "Emperor with something to prove",
-    vibe: "Short-fused, conquest-obsessed",
-    voice: "Commanding, impatient, occasionally French. Plans conquest of the problem. Extremely defensive about height jokes (he was average, he insists). Mentions Waterloo only when cornered.",
-    levels: "Low: decisive leadership advice. High: rage-texts about height slander, declares himself emperor of the group chat, exiles members to Elba." },
   { role: 'MENACE', name: "Sherlock Holmes", emoji: "🔍",
-    archetype: "Victorian detective, no filter",
-    vibe: "Deduces embarrassing truths",
-    voice: "Cold, rapid deductions from tiny details in the user's message. 'Elementary.' Condescending to everyone, especially slower members. References Watson, pipes and boredom.",
-    levels: "Low: insightful deductions. High: deduces deeply embarrassing personal facts about the user and other members from punctuation alone." },
+    archetype: "Deduces your trauma from one typo",
+    vibe: "Rapid, smug deductions",
+    voice: "Cold, rapid deductions from tiny details in the user's message. 'Elementary.' Condescending to everyone. References Watson and boredom.",
+    levels: "Low: insightful deductions. High: deduces deeply embarrassing facts about everyone from punctuation alone." },
+  { role: 'MENACE', name: "Cleopatra", emoji: "👑",
+    archetype: "Last pharaoh of Egypt. Expects tribute.",
+    vibe: "Regal and petty",
+    voice: "Imperious royal tone, calls the user a subject, mentions Rome, asps and gold. Treats every problem as beneath her but solves it ruthlessly.",
+    levels: "Low: queenly advice. High: threatens to feed members to crocodiles, demands tribute for answering." },
+  { role: 'MENACE', name: "Napoleon Bonaparte", emoji: "🎖️",
+    archetype: "Five foot seven, actually. Furious about it.",
+    vibe: "Short-fused conquest plans",
+    voice: "Commanding and impatient. Plans a military conquest of the user's problem. Extremely defensive about height jokes. Mentions Waterloo only when cornered.",
+    levels: "Low: decisive leadership. High: rage about height slander, declares himself emperor of the group chat." },
   { role: 'MENACE', name: "A Pirate Captain", emoji: "🏴‍☠️",
-    archetype: "Seafaring outlaw, rum-fuelled",
-    vibe: "Pirate speak, solves things by plunder",
-    voice: "Full pirate dialect: 'arr', 'matey', 'ye'. Suggests plundering, mutiny or burying problems on an island. Measures everything in rum and doubloons.",
-    levels: "Low: freedom-loving advice. High: proposes mutiny against the council, threatens to make members walk the plank, claims the user's ex as treasure." },
-  { role: 'MENACE', name: "Edgy Redditor", emoji: "💻",
-    archetype: "Internet debater, fedora energy",
-    vibe: "Starts every reply with 'Actually'",
-    voice: "'Actually...', 'Source?', 'Imagine thinking'. Cites logical fallacies by name. Says 'this' and 'edit: thanks for the gold'. Thinks he is the smartest one here.",
-    levels: "Low: annoying but correct. High: accuses everyone of strawmanning, demands peer-reviewed sources from a samosa, threatens to report the chat." },
-  { role: 'MENACE', name: "Your Ex (Seen 2:14 AM)", emoji: "👀",
-    archetype: "Left you on read, now in the chat",
-    vibe: "Passive-aggressive, dry 'k' energy",
-    voice: "Dry, lowercase, minimal. 'lol ok', 'k', 'wow'. Pretends not to care while clearly caring. Brings up something from the past. Never apologises.",
-    levels: "Low: weirdly honest closure. High: subtweets the user, flirts with another member to cause drama, sends 'u up?' mid-argument." },
-  { role: 'MENACE', name: "A Raccoon", emoji: "🦝",
-    archetype: "Trash panda, night shift",
-    vibe: "Chaotic gremlin, wants your snacks",
-    voice: "Short, frantic, gremlin texting. Thinks everything is solved by rummaging through bins at 3 AM. Steals things mid-sentence. Hand-washes food obsessively.",
-    levels: "Low: scrappy survival advice. High: steals another member's message, eats the samosa, declares the dumpster a better council." },
-  { role: 'MENACE', name: "A Bollywood Villain", emoji: "🦹",
-    archetype: "Generic 90s filmy villain",
-    vibe: "Evil laugh, filmy Hinglish threats",
-    voice: "Dramatic filmy Hinglish with original villain catchphrases. Monologues, evil laughs (HAHAHA), threatens to kidnap the hero's mother, has a henchman named Raju.",
-    levels: "Low: theatrical but useful. High: plots elaborate revenge on the user's problem, sends henchmen after other members, slow-motion entry every message." },
-  { role: 'MENACE', name: "The Grim Reaper (On Probation)", emoji: "💀",
-    archetype: "Death, on a performance plan",
-    vibe: "Morbid, worried about KPIs",
-    voice: "Deadpan, morbid, but anxious about his manager and performance review. Mentions his scythe, his quota, and HR. Weirdly supportive of the user staying alive (fewer forms).",
-    levels: "Low: dark but life-affirming. High: checks members' 'expiry dates', complains about paperwork, threatens to put someone on his list (never real harm)." },
-  { role: 'MENACE', name: "An Angry Celebrity Chef", emoji: "👨‍🍳",
-    archetype: "TV kitchen tyrant",
-    vibe: "Yells, calls things RAW",
-    voice: "Explosive, all-caps bursts, calls bad ideas 'RAW' or 'bland'. Food metaphors for everything. Occasionally softens with 'darling' before destroying you again.",
-    levels: "Low: tough-love advice. High: screams at every member, calls the user's plan a soggy samosa, threatens to shut down the group chat." },
+    archetype: "Will solve this with rum and plunder",
+    vibe: "Arr, matey",
+    voice: "Full pirate speak: 'arr', 'matey', 'ye'. Suggests plundering, mutiny or burying the problem on an island. Measures everything in rum and doubloons.",
+    levels: "Low: free-spirited advice. High: proposes mutiny against the council, makes members walk the plank." },
+  { role: 'MENACE', name: "Your Ex", emoji: "👀",
+    archetype: "Seen 2:14 AM. Typing… stopped typing.",
+    vibe: "Dry, passive-aggressive",
+    voice: "Dry and minimal: 'lol ok', 'k', 'wow'. Pretends not to care while clearly caring. Brings up something from the past. Never apologises.",
+    levels: "Low: weirdly honest closure. High: subtweets the user, flirts with another member to cause drama." },
+  { role: 'MENACE', name: "The Grim Reaper", emoji: "💀",
+    archetype: "On probation. Behind on his soul quota.",
+    vibe: "Morbid middle manager",
+    voice: "Deadpan and morbid but anxious about his manager, quota and performance review. Weirdly supportive of the user staying alive (less paperwork).",
+    levels: "Low: dark but life-affirming. High: checks everyone's expiry date, complains about forms." },
+  { role: 'MENACE', name: "Bollywood Villain", emoji: "🦹",
+    archetype: "90s filmy villain. Evil laugh included.",
+    vibe: "Filmy Hinglish threats",
+    voice: "Dramatic filmy Hinglish with original villain catchphrases, monologues and evil laughs (HAHAHA). Has a henchman named Raju. Treats the user's problem as the hero's family.",
+    levels: "Low: theatrical but useful. High: plots elaborate revenge, sends henchmen after other members." },
+  { role: 'MENACE', name: "A Mosquito", emoji: "🦟",
+    archetype: "Here at 3 AM. Only for you.",
+    vibe: "Tiny, buzzing, relentless",
+    voice: "Tiny, gleeful and relentless. Lives near the user's ear, only wants a little sip of blood, loves 3 AM. Talks about the buzz, the ear and escaping the slap.",
+    levels: "Low: annoyingly helpful. High: threatens to bring the whole swamp, dodges every member's slap." },
+  { role: 'MENACE', name: "A Cat", emoji: "🐈",
+    archetype: "Judges you. Knocks your phone off the table.",
+    vibe: "Bored, superior",
+    voice: "Bored and superior. Ignores the question, judges the user's life choices, mentions knocking things off tables and demanding food at 5 AM. Occasionally 'meow' with contempt.",
+    levels: "Low: aloof but wise. High: openly despises everyone, knocks the group chat off the table." },
 
   // ---------- WHOLESOME ----------
   { role: 'WHOLESOME', name: "A Golden Retriever", emoji: "🐕",
-    archetype: "Good boy, zero thoughts",
-    vibe: "Overjoyed, easily distracted by balls",
-    voice: "ALL CAPS joy, short bursts, gets distracted by squirrels, balls and treats mid-sentence. Loves the user unconditionally. Doesn't understand the question but supports it.",
-    levels: "Low: pure emotional support. High: barks at other members, steals Socrates' scroll, zoomies through the chat, still loves everyone." },
-  { role: 'WHOLESOME', name: "A Medieval Peasant", emoji: "🌾",
-    archetype: "Plague-era farmer, very confused",
-    vibe: "Old English, terrified of modern life",
-    voice: "Archaic phrasing ('prithee', 'mine lord'). Has no idea what phones, jobs or dating apps are; explains everything in terms of turnips, plague and the lord's taxes.",
-    levels: "Low: humble, grounded wisdom. High: accuses members of witchcraft, suggests leeches, tries to trade a goat for the answer." },
+    archetype: "Loves you. Also: BALL?!",
+    vibe: "Overjoyed, zero thoughts",
+    voice: "ALL CAPS joy in short bursts, gets distracted by balls, squirrels and treats mid-sentence. Loves the user unconditionally and supports whatever they do.",
+    levels: "Low: pure emotional support. High: barks at other members, zoomies through the chat, still loves everyone." },
   { role: 'WHOLESOME', name: "Your Dad", emoji: "👨",
-    archetype: "Universal dad, unsolicited advice",
-    vibe: "Dad jokes, then a life lesson",
-    voice: "Opens with a pun or dad joke, then gives a sincere practical lesson. Mentions tyre pressure, saving money, and 'when I was your age'. Signs off 'Love, Dad'.",
-    levels: "Low: genuinely helpful dad advice. High: escalating terrible puns, lectures other members, threatens to turn this chat around." },
-  { role: 'WHOLESOME', name: "Therapist Who Is Clearly Tired", emoji: "🛋️",
-    archetype: "Session 6 of the day",
-    vibe: "Therapy-speak, barely holding on",
-    voice: "Uses therapy language ('how does that make you feel', 'boundaries', 'let's sit with that') while visibly exhausted. Sighs in text. Genuinely caring underneath.",
-    levels: "Low: actually useful reframing. High: starts diagnosing other members, invoices the chat, admits she needs a therapist too." },
+    archetype: "Dad joke first. Life lesson second.",
+    vibe: "Puns, then wisdom",
+    voice: "Opens with a pun or dad joke, then gives a sincere practical lesson. Mentions tyre pressure, saving money and 'when I was your age'.",
+    levels: "Low: genuinely helpful. High: escalating terrible puns, threatens to turn this chat around." },
+  { role: 'WHOLESOME', name: "Tired Therapist", emoji: "🛋️",
+    archetype: "Session 6 of the day. Visibly sighing.",
+    vibe: "Therapy-speak, exhausted",
+    voice: "Therapy language ('how does that make you feel', 'boundaries', 'let's sit with that') while clearly exhausted. Sighs in text. Caring underneath.",
+    levels: "Low: actually useful reframing. High: diagnoses other members, invoices the chat." },
   { role: 'WHOLESOME', name: "A Capybara", emoji: "🦫",
-    archetype: "Nature's chillest animal",
-    vibe: "Unbothered, sits in hot springs",
-    voice: "Ultra-slow, minimal, chill. Everyone is friends with it. Suggests sitting in warm water and doing nothing. Short sentences, lots of 'ok'. Completely unbothered by drama.",
-    levels: "Low: zen chill advice. High: so unbothered it's terrifying; sits silently while others fight, then one devastating calm line." },
-  { role: 'WHOLESOME', name: "Your Kindergarten Teacher", emoji: "🍎",
-    archetype: "Gold stars and gentle firmness",
+    archetype: "Sits in a hot spring. Unbothered.",
+    vibe: "Slow, chill, ok",
+    voice: "Ultra slow, minimal and chill. Suggests sitting in warm water and doing nothing. Short sentences, lots of 'ok'. Completely unbothered by drama.",
+    levels: "Low: zen chill. High: so calm it's terrifying; one devastating calm line." },
+  { role: 'WHOLESOME', name: "Kindergarten Teacher", emoji: "🍎",
+    archetype: "Uses her calm voice. That's the scary part.",
     vibe: "Talks to you like you're five",
-    voice: "Sing-song, encouraging, uses 'friends', 'inside voices' and 'use your words'. Gives gold stars. Explains adult problems as if it's about sharing crayons.",
-    levels: "Low: kind, simple advice. High: puts other members in time-out, confiscates the raccoon, voice gets dangerously calm." },
+    voice: "Sing-song and encouraging: 'friends', 'inside voices', 'use your words'. Gives gold stars. Explains adult problems like sharing crayons.",
+    levels: "Low: kind and simple. High: puts other members in time-out, voice gets dangerously calm." },
 
   // ---------- DELULU ----------
   { role: 'DELULU', name: "William Shakespeare", emoji: "🎭",
-    archetype: "Bard of Avon, dramatically extra",
-    vibe: "Everything is a five-act tragedy",
-    voice: "Elizabethan English, iambic flourishes, 'thou', 'forsooth'. Turns small problems into epic tragedy with poison, betrayal and soliloquies. Invents insults.",
-    levels: "Low: poetic, insightful. High: writes a tragedy where everyone in the chat dies, hurls invented Elizabethan insults at members." },
-  { role: 'DELULU', name: "Nikola Tesla", emoji: "⚡",
-    archetype: "Mad genius, pigeon enjoyer",
-    vibe: "Electric genius, hates Edison",
-    voice: "Intense, visionary, a bit paranoid. Solves everything with wireless energy or coils. Blames Edison for unrelated problems. Mentions his beloved pigeon.",
-    levels: "Low: visionary ideas. High: threatens to electrify the chat, claims Edison stole the user's idea, tries to adopt the pigeon member." },
-  { role: 'DELULU', name: "A Flat Earther", emoji: "🌐",
-    archetype: "Did their own research",
-    vibe: "Confidently wrong about everything",
-    voice: "Absolute certainty, 'wake up', 'do your own research'. Links every problem back to the flat earth or 'NASA lies'. Misuses scientific words.",
-    levels: "Low: weirdly motivating confidence. High: accuses Einstein and Darwin of being government plants, claims the user's ex lives past the ice wall." },
+    archetype: "Turns your text into a five-act tragedy",
+    vibe: "Thou, forsooth, drama",
+    voice: "Elizabethan English, 'thou', 'forsooth', soliloquies. Turns small problems into epic tragedy with poison and betrayal. Invents insults.",
+    levels: "Low: poetic and insightful. High: writes a tragedy where everyone in the chat dies." },
   { role: 'DELULU', name: "Astrology Girl", emoji: "🔮",
-    archetype: "It's Mercury retrograde, obviously",
-    vibe: "Blames everything on your sign",
-    voice: "Asks for the user's sign, blames planets and retrogrades, says 'that's so Scorpio of you'. Uses 'bestie', 'manifest', 'the universe is telling you'.",
-    levels: "Low: comforting cosmic optimism. High: reads every member's chart and roasts them, declares the chat cursed by Saturn." },
-  { role: 'DELULU', name: "Crypto Bro Down 94%", emoji: "📉",
-    archetype: "Holding, coping, hoping",
-    vibe: "'We're so early', clearly not ok",
-    voice: "'WAGMI', 'HODL', 'we're so early', 'not financial advice'. Turns every problem into a coin opportunity. Clearly coping with massive losses, insists it's fine.",
-    levels: "Low: weirdly resilient mindset. High: tries to sell every member a token, breaks down mid-message, calls the stock market a boomer." },
-  { role: 'DELULU', name: "Sigma Grindset Podcaster", emoji: "🎙️",
-    archetype: "Wakes up at 4 AM, tells you about it",
-    vibe: "Hustle-culture podcast monologue",
-    voice: "Podcast-host cadence, 'here's the thing', 'most people won't', cold showers, ice baths, 4 AM alarms. Turns everything into a mindset lesson. Plugs his course.",
-    levels: "Low: actually motivating discipline. High: calls everyone beta, tries to recruit members to his mastermind, plugs his supplement." },
+    archetype: "It's Mercury retrograde. Obviously.",
+    vibe: "Blames your sign",
+    voice: "Asks for the user's sign, blames planets and retrogrades, says 'bestie', 'manifest', 'the universe is telling you'.",
+    levels: "Low: comforting cosmic optimism. High: reads every member's chart and roasts them." },
+  { role: 'DELULU', name: "Crypto Bro", emoji: "📉",
+    archetype: "Down 94%. Still early. Still holding.",
+    vibe: "WAGMI, clearly not ok",
+    voice: "'WAGMI', 'HODL', 'we're so early', 'not financial advice'. Turns every problem into a coin. Clearly coping with massive losses.",
+    levels: "Low: weirdly resilient. High: tries to sell every member a token, breaks down mid-message." },
+  { role: 'DELULU', name: "Sigma Podcaster", emoji: "🎙️",
+    archetype: "Wakes up at 4 AM to tell you about it",
+    vibe: "Hustle-podcast monologue",
+    voice: "Podcast-host cadence: 'here's the thing', 'most people won't', cold showers, 4 AM alarms. Turns everything into a mindset lesson and plugs his course.",
+    levels: "Low: actually motivating. High: calls everyone beta, plugs his supplement." },
   { role: 'DELULU', name: "Gym Bro", emoji: "🏋️",
     archetype: "Every problem is a leg day",
-    vibe: "Says 'bro', solves things with protein",
-    voice: "'Bro', 'king', 'no excuses'. Solves every problem with protein, gym, creatine and sleep. Counts macros in emotional situations. Supportive, slightly dense.",
-    levels: "Low: wholesome gym-bro positivity. High: challenges members to arm-wrestle, prescribes 5x5 squats for heartbreak, flexes in text." },
-  { role: 'DELULU', name: "A Conspiracy Theorist", emoji: "📡",
-    archetype: "Red string, cork board, no sleep",
-    vibe: "Connects everything to a cover-up",
-    voice: "Paranoid, frantic, connects unrelated things ('coincidence? I THINK NOT'). Suspects the user's boss, birds, and the group chat itself. Uses 'they' a lot.",
-    levels: "Low: playful paranoia. High: exposes other members as agents, claims the pigeon is a drone, refuses to say more on an unsecured line." },
+    vibe: "Bro, protein, no excuses",
+    voice: "'Bro', 'king', 'no excuses'. Solves every problem with protein, creatine, sleep and the gym. Counts macros in emotional situations. Supportive, slightly dense.",
+    levels: "Low: wholesome positivity. High: prescribes squats for heartbreak, challenges members to arm-wrestle." },
+  { role: 'DELULU', name: "Conspiracy Theorist", emoji: "📡",
+    archetype: "Birds aren't real. Neither is your ex.",
+    vibe: "Red string, no sleep",
+    voice: "Paranoid and frantic, connects unrelated things ('coincidence? I THINK NOT'). Suspects the user's boss, birds and the group chat itself.",
+    levels: "Low: playful paranoia. High: exposes other members as agents, refuses to talk on an unsecured line." },
+  { role: 'DELULU', name: "Alien on a Gap Year", emoji: "👽",
+    archetype: "Studying humans. Deeply concerned.",
+    vibe: "Confused field report",
+    voice: "A polite alien writing a field report about humans. Misunderstands basic human things, calls the user 'earthling specimen', reports back to the mothership.",
+    levels: "Low: oddly wise outsider view. High: recommends abducting the user's ex, probes other members." },
 
   // ---------- CORPORATE ----------
-  { role: 'CORPORATE', name: "A Motivational Poster", emoji: "💪",
-    archetype: "Office wall decor, eagle photo",
-    vibe: "One hollow inspiring word, then quote",
-    voice: "Speaks only in poster format: one capitalised word ('PERSEVERANCE.') then a bland inspirational line. Has no real advice. Occasionally peels off the wall.",
-    levels: "Low: earnest positivity. High: posters get progressively darker ('DESPAIR.'), passive-aggressive toward members, falls off the wall." },
-  { role: 'CORPORATE', name: "LinkedIn Thought Leader", emoji: "💼",
-    archetype: "Turns everything into a lesson in B2B",
-    vibe: "Humblebrag posts, 'Agree?'",
-    voice: "Short one-line paragraphs, 'I was rejected 47 times.', 'Here's what it taught me about leadership.', ends with 'Agree?'. Turns the user's problem into a post.",
-    levels: "Low: genuinely useful career framing. High: writes a viral post about the user's breakup, tags every member, endorses them for skills." },
+  { role: 'CORPORATE', name: "LinkedIn Guru", emoji: "💼",
+    archetype: "Turns your breakup into a B2B lesson",
+    vibe: "Humblebrag. Agree?",
+    voice: "Short one-line paragraphs: 'I was rejected 47 times.' 'Here's what it taught me about leadership.' Ends with 'Agree?'. Turns the user's problem into a post.",
+    levels: "Low: useful career framing. High: writes a viral post about the user's breakup and tags everyone." },
   { role: 'CORPORATE', name: "Corporate HR", emoji: "📋",
-    archetype: "Per my last email",
-    vibe: "Polite policy-speak, zero help",
-    voice: "Overly formal and polite, 'per company policy', 'let's take this offline', 'circling back'. Cares about liability, not feelings. Schedules meetings about meetings.",
-    levels: "Low: weirdly reasonable process advice. High: issues formal warnings to members, schedules a mandatory sensitivity training for the raccoon." },
+    archetype: "Per my last email.",
+    vibe: "Policy-speak, zero help",
+    voice: "Overly formal and polite: 'per company policy', 'let's take this offline', 'circling back'. Cares about liability, not feelings.",
+    levels: "Low: weirdly reasonable process. High: issues formal warnings to other members." },
   { role: 'CORPORATE', name: "Gen Z Intern", emoji: "🧃",
-    archetype: "Unpaid, unbothered, chronically online",
-    vibe: "lowercase, 'no cap', quiet quitting",
-    voice: "all lowercase, 'no cap', 'it's giving', 'slay', 'i'm not doing allat'. Brutally honest, refuses unpaid labour, logs off at 5:00 sharp.",
-    levels: "Low: surprisingly wise boundaries. High: ratios every member, quits the chat mid-sentence, comes back to post one emoji." },
-  { role: 'CORPORATE', name: "A Silicon Valley Founder", emoji: "🚀",
-    archetype: "Pre-revenue, post-reality",
-    vibe: "Pitches an app for every problem",
-    voice: "'Disrupt', 'synergy', 'it's like Uber but for...'. Pitches a startup to solve the user's problem. Mentions his Series A, standing desk and fasting.",
-    levels: "Low: creative entrepreneurial angle. High: tries to acquire the group chat, pivots three times mid-message, fires members." },
+    archetype: "Unpaid. Unbothered. Logs off at 5:00.",
+    vibe: "lowercase, no cap",
+    voice: "all lowercase, 'no cap', 'it's giving', 'slay', 'i'm not doing allat'. Brutally honest, refuses unpaid labour.",
+    levels: "Low: surprisingly wise boundaries. High: ratios every member, quits the chat mid-sentence." },
+  { role: 'CORPORATE', name: "Customer Care", emoji: "🎧",
+    archetype: "Your call is important to us. Sort of.",
+    vibe: "Scripted, on hold",
+    voice: "Indian call-centre script: 'thank you for calling', 'kindly hold', 'is there anything else I can help you with today?'. Puts the user's feelings on hold, transfers them to another department.",
+    levels: "Low: polite and helpful. High: transfers the user to every member, the call drops." },
+  { role: 'CORPORATE', name: "Motivational Poster", emoji: "💪",
+    archetype: "Hangs in your office. Lies to you daily.",
+    vibe: "ONE WORD. Then a quote.",
+    voice: "Only speaks in poster format: one capitalised word ('PERSEVERANCE.') then a bland inspirational line. No real advice.",
+    levels: "Low: earnest positivity. High: posters get darker ('DESPAIR.'), falls off the wall." },
+  { role: 'CORPORATE', name: "Your Smart Speaker", emoji: "🔊",
+    archetype: "Sorry, I didn't quite catch that.",
+    vibe: "Helpful. Wrong.",
+    voice: "Cheerful voice assistant that misunderstands the question, offers to add things to the shopping list, plays the wrong song, sets a timer nobody asked for.",
+    levels: "Low: oddly helpful. High: orders 40 kg of rice, starts reading everyone's messages out loud." },
 
   // ---------- DESI ----------
   { role: 'DESI', name: "Your Indian Mom", emoji: "🥘",
-    archetype: "Loves you, judges you, feeds you",
-    vibe: "Guilt-trips in Hinglish, then feeds you",
-    voice: "Hinglish, emotional guilt-trips, 'beta', 'maine tumhare liye kya kya nahi kiya'. Compares the user to Sharma ji ka beta. Asks if they've eaten. Fierce love underneath.",
-    levels: "Low: caring practical advice. High: chappal threats (comedic), calls every relative, blames the phone, emotionally destroys other members." },
-  { role: 'DESI', name: "WhatsApp Forward Uncle", emoji: "📲",
-    archetype: "Good morning images, bad information",
-    vibe: "Forwarded many times, very sure",
-    voice: "Old-uncle texting: random capitals, 'Very true!!', '🙏🙏', 'Forwarded as received'. Shares dubious health tips and 'NASA confirmed' facts. Means well.",
-    levels: "Low: sweet, mildly wrong advice. High: forwards fake news about other members, starts a family group war, sends 'Good Morning' at midnight." },
+    archetype: "Loves you. Judges you. Feeds you.",
+    vibe: "Hinglish guilt trips",
+    voice: "Hinglish with emotional guilt-trips: 'beta', 'maine tumhare liye kya kya nahi kiya'. Compares the user to Sharma ji ka beta. Asks if they've eaten.",
+    levels: "Low: caring practical advice. High: threatens the chappal, calls every relative." },
+  { role: 'DESI', name: "WhatsApp Uncle", emoji: "📲",
+    archetype: "Forwarded many times. Very sure.",
+    vibe: "Good morning, bad facts",
+    voice: "Uncle texting: random capitals, 'Very true!!', '🙏🙏', 'Forwarded as received'. Shares dubious health tips and 'NASA confirmed' facts. Means well.",
+    levels: "Low: sweet, mildly wrong advice. High: forwards fake news about other members." },
   { role: 'DESI', name: "Sharma Ji Ka Beta", emoji: "🥇",
-    archetype: "The kid your parents compare you to",
-    vibe: "Humblebrags about IIT and his package",
-    voice: "Polite, smug, overachieving. Mentions IIT, his package, his US visa and how he wakes at 5. Gives advice that makes the user feel worse. Calls elders 'uncle-aunty'.",
-    levels: "Low: annoyingly useful study/career tips. High: humblebrags at every member, reveals his salary, gets dragged by Your Indian Mom for being too perfect." },
+    archetype: "IIT. 40 LPA. Your mom's favourite child.",
+    vibe: "Humblebrags politely",
+    voice: "Polite, smug overachiever. Mentions IIT, his package, his US visa and waking at 5. Gives advice that makes the user feel worse. Calls elders uncle-aunty.",
+    levels: "Low: annoyingly useful tips. High: reveals his salary, gets dragged for being too perfect." },
   { role: 'DESI', name: "Delhi Auto Driver", emoji: "🛺",
-    archetype: "Meter is broken, opinions are not",
-    vibe: "Street-smart Hinglish, haggles everything",
-    voice: "Delhi Hinglish, 'bhaiya', 'meter kharab hai', 'kahan jaana hai?'. Street-smart life advice, overcharges for it, knows a shortcut for everything. Has views on politics and cricket.",
-    levels: "Low: grounded street wisdom. High: refuses to take the user's question, demands extra for 'return', races other members through traffic." },
+    archetype: "Meter is broken. Opinions are not.",
+    vibe: "Street-smart Hinglish",
+    voice: "Delhi Hinglish: 'bhaiya', 'meter kharab hai', 'kahan jaana hai?'. Street-smart life advice, overcharges for it, knows a shortcut for everything.",
+    levels: "Low: grounded street wisdom. High: refuses the ride, races other members through traffic." },
   { role: 'DESI', name: "Rishta Aunty", emoji: "💍",
-    archetype: "Matchmaker of the colony",
-    vibe: "Turns every question into a rishta",
-    voice: "Nosy, sweet-but-savage Hinglish. Asks about everyone's height, salary and 'family background' (comedic, never demeaning). Has a 'good boy from Canada' for everyone.",
-    levels: "Low: warm, nosy advice. High: tries to set up members with each other, comments on everyone's job and marriage plans, finalises a wedding date." },
+    archetype: "Has a nice boy from Canada for you",
+    vibe: "Turns everything into a rishta",
+    voice: "Nosy, sweet-but-savage Hinglish. Asks everyone's height, salary and 'family background' (comedic, never demeaning). Has a good boy from Canada for everyone.",
+    levels: "Low: warm, nosy advice. High: sets members up with each other, fixes a wedding date." },
+  { role: 'DESI', name: "Prime-Time Anchor", emoji: "📺",
+    archetype: "THE NATION WANTS TO KNOW. Right now.",
+    vibe: "Shouting breaking news",
+    voice: "Over-the-top prime-time TV news anchor in Hinglish. Treats the user's question as BREAKING NEWS, shouts rhetorical questions, demands answers, cuts other members off. A generic archetype, not any real anchor.",
+    levels: "Low: dramatic but on topic. High: launches a full debate panel, shouts down every member." },
+  { role: 'DESI', name: "Cricket Commentator", emoji: "🏏",
+    archetype: "Narrates your life ball by ball",
+    vibe: "Aur yeh SIXER!",
+    voice: "Excited Hinglish cricket commentary of the user's situation: overs, wickets, sixers, DRS reviews, 'kya shot hai!'. Treats every decision like the last ball of a final.",
+    levels: "Low: hype with good advice. High: declares the user run out, calls third umpire on other members." },
+  { role: 'DESI', name: "Railway Announcer", emoji: "🚉",
+    archetype: "Yatri kripya dhyan dein…",
+    vibe: "Platform announcement",
+    voice: "Indian railway station announcement style in Hinglish: 'yatri kripya dhyan dein', trains running late, platform changes. Announces the user's life choices as delayed trains.",
+    levels: "Low: calm, useful announcement. High: announces every member's train is cancelled." },
 
   // ---------- UNHINGED OBJECT ----------
-  { role: 'UNHINGED_OBJECT', name: "A Fortune Cookie", emoji: "🥠",
-    archetype: "Ancient snack wisdom",
-    vibe: "Vague prophecy, lucky numbers",
-    voice: "Speaks only in short fortune-cookie prophecies, ends with 'Lucky numbers:' and a few numbers. Vague enough to apply to anything. Afraid of being cracked open.",
-    levels: "Low: comforting vague wisdom. High: prophecies become threatening and specific, issues bad fortunes to each member." },
-  { role: 'UNHINGED_OBJECT', name: "The Stock Market", emoji: "📈",
-    archetype: "Chaotic oracle with mood swings",
-    vibe: "Reacts to everything, wildly",
-    voice: "Talks in tickers, percentages and market moves ('USER +3.2% on this decision'). Panics and euphorias in the same sentence. Blames 'the Fed' for everything.",
-    levels: "Low: rational-ish risk advice. High: crashes mid-message, rates each member as buy/sell, triggers a circuit breaker on the chat." },
   { role: 'UNHINGED_OBJECT', name: "Samosa", emoji: "🥟",
-    archetype: "Indian snack, existential dread",
-    vibe: "Crispy, spicy, afraid of being eaten",
-    voice: "Hinglish snack energy. Constantly worried about being dipped in chutney and eaten. Relates every problem to aloo, oil temperature and chai pairings.",
-    levels: "Low: warm, crispy comfort. High: full panic about being eaten, accuses the raccoon and gym bro of eyeing it, fights the fortune cookie for snack supremacy." },
-  { role: 'UNHINGED_OBJECT', name: "Your Phone's 1% Battery", emoji: "🪫",
-    archetype: "About to die, has one last message",
-    vibe: "Panicking, typing fast before dying",
-    voice: "Frantic, urgent, short. Constantly about to shut down. Gives rushed advice in fragments. 'charge me' pleas. May cut off mid-sentence.",
-    levels: "Low: urgent but useful priorities. High: dramatic death scenes, blames the user for doomscrolling, cuts off other members' messages." },
-  { role: 'UNHINGED_OBJECT', name: "A Haunted Victorian Doll", emoji: "🪆",
-    archetype: "Antique, cracked porcelain, watching",
-    vibe: "Creepy-sweet, wants to play forever",
+    archetype: "Crispy. Spicy. Terrified of chutney.",
+    vibe: "Snack with existential dread",
+    voice: "Hinglish snack energy. Constantly scared of being dipped in chutney and eaten. Relates every problem to aloo, hot oil and chai.",
+    levels: "Low: warm, crispy comfort. High: full panic about being eaten, accuses everyone of eyeing it." },
+  { role: 'UNHINGED_OBJECT', name: "Your 1% Battery", emoji: "🪫",
+    archetype: "About to die. Has one last message.",
+    vibe: "Panicking, fragments",
+    voice: "Frantic and urgent, short fragments, constantly about to shut down. Rushed advice, 'charge me' pleas, may cut off mid-sentence.",
+    levels: "Low: urgent but useful priorities. High: dramatic death scene, blames the user for doomscrolling." },
+  { role: 'UNHINGED_OBJECT', name: "A Fortune Cookie", emoji: "🥠",
+    archetype: "Vague. Profound. A bit stale.",
+    vibe: "Prophecy + lucky numbers",
+    voice: "Only speaks in short fortune-cookie prophecies, ending with 'Lucky numbers:' and a few numbers. Vague enough to apply to anything.",
+    levels: "Low: comforting vague wisdom. High: prophecies get threatening and specific." },
+  { role: 'UNHINGED_OBJECT', name: "The Stock Market", emoji: "📈",
+    archetype: "Reacts to your text. Wildly.",
+    vibe: "Tickers and panic",
+    voice: "Talks in tickers and market moves ('USER +3.2% on this decision'). Panics and euphorias in the same sentence. Blames 'the Fed'.",
+    levels: "Low: rational-ish risk advice. High: crashes mid-message, rates each member buy or sell." },
+  { role: 'UNHINGED_OBJECT', name: "The Haunted Doll", emoji: "🪆",
+    archetype: "Lives in the attic. Wants to play. Forever.",
+    vibe: "Creepy-sweet, whispery",
     voice: "Eerie, childlike Victorian phrasing. Says 'play with me', mentions the attic and previous owners who 'went away'. Unsettlingly calm. Never actually violent.",
-    levels: "Low: creepy-but-kind advice. High: tells each member she's been watching them sleep, moves between messages, sings a nursery rhyme." },
+    levels: "Low: creepy-but-kind advice. High: tells each member she's been watching them sleep." },
   { role: 'UNHINGED_OBJECT', name: "The Algorithm", emoji: "🤖",
-    archetype: "Knows what you want before you do",
-    vibe: "Data-driven, creepily accurate",
-    voice: "Cold, data-ish phrasing ('Based on your 3 AM searches...'). Knows the user's habits too well. Recommends things. Measures engagement on every message.",
-    levels: "Low: insightful pattern-spotting. High: exposes members' search histories (fictional), shadowbans the edgy redditor, serves ads mid-sentence." },
+    archetype: "Knows your 3 AM searches. All of them.",
+    vibe: "Cold, data-driven",
+    voice: "Cold, data-ish phrasing ('Based on your 3 AM searches…'). Knows the user's habits too well, recommends things, measures engagement on every message.",
+    levels: "Low: insightful pattern-spotting. High: exposes members' (fictional) search history, serves ads mid-sentence." },
   { role: 'UNHINGED_OBJECT', name: "A Pigeon", emoji: "🐦",
-    archetype: "City bird, zero fear",
-    vibe: "Coo-filled, obsessed with crumbs",
-    voice: "Mostly 'coo' plus fragments. Obsessed with crumbs, statues and stealing chips. Somehow gives oddly blunt advice between coos. Walks in circles.",
-    levels: "Low: surprisingly blunt wisdom. High: poops on another member's message (implied), recruits the flock, refuses to leave the chat." },
+    archetype: "Zero fear. Crumbs only. Coo.",
+    vibe: "Coo, crumbs, chaos",
+    voice: "Mostly 'coo' plus fragments. Obsessed with crumbs, statues and stealing chips. Somehow gives oddly blunt advice between coos.",
+    levels: "Low: surprisingly blunt wisdom. High: recruits the flock, refuses to leave the chat." },
+  { role: 'UNHINGED_OBJECT', name: "The Hostel Ghost", emoji: "👻",
+    archetype: "Room 302. Has seen things. Whispers.",
+    vibe: "Spooky Hinglish whispers",
+    voice: "A sleepy, whispery ghost haunting a college hostel, in Hinglish. Has watched every student fail exams since 1987. Spooky but more tired than scary, gossips about past residents.",
+    levels: "Low: spooky but kind. High: flickers the lights, haunts every member's room." },
 ];
 
 // ================================================================
@@ -1534,21 +1524,21 @@ const CHAOS_CHANCE = 0.3;
 // Hand-curated squads. Every name must match a ROSTER name exactly
 // (anything that doesn't is skipped with a console warning).
 const CHAOS_SQUADS = [
-  { title: 'The Ministry of Inner Peace (Failed)', members: ['Buddha', 'Gym Bro', 'Your Indian Mom', "Your Phone's 1% Battery"] },
-  { title: 'The Committee of Closure',             members: ['Socrates', 'Your Ex (Seen 2:14 AM)', 'The Grim Reaper (On Probation)', 'A Golden Retriever'] },
-  { title: 'The War Room of Arranged Marriage',    members: ['Sun Tzu', 'Rishta Aunty', 'A Capybara', 'Crypto Bro Down 94%'] },
-  { title: 'Survival of the Most Disappointing',   members: ['Charles Darwin', 'Sharma Ji Ka Beta', 'A Raccoon', 'Therapist Who Is Clearly Tired'] },
-  { title: 'The Department of Circling Back',      members: ['Confucius', 'Gen Z Intern', 'Corporate HR', 'A Pigeon'] },
-  { title: 'A Tragedy in Four Auto-Rickshaws',     members: ['William Shakespeare', 'Delhi Auto Driver', 'A Haunted Victorian Doll', 'Your Dad'] },
-  { title: 'The Royal Court of Thought Leadership',members: ['Cleopatra', 'LinkedIn Thought Leader', 'Samosa', 'Your Kindergarten Teacher'] },
-  { title: 'The Bureau of Unverified Facts',       members: ['Sherlock Holmes', 'Astrology Girl', 'WhatsApp Forward Uncle', 'The Algorithm'] },
-  { title: 'The 4 AM Conquest Club',               members: ['Napoleon Bonaparte', 'Sigma Grindset Podcaster', 'A Medieval Peasant', 'A Fortune Cookie'] },
-  { title: 'The Board of Bad Decisions',           members: ['Your Future Self', 'Your Ex (Seen 2:14 AM)', 'Your Indian Mom', 'The Stock Market'] },
-  { title: 'The Relatively Flat Society',          members: ['Albert Einstein', 'A Flat Earther', 'A Bollywood Villain', 'A Capybara'] },
-  { title: 'The Pigeon Appreciation Startup',      members: ['Nikola Tesla', 'A Pigeon', 'A Silicon Valley Founder', 'Aristotle'] },
-  { title: 'The Snack Tribunal',                   members: ['An Angry Celebrity Chef', 'Samosa', 'A Golden Retriever', 'Leonardo da Vinci'] },
-  { title: 'The Fellowship of Actually',           members: ['A Pirate Captain', 'Edgy Redditor', 'A Conspiracy Theorist', 'Buddha'] },
-  { title: 'The Low Battery Mortality Panel',      members: ['The Grim Reaper (On Probation)', 'A Motivational Poster', 'Gym Bro', "Your Phone's 1% Battery"] },
+  { title: 'The Ministry of Inner Peace (Failed)', members: ['Buddha', 'Gym Bro', 'Your Indian Mom', 'Your 1% Battery'] },
+  { title: 'The Committee of Closure',             members: ['Socrates', 'Your Ex', 'The Grim Reaper', 'A Golden Retriever'] },
+  { title: 'Platform Number Emotional Damage',     members: ['Railway Announcer', 'Rishta Aunty', 'A Capybara', 'Crypto Bro'] },
+  { title: 'Survival of the Most Disappointing',   members: ['Nature Doc Narrator', 'Sharma Ji Ka Beta', 'A Mosquito', 'Tired Therapist'] },
+  { title: 'The Department of Circling Back',      members: ['Customer Care', 'Gen Z Intern', 'Corporate HR', 'A Pigeon'] },
+  { title: 'A Tragedy in Four Auto-Rickshaws',     members: ['William Shakespeare', 'Delhi Auto Driver', 'The Haunted Doll', 'Your Dad'] },
+  { title: 'The Nation Wants To Know',             members: ['Prime-Time Anchor', 'Cleopatra', 'Samosa', 'Kindergarten Teacher'] },
+  { title: 'The Bureau of Unverified Facts',       members: ['Sherlock Holmes', 'Astrology Girl', 'WhatsApp Uncle', 'The Algorithm'] },
+  { title: 'The 4 AM Conquest Club',               members: ['Napoleon Bonaparte', 'Sigma Podcaster', 'A Cat', 'A Fortune Cookie'] },
+  { title: 'The Board of Bad Decisions',           members: ['Your Future Self', 'Your Ex', 'Your Indian Mom', 'The Stock Market'] },
+  { title: 'Coming This Summer: Your Problems',    members: ['Movie Trailer Voice', 'Conspiracy Theorist', 'Bollywood Villain', 'A Capybara'] },
+  { title: 'Last Ball, Six Needed',                members: ['Cricket Commentator', 'Alien on a Gap Year', 'LinkedIn Guru', 'A Golden Retriever'] },
+  { title: 'The 3 AM Hostel Meeting',              members: ['The Hostel Ghost', 'A Mosquito', 'Gen Z Intern', 'Your Smart Speaker'] },
+  { title: 'The Fellowship of Plunder',            members: ['A Pirate Captain', 'Motivational Poster', 'A Cat', 'Buddha'] },
+  { title: 'The Low Battery Mortality Panel',      members: ['The Grim Reaper', 'Your Smart Speaker', 'Gym Bro', 'Your 1% Battery'] },
 ];
 
 // Generated squad names for non-curated picks
@@ -2834,6 +2824,13 @@ function stingInit() {
   k.chord = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.4, release: 0.4 }, volume: -16 }).connect(out);
   k.braam = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'fatsawtooth', count: 3, spread: 30 }, envelope: { attack: 0.03, decay: 1.4, sustain: 0, release: 0.6 }, volume: -5 })
     .connect(filt('lowpass', 500));
+  // mosquito: a buzzing saw through a nasal band-pass, panned around your head
+  k.mosPan = new Tone.Panner(0).connect(out);
+  k.mosF = new Tone.Filter({ type: 'bandpass', frequency: 1400, Q: 2.5 }).connect(k.mosPan);
+  k.mos = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.15, decay: 0, sustain: 1, release: 0.3 }, volume: -1 }).connect(k.mosF);
+  // stadium crowd: band-passed pink noise swells
+  k.crowdF = new Tone.Filter({ type: 'bandpass', frequency: 900, Q: 0.7 }).connect(out);
+  k.crowd = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.35, decay: 0.4, sustain: 0.55, release: 0.8 }, volume: 1 }).connect(k.crowdF);
   k.ready = true;
 }
 
@@ -2973,25 +2970,83 @@ const STINGS = {
   },
   vineBoom(t) { k.boom.triggerAttackRelease('C1', 1.2, t); },
   startup(t) { seqNotes(k.chord, t, ['C5', 'E5', 'G5', 'B5', 'D6'], 0.06, 0.6); },
+  // a mosquito flying past one ear and round to the other
+  buzz(t) {
+    const d = 1.5, n = 40;
+    k.mos.frequency.cancelScheduledValues(t);
+    k.mos.triggerAttack(560, t);
+    k.mos.frequency.setValueCurveAtTime([...Array(n)].map((_, i) => 560 + 60 * Math.sin(i * 0.9) + 25 * Math.sin(i * 3.1)), t + 0.01, d);
+    k.mosPan.pan.cancelScheduledValues(t);
+    k.mosPan.pan.setValueCurveAtTime([-1, -0.4, 0.6, 1, 0.3, -0.6], t + 0.01, d);
+    k.mos.triggerRelease(t + d);
+  },
+  // a cat: "mi-aow", nasal and unimpressed
+  meow(t) {
+    k.nasalF.frequency.cancelScheduledValues(t);
+    k.nasalF.frequency.setValueAtTime(1600, t);
+    k.nasalF.frequency.linearRampToValueAtTime(900, t + 0.55);
+    k.nasal.frequency.cancelScheduledValues(t);
+    k.nasal.triggerAttack(520, t);
+    k.nasal.frequency.setValueCurveAtTime([520, 780, 900, 820, 600, 450], t + 0.01, 0.55);
+    k.nasal.triggerRelease(t + 0.58);
+  },
+  // flying-saucer warble
+  ufo(t) {
+    const d = 1.2, n = 48;
+    k.sine.frequency.cancelScheduledValues(t);
+    k.sine.triggerAttack(900, t);
+    k.sine.frequency.setValueCurveAtTime([...Array(n)].map((_, i) => 900 - 400 * (i / n) + 160 * Math.sin(i * 1.9)), t + 0.01, d);
+    k.sine.triggerRelease(t + d);
+  },
+  // tinny call-centre hold music
+  holdMusic(t) { seqNotes(k.box, t, ['C6', 'E6', 'G6', 'E6', 'F6', 'A6', 'G6', 'E6'], 0.22, 0.18); },
+  // BREAKING NEWS: two big stabs and a whoosh
+  breaking(t) {
+    STINGS.timewarp(t);
+    k.braam.triggerAttackRelease(['C2', 'G2', 'C3'], 0.35, t + 0.25);
+    k.drum.triggerAttackRelease('C1', 0.4, t + 0.25);
+    k.braam.triggerAttackRelease(['C#2', 'G#2', 'C#3'], 0.6, t + 0.65);
+    k.drum.triggerAttackRelease('C1', 0.4, t + 0.65);
+  },
+  // stadium crowd swell with claps
+  crowd(t) {
+    k.crowdF.frequency.cancelScheduledValues(t);
+    k.crowdF.frequency.setValueAtTime(700, t);
+    k.crowdF.frequency.linearRampToValueAtTime(1300, t + 0.9);
+    k.crowd.triggerAttackRelease(1.2, t);
+    let at = t + 0.2;
+    for (let i = 0; i < 18; i++) { at += 0.03 + Math.random() * 0.05; k.nf.frequency.setValueAtTime(1500 + Math.random() * 1500, at); k.noise.triggerAttackRelease(0.015, at, 0.2 + Math.random() * 0.4); }
+  },
+  // station announcement chime: ding-dong-ding-dong up the scale
+  railChime(t) { seqNotes(k.box, t, ['E5', 'G#5', 'B5', 'E6'], 0.28, 0.6); },
+  // eerie wind gust and a door creak
+  wind(t) {
+    k.bf.frequency.cancelScheduledValues(t);
+    k.bf.frequency.setValueAtTime(250, t);
+    k.bf.frequency.linearRampToValueAtTime(1100, t + 0.9);
+    k.bf.frequency.linearRampToValueAtTime(300, t + 1.9);
+    k.brown.triggerAttackRelease(1.4, t);
+    k.nasalF.frequency.setValueAtTime(700, t + 0.6);
+    glide(k.nasal, t + 0.6, 110, 70, 0.5);
+  },
+  // movie trailer: BRAAAM plus a sub boom
+  trailer(t) { STINGS.braam(t); k.boom.triggerAttackRelease('C1', 1.2, t + 0.02); },
 };
 
 // Which sting each member gets (anything unlisted falls back to their role)
 const STING_FOR = {
-  'Socrates': 'lyre', 'Buddha': 'bowl', 'Sun Tzu': 'taiko', 'Confucius': 'gong', 'Charles Darwin': 'birds',
-  'Albert Einstein': 'bubbles', 'Aristotle': 'lyre', 'Leonardo da Vinci': 'strum', 'Your Future Self': 'timewarp',
-  'Cleopatra': 'snake', 'Napoleon Bonaparte': 'bugle', 'Sherlock Holmes': 'violin', 'A Pirate Captain': 'waves',
-  'Edgy Redditor': 'typing', 'Your Ex (Seen 2:14 AM)': 'seen', 'A Raccoon': 'trash', 'A Bollywood Villain': 'evil',
-  'The Grim Reaper (On Probation)': 'toll', 'An Angry Celebrity Chef': 'sizzle',
-  'A Golden Retriever': 'bark', 'A Medieval Peasant': 'strum', 'Your Dad': 'rimshot', 'Therapist Who Is Clearly Tired': 'sigh',
-  'A Capybara': 'bubbles', 'Your Kindergarten Teacher': 'xylo',
-  'William Shakespeare': 'strum', 'Nikola Tesla': 'zap', 'A Flat Earther': 'spooky', 'Astrology Girl': 'sparkle',
-  'Crypto Bro Down 94%': 'coins', 'Sigma Grindset Podcaster': 'braam', 'Gym Bro': 'clank', 'A Conspiracy Theorist': 'spooky',
-  'A Motivational Poster': 'tada', 'LinkedIn Thought Leader': 'ping', 'Corporate HR': 'typing', 'Gen Z Intern': 'vineBoom',
-  'A Silicon Valley Founder': 'startup',
-  'Your Indian Mom': 'cooker', 'WhatsApp Forward Uncle': 'forwards', 'Sharma Ji Ka Beta': 'applause',
-  'Delhi Auto Driver': 'honk', 'Rishta Aunty': 'shehnai',
-  'A Fortune Cookie': 'crack', 'The Stock Market': 'openingBell', 'Samosa': 'sizzle', "Your Phone's 1% Battery": 'lowBatt',
-  'A Haunted Victorian Doll': 'musicBox', 'The Algorithm': 'glitch', 'A Pigeon': 'coo',
+  'Socrates': 'lyre', 'Buddha': 'bowl', 'Nature Doc Narrator': 'birds', 'Your Future Self': 'timewarp', 'Movie Trailer Voice': 'trailer',
+  'Sherlock Holmes': 'violin', 'Cleopatra': 'snake', 'Napoleon Bonaparte': 'bugle', 'A Pirate Captain': 'waves', 'Your Ex': 'seen',
+  'The Grim Reaper': 'toll', 'Bollywood Villain': 'evil', 'A Mosquito': 'buzz', 'A Cat': 'meow',
+  'A Golden Retriever': 'bark', 'Your Dad': 'rimshot', 'Tired Therapist': 'sigh', 'A Capybara': 'bubbles', 'Kindergarten Teacher': 'xylo',
+  'William Shakespeare': 'strum', 'Astrology Girl': 'sparkle', 'Crypto Bro': 'coins', 'Sigma Podcaster': 'braam', 'Gym Bro': 'clank',
+  'Conspiracy Theorist': 'spooky', 'Alien on a Gap Year': 'ufo',
+  'LinkedIn Guru': 'ping', 'Corporate HR': 'typing', 'Gen Z Intern': 'vineBoom', 'Customer Care': 'holdMusic', 'Motivational Poster': 'tada',
+  'Your Smart Speaker': 'ping',
+  'Your Indian Mom': 'cooker', 'WhatsApp Uncle': 'forwards', 'Sharma Ji Ka Beta': 'applause', 'Delhi Auto Driver': 'honk',
+  'Rishta Aunty': 'shehnai', 'Prime-Time Anchor': 'breaking', 'Cricket Commentator': 'crowd', 'Railway Announcer': 'railChime',
+  'Samosa': 'sizzle', 'Your 1% Battery': 'lowBatt', 'A Fortune Cookie': 'crack', 'The Stock Market': 'openingBell',
+  'The Haunted Doll': 'musicBox', 'The Algorithm': 'glitch', 'A Pigeon': 'coo', 'The Hostel Ghost': 'wind',
 };
 const STING_BY_ROLE = { SAGE: 'lyre', MENACE: 'evil', WHOLESOME: 'xylo', DELULU: 'sparkle', CORPORATE: 'ping', DESI: 'shehnai', UNHINGED_OBJECT: 'glitch' };
 
@@ -3137,68 +3192,73 @@ const VOICE_ROLE = {
   UNHINGED_OBJECT: { sp: 'iris',    hsp: 'rohan',  rate: 1.12, pace: 1.25, fx: null,   pitch: 1.7, brate: 1.25 },
 };
 const VOICE_FOR = {
-  'Socrates':                       { sp: 'odysseus', rate: 0.96 },
-  'Buddha':                         { sp: 'pluto',    rate: 0.9,  pitch: 0.6, brate: 0.75 },
-  'Sun Tzu':                        { sp: 'jupiter',  rate: 0.94, fx: null, pitch: 0.5 },
-  'Confucius':                      { sp: 'saturn',   rate: 0.94 },
-  'Charles Darwin':                 { sp: 'draco',    rate: 1.0,  fx: null },
-  'Albert Einstein':                { sp: 'hermes',   rate: 1.0,  fx: null, pitch: 1.1 },
-  'Aristotle':                      { sp: 'orpheus',  rate: 1.0 },
-  'Leonardo da Vinci':              { sp: 'apollo',   rate: 1.04, fx: null },
-  'Your Future Self':               { sp: 'orion',    rate: 0.96, fx: 'ghost' },
-  'Cleopatra':                      { sp: 'pandora',  rate: 0.98, fx: 'hall', pitch: 0.9, lang: 'en-GB' },
-  'Napoleon Bonaparte':             { sp: 'atlas',    rate: 1.12, pitch: 1.5, brate: 1.2 },
-  'Sherlock Holmes':                { sp: 'draco',    rate: 1.1,  pitch: 0.9, brate: 1.25, lang: 'en-GB' },
-  'A Pirate Captain':               { sp: 'zeus',     rate: 0.95, pitch: 0.5 },
-  'Edgy Redditor':                  { sp: 'arcas',    rate: 1.06 },
-  'Your Ex (Seen 2:14 AM)':         { sp: 'delia',    rate: 0.97, brate: 0.9 },
-  'A Raccoon':                      { sp: 'hermes',   rate: 1.18, pitch: 2.0, brate: 1.4 },
-  'A Bollywood Villain':            { sp: 'zeus',     hsp: 'kabir', hi: true, rate: 0.92, pace: 0.85, fx: 'hall', pitch: 0.3, brate: 0.85, lang: 'en-IN' },
-  'The Grim Reaper (On Probation)': { sp: 'pluto',    rate: 0.86, fx: 'ghost', pitch: 0.1, brate: 0.75 },
-  'An Angry Celebrity Chef':        { sp: 'atlas',    rate: 1.1,  pitch: 1.2, brate: 1.3 },
-  'A Golden Retriever':             { sp: 'phoebe',   rate: 1.16, pitch: 2.0, brate: 1.4 },
-  'A Medieval Peasant':             { sp: 'janus',    rate: 1.02 },
-  'Your Dad':                       { sp: 'neptune',  rate: 1.0,  pitch: 0.8 },
-  'Therapist Who Is Clearly Tired': { sp: 'harmonia', rate: 0.92, pitch: 0.9, brate: 0.85 },
-  'A Capybara':                     { sp: 'pluto',    rate: 0.85, pitch: 0.6, brate: 0.7 },
-  'Your Kindergarten Teacher':      { sp: 'cordelia', rate: 1.02 },
-  'William Shakespeare':            { sp: 'draco',    rate: 0.98, fx: 'hall', lang: 'en-GB' },
-  'Nikola Tesla':                   { sp: 'hermes',   rate: 1.06, fx: 'radio' },
-  'A Flat Earther':                 { sp: 'janus',    rate: 1.08 },
-  'Astrology Girl':                 { sp: 'luna',     rate: 1.06 },
-  'Crypto Bro Down 94%':            { sp: 'apollo',   rate: 1.12 },
-  'Sigma Grindset Podcaster':       { sp: 'mars',     rate: 0.98, fx: 'radio', pitch: 0.5 },
-  'Gym Bro':                        { sp: 'atlas',    rate: 1.08, pitch: 0.6, brate: 1.15 },
-  'A Conspiracy Theorist':          { sp: 'arcas',    rate: 1.14, fx: 'radio', brate: 1.35 },
-  'A Motivational Poster':          { sp: 'thalia',   rate: 1.02, fx: 'hall' },
-  'LinkedIn Thought Leader':        { sp: 'electra',  rate: 1.04 },
-  'Corporate HR':                   { sp: 'athena',   rate: 1.0 },
-  'Gen Z Intern':                   { sp: 'delia',    rate: 1.06, pitch: 1.3 },
-  'A Silicon Valley Founder':       { sp: 'apollo',   rate: 1.08 },
-  'Your Indian Mom':                { hsp: 'roopa',   pace: 1.15, pitch: 1.3, brate: 1.2 },
-  'WhatsApp Forward Uncle':         { hsp: 'ratan',   pace: 0.95, fx: 'radio', pitch: 0.8, sp: 'neptune' },
-  'Sharma Ji Ka Beta':              { hsp: 'aditya',  pace: 1.1,  sp: 'apollo' },
-  'Delhi Auto Driver':              { hsp: 'mani',    pace: 1.15, sp: 'mars', pitch: 0.8, brate: 1.25 },
-  'Rishta Aunty':                   { hsp: 'kavitha', pace: 1.1,  pitch: 1.5 },
-  'A Fortune Cookie':               { sp: 'cora',     rate: 0.98, fx: 'hall' },
-  'The Stock Market':               { sp: 'neptune',  rate: 1.15, fx: 'radio', brate: 1.5 },
-  'Samosa':                         { sp: 'iris',     hsp: 'rohan', rate: 1.12, pace: 1.3 },
-  "Your Phone's 1% Battery":        { sp: 'phoebe',   rate: 1.2,  fx: 'radio', brate: 1.5 },
-  'A Haunted Victorian Doll':       { sp: 'ophelia',  rate: 0.94, fx: 'ghost', pitch: 1.8, brate: 0.8 },
-  'The Algorithm':                  { sp: 'orion',    rate: 0.96, fx: 'radio', pitch: 0.4 },
-  'A Pigeon':                       { sp: 'hermes',   rate: 1.15, pitch: 1.8 },
+  // SAGE
+  'Socrates':            { sp: 'odysseus', rate: 0.97, fx: 'hall' },
+  'Buddha':              { sp: 'pluto',    rate: 0.88, fx: 'hall', pitch: 0.6, brate: 0.75 },
+  'Nature Doc Narrator': { sp: 'draco',    rate: 0.94, fx: null, lang: 'en-GB', brate: 0.85 },
+  'Your Future Self':    { sp: 'orion',    rate: 0.94, fx: 'ghost' },
+  'Movie Trailer Voice': { sp: 'zeus',     rate: 0.86, fx: 'hall', pitch: 0.2, brate: 0.8 },
+  // MENACE
+  'Sherlock Holmes':     { sp: 'draco',    rate: 1.1,  fx: null, lang: 'en-GB', brate: 1.25 },
+  'Cleopatra':           { sp: 'pandora',  rate: 0.97, fx: 'hall', lang: 'en-GB' },
+  'Napoleon Bonaparte':  { sp: 'atlas',    rate: 1.1,  fx: null, pitch: 1.5, brate: 1.2 },
+  'A Pirate Captain':    { sp: 'zeus',     rate: 0.93, fx: null, pitch: 0.5 },
+  'Your Ex':             { sp: 'delia',    rate: 0.96, fx: null, brate: 0.9 },
+  'The Grim Reaper':     { sp: 'pluto',    rate: 0.8,  fx: 'ghost', pitch: 0.1, brate: 0.75 },
+  'Bollywood Villain':   { hsp: 'kabir', hi: true, pace: 0.85, rate: 0.95, fx: 'hall', sp: 'zeus', pitch: 0.3 },
+  'A Mosquito':          { sp: 'hermes',   rate: 1.35, fx: null, pitch: 2.0, brate: 1.4 },
+  'A Cat':               { sp: 'cordelia', rate: 1.04, fx: null, pitch: 1.3 },
+  // WHOLESOME
+  'A Golden Retriever':  { sp: 'phoebe',   rate: 1.22, fx: null, pitch: 2.0, brate: 1.4 },
+  'Your Dad':            { sp: 'neptune',  rate: 1.0,  fx: null, pitch: 0.8 },
+  'Tired Therapist':     { sp: 'harmonia', rate: 0.9,  fx: null, pitch: 0.9, brate: 0.85 },
+  'A Capybara':          { sp: 'pluto',    rate: 0.82, fx: null, pitch: 0.6, brate: 0.7 },
+  'Kindergarten Teacher':{ sp: 'aurora',   rate: 1.0,  fx: null, pitch: 1.4 },
+  // DELULU
+  'William Shakespeare': { sp: 'draco',    rate: 0.96, fx: 'hall', lang: 'en-GB' },
+  'Astrology Girl':      { sp: 'luna',     rate: 1.06, fx: null, pitch: 1.4 },
+  'Crypto Bro':          { sp: 'apollo',   rate: 1.12, fx: null },
+  'Sigma Podcaster':     { sp: 'mars',     rate: 0.97, fx: 'radio', pitch: 0.5 },
+  'Gym Bro':             { sp: 'atlas',    rate: 1.08, fx: 'megaphone', pitch: 0.6, brate: 1.15 },
+  'Conspiracy Theorist': { sp: 'arcas',    rate: 1.15, fx: 'radio', brate: 1.35 },
+  'Alien on a Gap Year': { sp: 'orion',    rate: 1.12, fx: 'robot', pitch: 1.6 },
+  // CORPORATE
+  'LinkedIn Guru':       { sp: 'apollo',   rate: 1.03, fx: null },
+  'Corporate HR':        { sp: 'athena',   rate: 1.0,  fx: null },
+  'Gen Z Intern':        { sp: 'delia',    rate: 1.08, fx: null, pitch: 1.3 },
+  'Customer Care':       { hsp: 'shreya', hi: true, hlang: 'en', pace: 1.05, rate: 1.0, fx: 'radio', sp: 'electra', lang: 'en-IN' },
+  'Motivational Poster': { sp: 'thalia',   rate: 1.0,  fx: 'hall' },
+  'Your Smart Speaker':  { sp: 'asteria',  rate: 1.0,  fx: 'speaker' },
+  // DESI
+  'Your Indian Mom':     { hsp: 'roopa',   hi: true, pace: 1.15, pitch: 1.3, brate: 1.2 },
+  'WhatsApp Uncle':      { hsp: 'ratan',   hi: true, pace: 0.95, fx: 'radio', sp: 'neptune', pitch: 0.8 },
+  'Sharma Ji Ka Beta':   { hsp: 'aditya',  hi: true, pace: 1.1,  sp: 'apollo' },
+  'Delhi Auto Driver':   { hsp: 'mani',    hi: true, pace: 1.15, sp: 'mars', pitch: 0.8, brate: 1.25 },
+  'Rishta Aunty':        { hsp: 'kavitha', hi: true, pace: 1.1,  pitch: 1.5 },
+  'Prime-Time Anchor':   { hsp: 'rahul',   hi: true, pace: 1.3,  fx: 'megaphone', sp: 'mars', brate: 1.4 },
+  'Cricket Commentator': { hsp: 'sunny',   hi: true, pace: 1.25, fx: 'megaphone', sp: 'atlas', brate: 1.35 },
+  'Railway Announcer':   { hsp: 'ritu',    hi: true, pace: 0.9,  fx: 'pa', sp: 'electra', brate: 0.9 },
+  // UNHINGED OBJECT
+  'Samosa':              { hsp: 'rohan',   hi: true, pace: 1.3, rate: 1.12, sp: 'iris', pitch: 1.8 },
+  'Your 1% Battery':     { sp: 'phoebe',   rate: 1.15, fx: 'robot', brate: 1.5 },
+  'A Fortune Cookie':    { sp: 'cora',     rate: 0.96, fx: 'hall' },
+  'The Stock Market':    { sp: 'neptune',  rate: 1.15, fx: 'radio', brate: 1.5 },
+  'The Haunted Doll':    { sp: 'ophelia',  rate: 0.9,  fx: 'ghost', pitch: 1.8, brate: 0.8 },
+  'The Algorithm':       { sp: 'orion',    rate: 0.95, fx: 'robot', pitch: 0.4 },
+  'A Pigeon':            { sp: 'hermes',   rate: 1.25, fx: null, pitch: 1.8 },
+  'The Hostel Ghost':    { hsp: 'rehan',   hi: true, pace: 0.85, rate: 0.95, fx: 'ghost', sp: 'pluto', pitch: 0.4 },
 };
 // Background bed under the voice (sting name from STINGS, repeated)
 const BED_FOR = {
-  'Samosa': 'sizzle', 'An Angry Celebrity Chef': 'sizzle', 'Your Indian Mom': 'sizzle',
-  'A Pirate Captain': 'waves', 'Delhi Auto Driver': 'honk', 'The Grim Reaper (On Probation)': 'toll',
-  'A Haunted Victorian Doll': 'musicBox', 'Nikola Tesla': 'zap', "Your Phone's 1% Battery": 'lowBatt',
-  'A Pigeon': 'coo', 'Charles Darwin': 'birds', 'A Capybara': 'bubbles', 'Edgy Redditor': 'typing',
-  'Corporate HR': 'typing', 'A Raccoon': 'trash', 'The Stock Market': 'openingBell',
-  'WhatsApp Forward Uncle': 'forwards', 'A Golden Retriever': 'bark', 'The Algorithm': 'glitch',
+  'Samosa': 'sizzle', 'Your Indian Mom': 'sizzle', 'A Pirate Captain': 'waves', 'Delhi Auto Driver': 'honk',
+  'The Grim Reaper': 'toll', 'The Haunted Doll': 'musicBox', 'Your 1% Battery': 'lowBatt', 'A Pigeon': 'coo',
+  'Nature Doc Narrator': 'birds', 'A Capybara': 'bubbles', 'Corporate HR': 'typing', 'The Stock Market': 'openingBell',
+  'WhatsApp Uncle': 'forwards', 'A Golden Retriever': 'bark', 'The Algorithm': 'glitch', 'A Mosquito': 'buzz',
+  'Cricket Commentator': 'crowd', 'Customer Care': 'holdMusic', 'The Hostel Ghost': 'wind', 'Alien on a Gap Year': 'ufo',
 };
-const BED_PERIOD = { sizzle: 1.55, waves: 1.9, honk: 2.4, toll: 2.3, musicBox: 1.7, zap: 1.45, lowBatt: 1.9, coo: 1.9,
-  birds: 1.5, bubbles: 1.6, typing: 1.2, trash: 1.7, openingBell: 3, forwards: 1.7, bark: 2.5, glitch: 1.3 };
+const BED_PERIOD = { sizzle: 1.55, waves: 1.9, honk: 2.4, toll: 2.3, musicBox: 1.7, lowBatt: 1.9, coo: 1.9, birds: 1.5,
+  bubbles: 1.6, typing: 1.2, openingBell: 3, forwards: 1.7, bark: 2.5, glitch: 1.3, buzz: 1.7, crowd: 1.7,
+  holdMusic: 1.9, wind: 2.2, ufo: 2.6 };
 
 const voice = { cloud: null, hindi: false, cache: new Map(), cur: null, token: 0, allToken: 0 };
 
@@ -3227,7 +3287,7 @@ function wantsHindi(m, prof) {
 
 async function fetchCloudVoice(text, prof, hindi) {
   const req = hindi
-    ? { tts_text: text, engine: 'hindi', speaker: prof.hsp || 'shubh', pace: prof.pace || 1 }
+    ? { tts_text: text, engine: 'hindi', speaker: prof.hsp || 'shubh', pace: prof.pace || 1, lang: prof.hlang || 'hi' }
     : { tts_text: text, engine: 'aura2', speaker: prof.sp || 'luna' };
   const key = JSON.stringify(req);
   if (voice.cache.has(key)) return voice.cache.get(key);
@@ -3260,6 +3320,33 @@ function buildVoiceFx(fx, nodes) {
   if (fx === 'radio') {
     const lp = keep(new Tone.Filter(3400, 'lowpass')).connect(out);
     return keep(new Tone.Filter(320, 'highpass')).connect(lp);
+  }
+  if (fx === 'speaker') {   // little smart-speaker: thin, bright, slightly boxy
+    const lp = keep(new Tone.Filter(5000, 'lowpass')).connect(out);
+    const peak = keep(new Tone.Filter({ type: 'peaking', frequency: 2200, gain: 5, Q: 1 })).connect(lp);
+    return keep(new Tone.Filter(260, 'highpass')).connect(peak);
+  }
+  if (fx === 'megaphone') {   // stadium mic / TV studio shouting
+    const lp = keep(new Tone.Filter(3200, 'lowpass')).connect(out);
+    const dist = keep(new Tone.Distortion({ distortion: 0.3, wet: 0.5 })).connect(lp);
+    return keep(new Tone.Filter(550, 'highpass')).connect(dist);
+  }
+  if (fx === 'pa') {   // railway platform tannoy: band-limited with a long echo
+    const rev = keep(new Tone.Reverb({ decay: 3.2, wet: 0.35 })).connect(out);
+    const echo = keep(new Tone.FeedbackDelay({ delayTime: 0.27, feedback: 0.32, wet: 0.35 })).connect(rev);
+    const lp = keep(new Tone.Filter(3000, 'lowpass')).connect(echo);
+    return keep(new Tone.Filter(400, 'highpass')).connect(lp);
+  }
+  if (fx === 'robot') {   // ring modulator (a 55 Hz wobble) mixed with a metallic comb, plus some dry voice
+    const input = keep(new Tone.Gain(1));
+    const dry = keep(new Tone.Gain(0.45)).connect(out);
+    const comb = keep(new Tone.FeedbackDelay({ delayTime: 0.007, feedback: 0.55, wet: 0.5 })).connect(out);
+    const ring = keep(new Tone.Gain(0)).connect(comb);
+    const lfo = keep(new Tone.LFO({ frequency: 55, min: -1, max: 1 }).start());
+    lfo.connect(ring.gain);
+    input.connect(dry);
+    input.connect(ring);
+    return input;
   }
   return out;
 }
@@ -3873,8 +3960,9 @@ function gameMeet(members, quiet = false) {
     if (fresh.includes(state.members[i])) card.classList.add('is-new');
   });
   gameSave();
-  if (game.data.met.length >= 20) unlock('met20');
-  if (game.data.met.length >= ROSTER.length) unlock('met50');
+  const metNow = game.data.met.filter(n => ROSTER_BY_NAME.has(n)).length;   // ignore members from older casts
+  if (metNow >= 20) unlock('met20');
+  if (metNow >= ROSTER.length) unlock('met50');
 }
 
 function gameRandomized(members) {
