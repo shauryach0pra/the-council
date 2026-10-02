@@ -493,6 +493,35 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .skip-chip:hover { background: var(--c4); }
 
+/* Voice buttons */
+.say {
+  width: 28px; height: 22px;
+  margin-right: 2px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ink); color: var(--white);
+  border: 2px solid var(--ink);
+  font-size: 0.72rem;
+  cursor: pointer;
+  opacity: 1;
+}
+.say:hover { background: var(--c4); color: var(--ink); }
+.msg.speaking .say { background: var(--c4); color: var(--ink); animation: blink 0.8s steps(1) infinite; }
+.msg.speaking .bubble { animation: none; background: #FFF3A8; }
+.msg.speaking .msg-av { animation: talk 0.28s ease-in-out infinite alternate; }
+@keyframes talk { from { transform: rotate(-4deg) scale(1); } to { transform: rotate(-2deg) scale(1.08); } }
+.shot-row { gap: 14px; flex-wrap: wrap; }
+.play-btn {
+  background: var(--white);
+  font-family: var(--display);
+  font-weight: 800;
+  font-stretch: 85%;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  min-height: 54px;
+  padding: 0 22px;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+
 /* Messages */
 .msg { display: flex; align-items: flex-start; gap: 12px; max-width: min(640px, 86%); }
 .msg.me { align-self: flex-end; margin-right: 14px; }
@@ -549,6 +578,7 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .msg-meta {
   display: flex;
+  align-items: center;
   gap: 10px;
   margin-top: 9px;
   font-family: var(--mono);
@@ -854,6 +884,7 @@ button { -webkit-tap-highlight-color: transparent; }
   .a-boot, .a-launch, .a-stamp, .a-stamp-in, .a-ghost, .a-sys, .a-pop { animation: fadeIn 180ms both !important; }
   .a-stamp .bwrap::before, .a-unsend .bubble::after, .dots i, .bounce i, .msg.a-stamp .bubble { animation: none !important; }
   .round { transition: none; }
+  .msg.speaking .msg-av, .msg.speaking .say { animation: none; }
 }
 
 /* ================================================================
@@ -1959,7 +1990,7 @@ function makeMember(m, slot) {
     <div class="msg-col">
       <div class="msg-head"><span class="msg-tag">${escHtml(m.name)}</span><span class="msg-vibe">${escHtml(m.vibe)}</span></div>
       <div class="bwrap"><div class="bubble">${escHtml(m.response)}</div>${TAIL}</div>
-      <div class="msg-meta"><span>${nextId()}</span><span>${clock().slice(0, 5)}</span></div>
+      <div class="msg-meta"><button class="say" type="button" aria-label="Play voice">🔊</button><span>${nextId()}</span><span>${clock().slice(0, 5)}</span></div>
     </div>`;
   return el;
 }
@@ -2200,6 +2231,7 @@ function initChaosMachine() {
 function setLevel(v) {
   if (state.busy || v === state.level) return;
   playSfx(`lvl${v}`);
+  stopVoice();
   state.level = v;
   syncLevels();
   applyIntensity(v);
@@ -2352,6 +2384,7 @@ async function send() {
   if (!question) { postSystem('Type a message before sending.', true); els.input.focus(); return; }
 
   cancelResummon();
+  stopVoice();
   startMusicFor(question).then(() => playSfx('send'));   // must stay before any await: audio needs the user gesture
 
   els.input.value = '';
@@ -2386,6 +2419,7 @@ const flipIn = (el, delay) => el.animate(
 async function randomize(announce = true) {
   if (state.busy) return;
   if (announce) sound('dice');
+  stopVoice();
   const prev = state.members;
   const squad = pickSquad(prev, state.squadTitle);
   cancelResummon();
@@ -3236,7 +3270,7 @@ function playSting(name) {
 }
 
 async function toggleSound() {
-  if (music.enabled) playSfx('powerOff');   // play it before the switch mutes effects
+  if (music.enabled) { playSfx('powerOff'); stopVoice(); }   // play it before the switch mutes effects
   music.enabled = !music.enabled;
   if (window.Tone) {
     if (music.enabled) {
@@ -3284,6 +3318,7 @@ function updateMusicUI() {
   else if (!music.enabled) text = 'Muted';
   else if (mood && music.playing) text = MOODS[mood].label;
   else text = 'Waiting for you';
+  if (typeof voice !== 'undefined' && voice.cur) text = `🗣️ ${voice.cur.name}`;
   np.textContent = text;
   np.title = text;
   $('soundBox').classList.toggle('playing', !!(music.enabled && music.playing));
@@ -3329,6 +3364,293 @@ const viz = {
 document.addEventListener('visibilitychange', () => viz.kick());
 
 // ================================================================
+//  VOICES  (text to speech)
+// ================================================================
+// Two engines:
+//  1. Cloud: your worker's Workers AI route (Deepgram Aura). Real voices, then pitch-shifted,
+//     sped up and run through effects so each member sounds like a cartoon of themselves.
+//  2. Browser: the built-in Web Speech API with per-member pitch/speed. Used automatically
+//     when the worker has no voice route yet.
+// While anyone speaks, the music dips and objects/animals get a background bed (sizzle, waves...).
+
+// sp: Aura speaker, rate: playback speed (also raises pitch), shift: extra semitones,
+// fx: echo | ghost | radio | robot, pitch/brate: browser-voice pitch and speed, lang: preferred accent
+const VOICE_ROLE = {
+  SAGE:            { sp: 'helios',  rate: 0.92, shift: -2, fx: 'echo', pitch: 0.8, brate: 0.9,  lang: 'en-GB' },
+  MENACE:          { sp: 'orion',   rate: 0.95, shift: -3, fx: null,   pitch: 0.7, brate: 0.95 },
+  WHOLESOME:       { sp: 'luna',    rate: 1.08, shift: 3,  fx: null,   pitch: 1.4, brate: 1.05 },
+  DELULU:          { sp: 'stella',  rate: 1.12, shift: 4,  fx: null,   pitch: 1.5, brate: 1.15 },
+  CORPORATE:       { sp: 'asteria', rate: 1.05, shift: 0,  fx: 'radio', pitch: 1.0, brate: 1.1 },
+  DESI:            { sp: 'hera',    rate: 1.1,  shift: 2,  fx: null,   pitch: 1.2, brate: 1.1,  lang: 'en-IN' },
+  UNHINGED_OBJECT: { sp: 'arcas',   rate: 1.25, shift: 7,  fx: null,   pitch: 1.9, brate: 1.25 },
+};
+const VOICE_FOR = {
+  'Socrates':                       { sp: 'helios',  rate: 0.9,  shift: -2 },
+  'Buddha':                         { sp: 'orpheus', rate: 0.82, shift: -3, pitch: 0.6, brate: 0.75 },
+  'Sun Tzu':                        { sp: 'zeus',    rate: 0.9,  shift: -4, pitch: 0.5 },
+  'Confucius':                      { sp: 'perseus', rate: 0.9,  shift: -2 },
+  'Charles Darwin':                 { sp: 'helios',  rate: 0.95, shift: 0,  fx: null },
+  'Albert Einstein':                { sp: 'angus',   rate: 1.0,  shift: 1,  fx: null, pitch: 1.1 },
+  'Leonardo da Vinci':              { sp: 'arcas',   rate: 1.05, shift: 1,  fx: null },
+  'Your Future Self':               { sp: 'orion',   rate: 0.9,  shift: -2, fx: 'ghost' },
+  'Cleopatra':                      { sp: 'athena',  rate: 0.95, shift: -1, fx: 'echo', pitch: 0.9, lang: 'en-GB' },
+  'Napoleon Bonaparte':             { sp: 'angus',   rate: 1.15, shift: 5,  pitch: 1.6, brate: 1.2 },
+  'Sherlock Holmes':                { sp: 'helios',  rate: 1.15, shift: 0,  pitch: 0.9, brate: 1.25, lang: 'en-GB' },
+  'A Pirate Captain':               { sp: 'zeus',    rate: 0.95, shift: -5, pitch: 0.5 },
+  'Your Ex (Seen 2:14 AM)':         { sp: 'luna',    rate: 0.95, shift: 0,  pitch: 1.0, brate: 0.9 },
+  'A Raccoon':                      { sp: 'arcas',   rate: 1.35, shift: 9,  pitch: 2.0, brate: 1.4 },
+  'A Bollywood Villain':            { sp: 'zeus',    rate: 0.85, shift: -7, fx: 'echo', pitch: 0.3, brate: 0.85, lang: 'en-IN' },
+  'The Grim Reaper (On Probation)': { sp: 'zeus',    rate: 0.78, shift: -9, fx: 'ghost', pitch: 0.1, brate: 0.75 },
+  'An Angry Celebrity Chef':        { sp: 'angus',   rate: 1.2,  shift: 2,  pitch: 1.2, brate: 1.3 },
+  'A Golden Retriever':             { sp: 'luna',    rate: 1.3,  shift: 8,  pitch: 2.0, brate: 1.4 },
+  'Your Dad':                       { sp: 'perseus', rate: 1.0,  shift: -1, pitch: 0.8 },
+  'Therapist Who Is Clearly Tired': { sp: 'hera',    rate: 0.88, shift: -1, pitch: 0.9, brate: 0.85 },
+  'A Capybara':                     { sp: 'orpheus', rate: 0.75, shift: -5, pitch: 0.6, brate: 0.7 },
+  'William Shakespeare':            { sp: 'helios',  rate: 0.95, shift: 0,  fx: 'echo', lang: 'en-GB' },
+  'Nikola Tesla':                   { sp: 'arcas',   rate: 1.1,  shift: 1,  fx: 'radio' },
+  'Sigma Grindset Podcaster':       { sp: 'zeus',    rate: 1.0,  shift: -4, fx: 'radio', pitch: 0.5 },
+  'Gym Bro':                        { sp: 'zeus',    rate: 1.1,  shift: -3, pitch: 0.6, brate: 1.15 },
+  'A Conspiracy Theorist':          { sp: 'arcas',   rate: 1.25, shift: 2,  fx: 'radio', brate: 1.35 },
+  'A Motivational Poster':          { sp: 'asteria', rate: 1.0,  shift: 2,  fx: 'echo' },
+  'Gen Z Intern':                   { sp: 'luna',    rate: 1.15, shift: 2,  fx: null, pitch: 1.3 },
+  'Your Indian Mom':                { sp: 'hera',    rate: 1.15, shift: 2,  pitch: 1.3, brate: 1.2 },
+  'WhatsApp Forward Uncle':         { sp: 'angus',   rate: 1.0,  shift: -1, fx: 'radio', pitch: 0.8 },
+  'Delhi Auto Driver':              { sp: 'orion',   rate: 1.15, shift: -1, pitch: 0.8, brate: 1.25 },
+  'Rishta Aunty':                   { sp: 'hera',    rate: 1.1,  shift: 3,  pitch: 1.5 },
+  'A Fortune Cookie':               { sp: 'stella',  rate: 0.95, shift: 6,  fx: 'echo' },
+  'The Stock Market':               { sp: 'angus',   rate: 1.3,  shift: 1,  fx: 'radio', brate: 1.5 },
+  'Samosa':                         { sp: 'arcas',   rate: 1.25, shift: 8 },
+  "Your Phone's 1% Battery":        { sp: 'luna',    rate: 1.4,  shift: 6,  fx: 'robot', brate: 1.5 },
+  'A Haunted Victorian Doll':       { sp: 'luna',    rate: 0.85, shift: 5,  fx: 'ghost', pitch: 1.8, brate: 0.8 },
+  'The Algorithm':                  { sp: 'orion',   rate: 0.95, shift: -2, fx: 'robot', pitch: 0.4 },
+  'A Pigeon':                       { sp: 'arcas',   rate: 1.3,  shift: 7,  pitch: 1.8 },
+};
+// Background bed under the voice (sting name from STINGS, repeated)
+const BED_FOR = {
+  'Samosa': 'sizzle', 'An Angry Celebrity Chef': 'sizzle', 'Your Indian Mom': 'sizzle',
+  'A Pirate Captain': 'waves', 'Delhi Auto Driver': 'honk', 'The Grim Reaper (On Probation)': 'toll',
+  'A Haunted Victorian Doll': 'musicBox', 'Nikola Tesla': 'zap', "Your Phone's 1% Battery": 'lowBatt',
+  'A Pigeon': 'coo', 'Charles Darwin': 'birds', 'A Capybara': 'bubbles', 'Edgy Redditor': 'typing',
+  'Corporate HR': 'typing', 'A Raccoon': 'trash', 'The Stock Market': 'openingBell',
+  'WhatsApp Forward Uncle': 'forwards', 'A Golden Retriever': 'bark', 'The Algorithm': 'glitch',
+};
+const BED_PERIOD = { sizzle: 1.55, waves: 1.9, honk: 2.4, toll: 2.3, musicBox: 1.7, zap: 1.45, lowBatt: 1.9, coo: 1.9,
+  birds: 1.5, bubbles: 1.6, typing: 1.2, trash: 1.7, openingBell: 3, forwards: 1.7, bark: 2.5, glitch: 1.3 };
+
+const voice = { cloud: null, cache: new Map(), cur: null, token: 0, allToken: 0 };
+
+function voiceProfile(name) {
+  const p = ROSTER_BY_NAME.get(name);
+  return { ...(VOICE_ROLE[p?.role] || VOICE_ROLE.SAGE), ...(VOICE_FOR[name] || {}) };
+}
+// Emoji read aloud sound silly in the wrong way; strip them
+const speakable = t => String(t || '').replace(/\p{Extended_Pictographic}|\uFE0F|\u200D/gu, '').replace(/\s+/g, ' ').trim().slice(0, 600);
+
+// Ask the worker once per visit whether it has the voice route
+async function probeCloudVoice() {
+  try {
+    const res = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tts_probe: true }) });
+    const data = await res.json().catch(() => ({}));
+    voice.cloud = res.ok && data.tts === true;
+  } catch { /* offline: decide on first use */ }
+}
+
+async function fetchCloudVoice(text, speaker) {
+  const key = `${speaker}|${text}`;
+  if (voice.cache.has(key)) return voice.cache.get(key);
+  const res = await fetch(WORKER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tts_text: text, speaker }) });
+  if (!res.ok || !(res.headers.get('Content-Type') || '').startsWith('audio/')) throw new Error('No voice route');
+  const buf = await Tone.context.decodeAudioData(await res.arrayBuffer());
+  voice.cache.set(key, buf);
+  return buf;
+}
+
+function voiceOut() {
+  ensureMaster();
+  if (!music.voiceBus) music.voiceBus = new Tone.Gain(1.2).connect(music.limiter);
+  return music.voiceBus;
+}
+
+// Effect chain for the cloud voice; returns the node to feed
+function buildVoiceFx(fx, nodes) {
+  const keep = n => (nodes.push(n), n);
+  const out = voiceOut();
+  if (fx === 'echo')  return keep(new Tone.FeedbackDelay({ delayTime: 0.16, feedback: 0.3, wet: 0.28 })).connect(out);
+  if (fx === 'ghost') {
+    const rev = keep(new Tone.Reverb({ decay: 4.5, wet: 0.5 })).connect(out);
+    return keep(new Tone.Chorus({ frequency: 1.2, delayTime: 6, depth: 0.7, wet: 0.5 }).start()).connect(rev);
+  }
+  if (fx === 'radio') {
+    const lp = keep(new Tone.Filter(3200, 'lowpass')).connect(out);
+    const crunch = keep(new Tone.Distortion({ distortion: 0.25, wet: 0.5 })).connect(lp);
+    return keep(new Tone.Filter(450, 'highpass')).connect(crunch);
+  }
+  if (fx === 'robot') {
+    const cheb = keep(new Tone.Chebyshev({ order: 3, wet: 0.35 })).connect(out);
+    return keep(new Tone.FeedbackDelay({ delayTime: 0.011, feedback: 0.6, wet: 0.55 })).connect(cheb);
+  }
+  return out;
+}
+
+function pickBrowserVoice(prof) {
+  const voices = window.speechSynthesis?.getVoices() || [];
+  const en = voices.filter(v => /^en/i.test(v.lang));
+  const want = prof.lang || 'en-US';
+  return en.find(v => v.lang.replace('_', '-') === want) || en.find(v => v.lang.replace('_', '-') === 'en-US') || en[0] || null;
+}
+
+// Ambience bed + music dip while a voice is speaking
+function startVoiceBed(name, seconds) {
+  duckStart();
+  const key = BED_FOR[name];
+  if (!key || !music.enabled || !window.Tone) return;
+  try {
+    stingInit();
+    const now = Tone.now(), g = k.bus.gain;
+    g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(0.3, now + 0.1);
+    const period = BED_PERIOD[key] || 1.7;
+    for (let at = now + 0.05; at < now + seconds; at += period) { try { STINGS[key](at); } catch {} }
+    k.bedEnd = now + seconds + 1.6;
+  } catch {}
+}
+function endVoiceBed() {
+  duckEnd();
+  if (!k.ready) return;
+  const now = Tone.now(), g = k.bus.gain;
+  g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(0, now + 0.3);
+  const back = Math.max(now + 0.35, k.bedEnd || 0);   // leftover bed events play silently, then stings return
+  g.setValueAtTime(0, back); g.linearRampToValueAtTime(0.85, back + 0.05);
+}
+function duckStart() {
+  if (!music.master || !music.playing || !music.mood) return;
+  const g = music.master.gain, now = Tone.now();
+  g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(moodGain(music.mood) * 0.3, now + 0.15);
+}
+function duckEnd() {
+  if (!music.master || !music.playing || !music.mood) return;
+  const g = music.master.gain, now = Tone.now();
+  g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(moodGain(music.mood), now + 0.6);
+}
+
+function setSpeakingUI(el, on) {
+  if (!el) return;
+  el.classList.toggle('speaking', on);
+  const b = el.querySelector('.say');
+  if (b) { b.textContent = on ? '■' : '🔊'; b.setAttribute('aria-label', `${on ? 'Stop' : 'Play'} voice`); }
+}
+
+function finishVoice(cur, cancelSpeech = false) {
+  if (voice.cur !== cur) return;
+  voice.cur = null;
+  clearTimeout(cur.safety);
+  try { cur.player?.stop(); } catch {}
+  setTimeout(() => cur.nodes.forEach(n => { try { n.dispose(); } catch {} }), 600);
+  if (cancelSpeech && cur.utter) window.speechSynthesis?.cancel();
+  endVoiceBed();
+  setSpeakingUI(cur.el, false);
+  updateMusicUI();
+  cur.resolve();
+}
+function stopVoice() { voice.allToken++; voice.playingAll = false; if (voice.cur) finishVoice(voice.cur, true); updatePlayAll(); }
+
+// Speak one member's reply. Resolves when it finishes or is stopped.
+async function playVoice(m, el) {
+  if (voice.cur) finishVoice(voice.cur, true);
+  const text = speakable(m.response);
+  if (!text) return;
+  const token = ++voice.token;
+  const prof = voiceProfile(m.name);
+  const cur = { el, name: m.name, nodes: [] };
+  const done = new Promise(r => (cur.resolve = r));
+  voice.cur = cur;
+  setSpeakingUI(el, true);
+  updateMusicUI();
+  const ready = window.Tone ? Tone.start() : Promise.resolve();   // inside the click: unlock audio now
+
+  // Browser voice: decide synchronously when we already know there's no cloud route (iOS needs the gesture)
+  const speakBrowser = () => {
+    if (!('speechSynthesis' in window)) { finishVoice(cur); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.pitch = Math.min(2, Math.max(0, prof.pitch ?? 1));
+    u.rate = Math.min(2, Math.max(0.5, prof.brate ?? 1));
+    const v = pickBrowserVoice(prof);
+    if (v) { u.voice = v; u.lang = v.lang; }
+    cur.utter = u;
+    const est = text.length / (14 * u.rate);
+    u.onend = u.onerror = () => finishVoice(cur);
+    cur.safety = setTimeout(() => finishVoice(cur), (est * 1.8 + 3) * 1000);  // some browsers never fire onend
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+    ready.then(() => startVoiceBed(m.name, est));
+  };
+
+  if (voice.cloud === false || !window.Tone) { speakBrowser(); return done; }
+
+  try {
+    await ready;
+    const buf = await fetchCloudVoice(text, prof.sp);
+    if (token !== voice.token || voice.cur !== cur) return done;
+    voice.cloud = true;
+    let input = buildVoiceFx(prof.fx, cur.nodes);
+    if (prof.shift) {
+      const ps = new Tone.PitchShift({ pitch: prof.shift, windowSize: 0.05 }).connect(input);
+      cur.nodes.push(ps);
+      input = ps;
+    }
+    const player = new Tone.Player(buf).connect(input);
+    player.playbackRate = prof.rate;
+    cur.nodes.push(player);
+    cur.player = player;
+    player.onstop = () => finishVoice(cur);
+    startVoiceBed(m.name, buf.duration / prof.rate);
+    player.start();
+  } catch (e) {
+    if (token !== voice.token || voice.cur !== cur) return done;
+    voice.cloud = false;   // no route on the worker: use browser voices from now on
+    speakBrowser();
+  }
+  return done;
+}
+
+// "Play the chat": every reply of the latest round, one after another
+async function playAll() {
+  const round = state.round;
+  if (!round?.memberEls.length) return;
+  if (voice.playingAll) { stopVoice(); return; }
+  const token = ++voice.allToken;
+  voice.playingAll = true;
+  updatePlayAll();
+  for (let i = 0; i < round.memberEls.length; i++) {
+    if (token !== voice.allToken || !round.memberEls[i].isConnected) break;
+    round.memberEls[i].scrollIntoView({ block: 'nearest', behavior: REDUCED ? 'auto' : 'smooth' });
+    await playVoice(round.members[i], round.memberEls[i]);
+    if (token !== voice.allToken) break;
+    await wait(350);
+  }
+  if (token === voice.allToken) voice.playingAll = false;
+  updatePlayAll();
+}
+function updatePlayAll() {
+  document.querySelectorAll('.play-btn').forEach(b => {
+    const on = !!voice.playingAll;
+    b.innerHTML = on ? '<span class="ico" aria-hidden="true">■</span>Stop' : '<span class="ico" aria-hidden="true">▶</span>Play the chat';
+  });
+}
+
+// Clicks on any 🔊 button in the stream
+function onSayClick(e) {
+  const b = e.target.closest('.say');
+  if (!b) return;
+  const el = b.closest('.msg');
+  const round = state.round;
+  const idx = round ? round.memberEls.indexOf(el) : -1;
+  if (idx < 0) return;
+  if (voice.cur?.el === el) { stopVoice(); return; }
+  voice.allToken++; voice.playingAll = false; updatePlayAll();
+  playVoice(round.members[idx], el);
+}
+
+// ================================================================
 //  STORY EXPORT  (screenshot -> 1080x1920 Instagram story)
 // ================================================================
 const STORY_W = 1080;
@@ -3344,8 +3666,10 @@ function showShotButton(into) {
   removeShotButton();
   const row = document.createElement('div');
   row.className = 'shot-row';
-  row.innerHTML = '<button class="kbtn shot-btn a-slam" type="button"><span class="ico" aria-hidden="true">📸</span>Screenshot this chat</button>';
-  row.querySelector('button').addEventListener('click', openStory);
+  row.innerHTML = '<button class="kbtn play-btn a-slam" type="button"><span class="ico" aria-hidden="true">▶</span>Play the chat</button>'
+    + '<button class="kbtn shot-btn a-slam" type="button"><span class="ico" aria-hidden="true">📸</span>Screenshot this chat</button>';
+  row.querySelector('.shot-btn').addEventListener('click', openStory);
+  row.querySelector('.play-btn').addEventListener('click', playAll);
   appendToStream(row, into);
 }
 
@@ -3510,6 +3834,7 @@ async function openStory() {
   const round = state.round;
   if (story.open || state.busy || state.resummonTimer || !round?.members.length) return;
   story.open = true;
+  stopVoice();
   story.lastFocus = document.activeElement;
   const token = ++story.token;
 
@@ -3663,6 +3988,9 @@ function storyKeydown(e) {
   els.stream.addEventListener('click', e => { if (state.busy && !e.target.closest('button')) state.skip = true; });
   els.rand.addEventListener('click', () => randomize(true));
   initChaosMachine();
+  els.stream.addEventListener('click', onSayClick);
+  probeCloudVoice();
+  window.speechSynthesis?.getVoices();   // start loading browser voices early
   $('soundBtn').addEventListener('click', toggleSound);
   $('storyDownload').addEventListener('click', downloadStory);
   $('storyShare').addEventListener('click', shareStory);
