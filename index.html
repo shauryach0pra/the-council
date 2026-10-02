@@ -160,50 +160,27 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .head-members { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ---------- Sound unit: visualiser, track name and switch in one block ---------- */
-.sound {
-  flex-shrink: 0;
-  align-self: center;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-right: 16px;
-  padding: 8px 10px 8px 12px;
-  background: var(--ink);
-  color: var(--white);
-  border: 3px solid var(--c4);
-}
-.viz-wrap { display: flex; align-items: center; background: var(--white); border: 2.5px solid var(--white); padding: 3px 4px; }
-.viz { display: block; width: 52px; height: 26px; }
-.np-txt { display: flex; flex-direction: column; justify-content: center; min-width: 0; width: 150px; line-height: 1.1; }
-.np-k { font-family: var(--mono); font-size: 0.56rem; font-weight: 700; text-transform: uppercase; color: var(--c4); }
-.np-v { font-weight: 800; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
-.switch {
-  border: none;
-  background: transparent;
-  color: var(--white);
+/* ---------- Sound: one block button. Bars dance while music plays; a crossed speaker when muted. ---------- */
+.sound { flex-shrink: 0; align-self: center; display: flex; margin-right: 16px; }
+.sound-btn {
+  position: relative;
+  width: 64px; height: 50px;
+  display: grid; place-items: center;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  background: var(--c4);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  outline: 3px solid var(--c4);
   cursor: pointer;
-  font-family: var(--mono);
-  font-size: 0.55rem;
-  font-weight: 700;
-  text-transform: uppercase;
 }
-.switch-track { position: relative; width: 44px; height: 22px; background: #3A3A3A; border: 2.5px solid var(--white); transition: background 0.15s; }
-.switch-knob {
-  position: absolute;
-  top: 2px; left: 2px;
-  width: 13px; height: 13px;
-  background: var(--white);
-  transition: transform 0.18s cubic-bezier(.3,1.4,.5,1);
-}
-.switch[aria-checked="true"] .switch-track { background: var(--c3); }
-.switch[aria-checked="true"] .switch-knob { transform: translateX(22px); background: var(--ink); }
-.switch:active .switch-knob { width: 17px; }
+.sound-btn:active { transform: translate(2px, 2px); }
+.viz { display: block; width: 40px; height: 26px; }
+.sound-off { display: none; width: 28px; height: 28px; }
+.sound-off path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: square; }
+.sound-off path:first-child { fill: currentColor; stroke: none; }
+.sound-btn[aria-checked="false"] { background: var(--white); outline-color: var(--white); }
+.sound-btn[aria-checked="false"] .viz { display: none; }
+.sound-btn[aria-checked="false"] .sound-off { display: block; }
 
 /* Randomize: each card turns into a spinning reel */
 .member.slotting { display: block; padding: 0; overflow: hidden; position: relative; }
@@ -218,7 +195,6 @@ button { -webkit-tap-highlight-color: transparent; }
   border-bottom: var(--b);
 }
 .slot-face .avatar { flex-shrink: 0; transform: none; }
-.member.slot-land .slot-face:last-child { background: var(--c4); }
 
 /* NEW! sticker on members you've never met before */
 .member.is-new .avatar { position: relative; }
@@ -451,8 +427,8 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
   text-transform: uppercase;
   padding: 6px 12px;
-  border-top: var(--b);
-  background: var(--paper);
+  background: var(--ink);
+  color: var(--white);
 }
 .sc-h.mid { padding: 0; }
 .sc-cell { padding: 8px 12px; border-top: 2px solid var(--ink); display: flex; align-items: stretch; }
@@ -665,8 +641,9 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .rand-btn { background: var(--c3); }
 .rand-btn .ico { display: inline-block; margin-right: 4px; }
-.rand-btn:not(:disabled):hover .ico { animation: dice 0.5s ease-in-out; }
-@keyframes dice { 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg); } }
+.rand-btn .ico { display: inline-block; }
+.rand-btn:not(:disabled):hover .ico { animation: dice 0.6s steps(4) infinite; }
+@keyframes dice { to { transform: rotate(360deg); } }
 .send-btn { grid-area: send; background: var(--c1); min-width: 112px; }
 
 .input-wrap {
@@ -681,7 +658,7 @@ button { -webkit-tap-highlight-color: transparent; }
   cursor: text;
   transition: box-shadow 120ms;
 }
-.input-wrap:focus-within { box-shadow: 6px 6px 0 var(--ink); }
+.input-wrap:focus-within { box-shadow: 4px 4px 0 var(--ink); }
 .input {
   flex: 1;
   border: none;
@@ -1083,7 +1060,6 @@ button { -webkit-tap-highlight-color: transparent; }
    MOBILE
    ================================================================ */
 @media (max-width: 1100px) {
-  .np-txt { width: 140px; }
   .head-avatars { display: none; }
 }
 @media (max-width: 720px) {
@@ -1101,13 +1077,12 @@ button { -webkit-tap-highlight-color: transparent; }
   .brand { display: none; }
   .titlebar { min-height: 0; }
   .head-main { padding: 10px 10px 10px 12px; }
-  .sound { margin-right: 10px; padding: 6px 8px; gap: 8px; }
+  .sound { margin-right: 10px; }
+  .sound-btn { width: 52px; height: 42px; }
   .randbox { border-right: none; border-top: var(--B); padding: 10px 0 12px 10px; background: var(--paper); }
   .squad-name { font-size: 1.15rem; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .head-sub { font-size: 0.68rem; margin-top: 4px; }
-  .np-txt { display: none; }
-  .viz { width: 40px; height: 26px; }
-  .switch #soundTxt { display: none; }
+  .viz { width: 32px; height: 22px; }
 
   .rail { border-right: none; border-bottom: var(--b); }
   .rail-head { display: none; }
@@ -1153,7 +1128,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kbtn, .switch-knob { transition: none; }
+  .kbtn { transition: none; }
   * { scroll-behavior: auto !important; }
 }
 
@@ -1176,15 +1151,11 @@ button { -webkit-tap-highlight-color: transparent; }
       </div>
     </div>
     <div class="sound" id="soundBox">
-      <div class="viz-wrap" aria-hidden="true"><canvas class="viz" id="viz"></canvas></div>
-      <div class="np-txt" aria-live="polite">
-        <div class="np-k">Now playing</div>
-        <div class="np-v" id="nowPlaying">Silence</div>
-      </div>
-      <button class="switch" id="soundBtn" type="button" role="switch" aria-checked="true" aria-label="Sound">
-        <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
-        <span id="soundTxt">Sound on</span>
+      <button class="sound-btn" id="soundBtn" type="button" role="switch" aria-checked="true" aria-label="Sound on" title="Sound on">
+        <canvas class="viz" id="viz" aria-hidden="true"></canvas>
+        <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z"/><path d="M16 9l6 6M22 9l-6 6"/></svg>
       </button>
+      <span class="sr-only" id="nowPlaying" aria-live="polite"></span>
     </div>
   </header>
 
@@ -1769,7 +1740,7 @@ function postSquadChange(prev, next, title) {
   }
   const el = document.createElement('div');
   el.className = 'squad-card a-stamp';
-  el.innerHTML = `<div class="sc-title"><small>Chat renamed</small>${escHtml(title)}</div><div class="sc-grid">${grid}</div>`;
+  el.innerHTML = `<div class="sc-grid">${grid}</div>`;
   return appendToStream(el);
 }
 
@@ -2161,8 +2132,6 @@ async function randomize(announce = true) {
   swapTitle(squad.title);
   await slotRail(prev, state.members);   // every member card spins like a slot reel, stopping one by one
   renderRail(false);
-  if (!REDUCED) els.rail.querySelectorAll('.member').forEach((el, i) =>
-    el.animate([{ background: '#FFD600' }, { background: '#FFFFFF' }], { duration: 500, delay: i * 40 }));
   playSfx('slide', true);
   postSquadChange(prev, state.members, squad.title);
   gameRandomized(state.members);
@@ -2201,7 +2170,6 @@ async function slotRail(prev, next) {
     requestAnimationFrame(watch);
     await anim.finished;
     playSfx('thunk');
-    card.classList.add('slot-land');
   }));
   await wait(220);
 }
@@ -3064,7 +3032,6 @@ function updateMusicUI() {
   const btn = $('soundBtn');
   const np = $('nowPlaying');
   btn.setAttribute('aria-checked', String(music.enabled));
-  $('soundTxt').textContent = music.enabled ? 'Sound on' : 'Sound off';
   const mood = music.enabled ? (music.mood || music.wanted) : null;
   let text;
   if (!window.Tone) text = 'Audio unavailable';
@@ -3073,7 +3040,9 @@ function updateMusicUI() {
   else text = 'Waiting for you';
   if (typeof voice !== 'undefined' && voice.cur) text = `🗣️ ${voice.cur.name}`;
   np.textContent = text;
-  np.title = text;
+  const label = music.enabled ? `Sound on: ${text}. Click to mute` : 'Sound off. Click to turn on';
+  btn.title = label;
+  btn.setAttribute('aria-label', label);
   $('soundBox').classList.toggle('playing', !!(music.enabled && music.playing));
   viz.kick();
 }
@@ -3096,8 +3065,8 @@ const viz = {
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, w, h);
     const fft = live ? music.analyser.getValue() : null;
-    // six solid black slabs on white, square tops, a hard baseline
-    const n = 6, gap = 3, bw = (w - gap * (n - 1)) / n;
+    // five solid black slabs, square tops, a hard baseline
+    const n = 5, gap = 3, bw = (w - gap * (n - 1)) / n;
     g.fillStyle = '#000';
     for (let i = 0; i < n; i++) {
       let target = 0.12;
