@@ -85,7 +85,7 @@ button { -webkit-tap-highlight-color: transparent; }
          calc(26px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
   display: grid;
   grid-template-columns: var(--rail-w) minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto minmax(0, 1fr) minmax(min-content, 1fr) auto;
   grid-template-areas:
     "brand  head"
     "rail   stream"
@@ -347,6 +347,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .stream {
   grid-area: stream;
   min-height: 0;
+  contain: size;   /* its content must never stretch the sidebar rows */
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 18px 24px 22px;
@@ -651,17 +652,18 @@ button { -webkit-tap-highlight-color: transparent; }
 @keyframes dice { 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg); } }
 .send-btn { grid-area: send; background: var(--c1); min-width: 112px; }
 
-/* ---------- Chaos machine: arcade mode select ---------- */
+/* ---------- Chaos machine: a flat vertical slot reel (bottom half of the sidebar) ---------- */
 .chaos {
   grid-area: chaos;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  justify-content: center;
+  gap: 12px;
   background: var(--ink);
   color: var(--white);
   border-right: var(--B);
   border-top: var(--B);
-  padding: 12px 14px 14px;
+  padding: 14px 14px 12px;
 }
 .chaos-head {
   display: flex;
@@ -674,56 +676,70 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--c4);
 }
 .chaos-num { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; color: var(--white); }
-.chaos-body { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 8px; align-items: stretch; }
+.chaos-body { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: 10px; }
+
+/* The window shows three rows; the middle one is the live mode */
+.reel-win {
+  --row: 52px;
+  position: relative;
+  height: calc(var(--row) * 3);
+  overflow: hidden;
+  background: var(--ink);
+  border: 3px solid var(--white);
+  cursor: ns-resize;
+  user-select: none;
+  touch-action: none;
+}
+.reel-win:focus-visible { outline: 3px solid var(--c2); outline-offset: 2px; }
+.reel-strip { will-change: transform; }
+.reel-item {
+  height: var(--row);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  background: var(--lvl-color);
+  color: var(--ink);
+  border-bottom: 3px solid var(--ink);
+}
+.reel-item .e { font-size: 1.45rem; line-height: 1; }
+.reel-item .n { font-weight: 800; font-stretch: 78%; font-size: 1.4rem; text-transform: uppercase; line-height: 1; }
+/* flat shade over the top and bottom rows (no gradients) */
+.reel-shade { position: absolute; left: 0; right: 0; height: var(--row); background: rgba(0, 0, 0, 0.55); pointer-events: none; z-index: 1; }
+.reel-shade.top { top: 0; }
+.reel-shade.bot { bottom: 0; }
+/* the payline: a hard frame around the middle row */
+.reel-frame {
+  position: absolute;
+  left: 0; right: 0;
+  top: var(--row);
+  height: var(--row);
+  border: 4px solid var(--white);
+  box-shadow: 0 0 0 3px var(--ink);
+  pointer-events: none;
+  z-index: 2;
+}
+.reel-win.bump .reel-strip { animation: bump 0.25s steps(4); }
+@keyframes bump { 25% { translate: 0 -6px; } 75% { translate: 0 6px; } }
+.reel-win.jackpot .reel-frame { animation: jackpot 0.5s steps(2) 3; }
+@keyframes jackpot { 50% { border-color: var(--c4); } }
+
+.chaos-steps { display: grid; grid-template-rows: 1fr 1fr; gap: 8px; }
 .step {
   background: var(--white);
   color: var(--ink);
-  font-size: 0.9rem;
-  box-shadow: 3px 3px 0 var(--c4);
-}
-.step:not(:disabled):hover { box-shadow: 4px 4px 0 var(--c4); }
-.step:not(:disabled):active { box-shadow: 0 0 0 var(--c4); }
-
-/* The mode display: one flat slab in the level's heat colour */
-.mode {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  min-width: 0;
-  height: 56px;
-  background: var(--lvl-color);
-  color: var(--ink);
-  border: var(--b);
-  outline: 3px solid var(--white);
-  outline-offset: -6px;
-  cursor: ew-resize;
-  user-select: none;
-  touch-action: pan-y;
+  gap: 2px;
+  font-size: 0.85rem;
+  line-height: 1;
+  box-shadow: 3px 3px 0 var(--c4);
 }
-.mode:focus-visible { outline-color: var(--c2); }
-.mode .e { font-size: 1.6rem; line-height: 1; }
-.mode .n { font-weight: 800; font-stretch: 78%; font-size: 1.55rem; text-transform: uppercase; line-height: 1; letter-spacing: -0.01em; }
-.mode.flip { animation: flip 0.16s steps(2); }
-@keyframes flip { 50% { transform: scaleY(0.2); } }
-.mode.bump { animation: bumpX 0.25s steps(4); }
-@keyframes bumpX { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-.mode.jackpot { animation: jackpot 0.6s steps(2) 3; }
-@keyframes jackpot { 50% { outline-color: var(--ink); filter: invert(1); } }
-
-/* Power meter: five blocks, lit up to the current level; tap one to jump there */
-.meter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-.seg {
-  height: 16px;
-  border: 2px solid var(--white);
-  background: #2A2A2A;
-  cursor: pointer;
-  padding: 0;
-}
-.seg.lit { background: var(--seg); }
-.seg.cur { outline: 2px solid var(--white); outline-offset: 2px; }
-.seg.chase { background: var(--white); }
-.seg:disabled { cursor: not-allowed; }
+.step small { font-family: var(--mono); font-size: 0.5rem; font-weight: 700; text-transform: uppercase; }
+.step:not(:disabled):hover { box-shadow: 4px 4px 0 var(--c4); }
+.step:not(:disabled):active { box-shadow: 0 0 0 var(--c4); }
 
 .spin-btn {
   background: var(--c4);
@@ -742,7 +758,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .spin-btn:not(:disabled):hover { box-shadow: 5px 5px 0 var(--c1); }
 .spin-btn:not(:disabled):active { box-shadow: 0 0 0 var(--c1); }
-.chaos-desc { font-family: var(--mono); font-size: 0.64rem; font-weight: 700; line-height: 1.4; color: #CFCFCF; text-transform: uppercase; }
+.chaos-desc { font-family: var(--mono); font-size: 0.64rem; font-weight: 700; line-height: 1.4; color: #CFCFCF; text-transform: uppercase; min-height: 1.4em; }
 .step:disabled, .spin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .input-wrap {
@@ -1223,11 +1239,15 @@ button { -webkit-tap-highlight-color: transparent; }
 
   .bar { gap: 10px; padding: 10px 10px 12px; border-top: var(--B); }
   .chaos { border-right: none; padding: 8px 10px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-  .chaos-head, .meter { display: none; }
-  .chaos-body { grid-template-columns: 34px minmax(0, 1fr) 34px; gap: 6px; }
-  .mode { height: 46px; }
-  .mode .n { font-size: 1.2rem; }
-  .mode .e { font-size: 1.3rem; }
+  .chaos-head { display: none; }
+  .chaos-body { grid-template-columns: minmax(0, 1fr) 36px; gap: 6px; }
+  .reel-win { --row: 46px; height: var(--row); }
+  .reel-shade { display: none; }
+  .reel-frame { top: 0; border-width: 3px; }
+  .reel-item .n { font-size: 1.15rem; }
+  .reel-item .e { font-size: 1.2rem; }
+  .chaos-steps { gap: 4px; }
+  .step small { display: none; }
   .spin-btn { min-height: 46px; padding: 0 12px; font-size: 0.9rem; }
   .chaos-desc { display: none; }
   .rand-btn { padding: 0 12px; font-size: 0; min-height: 50px; }
@@ -1286,12 +1306,17 @@ button { -webkit-tap-highlight-color: transparent; }
   <section class="chaos" id="chaos" aria-label="Chaos level">
     <div class="chaos-head"><span>Chaos mode</span><span class="chaos-num" id="chaosNum">1/5</span></div>
     <div class="chaos-body">
-      <button class="kbtn step" id="chaosDown" type="button" aria-label="Less chaos">◀</button>
-      <div class="mode" id="reelWin" role="slider" tabindex="0" aria-label="Chaos level"
-           aria-valuemin="1" aria-valuemax="5" aria-valuenow="1" aria-valuetext="Sane"><span class="e" id="modeEmoji"></span><span class="n" id="modeName"></span></div>
-      <button class="kbtn step" id="chaosUp" type="button" aria-label="More chaos">▶</button>
+      <div class="reel-win" id="reelWin" role="slider" tabindex="0" aria-label="Chaos level"
+           aria-valuemin="1" aria-valuemax="5" aria-valuenow="1" aria-valuetext="Sane">
+        <div class="reel-strip" id="reelStrip"></div>
+        <i class="reel-shade top" aria-hidden="true"></i><i class="reel-shade bot" aria-hidden="true"></i>
+        <i class="reel-frame" aria-hidden="true"></i>
+      </div>
+      <div class="chaos-steps">
+        <button class="kbtn step" id="chaosDown" type="button" aria-label="Less chaos"><span aria-hidden="true">▲</span><small>Less</small></button>
+        <button class="kbtn step" id="chaosUp" type="button" aria-label="More chaos"><span aria-hidden="true">▼</span><small>More</small></button>
+      </div>
     </div>
-    <div class="meter" id="meter" aria-hidden="true"></div>
     <button class="kbtn spin-btn" id="lever" type="button" aria-label="Spin for a random chaos level"><span aria-hidden="true">🎰</span>Spin the chaos</button>
     <div class="chaos-desc" id="chaosDesc"></div>
   </section>
@@ -2059,31 +2084,21 @@ async function unsendAll(msgEls) {
 // ================================================================
 //  LEVELS
 // ================================================================
-// ---------- Chaos machine: arcade mode select (step, tap a block, swipe, or spin) ----------
-const reel = { spinning: false };
-
-function paintMode(v, { chase = null } = {}) {
-  const l = LEVELS[v - 1];
-  const mode = $('reelWin');
-  mode.style.setProperty('--lvl-color', `var(--l${l.v})`);
-  $('modeEmoji').textContent = l.emoji;
-  $('modeName').textContent = l.name;
-  $('meter').querySelectorAll('.seg').forEach((seg, i) => {
-    seg.classList.toggle('lit', chase === null && i < v);
-    seg.classList.toggle('cur', chase === null && i === v - 1);
-    seg.classList.toggle('chase', chase === i);
-  });
-}
-function flipMode() {
-  if (REDUCED) return;
-  const m = $('reelWin');
-  m.classList.remove('flip'); void m.offsetWidth; m.classList.add('flip');
-}
+// ---------- Chaos machine: vertical slot reel (step, tap a row, swipe, scroll, or spin) ----------
+// Levels run top to bottom (Sane -> Feral). The strip repeats so a spin can roll through
+// several full cycles; after landing we quietly recentre on the middle cycle.
+const reel = { cycles: 9, mid: 4, pos: 0, spinning: false };
+const reelStrip = () => $('reelStrip');
+const rowH = () => reelStrip().firstElementChild?.offsetHeight || 52;
+const centreOffset = () => ($('reelWin').clientHeight - rowH()) / 2;
+const reelY = pos => -(pos * rowH()) + centreOffset();
+const placeReel = () => { reelStrip().style.transform = `translateY(${reelY(reel.pos)}px)`; };
 
 function renderLevels() {
-  $('meter').innerHTML = LEVELS.map(l =>
-    `<button class="seg" type="button" tabindex="-1" style="--seg:var(--l${l.v})" data-level="${l.v}" aria-label="${l.name}"></button>`).join('');
-  paintMode(state.level);
+  reelStrip().innerHTML = Array.from({ length: reel.cycles }, () => LEVELS.map(l =>
+    `<div class="reel-item" style="--lvl-color:var(--l${l.v})" aria-hidden="true"><span class="e">${l.emoji}</span><span class="n">${l.name}</span></div>`).join('')).join('');
+  reel.pos = reel.mid * LEVELS.length + (state.level - 1);
+  placeReel();
   syncLevels();
 }
 
@@ -2094,36 +2109,49 @@ function syncLevels() {
   win.setAttribute('aria-valuetext', l.name);
   $('chaosNum').textContent = `${l.v}/5`;
   $('chaosDesc').textContent = l.desc;
-  paintMode(state.level);
   const now = $('levelNow');
   now.textContent = `Chaos: ${l.name} ${l.emoji}`;
   now.style.setProperty('--lvl-color', `var(--l${l.v})`);
 }
 
-function machineLocked() { return state.busy || reel.spinning; }
-
-function jumpLevel(target) {
-  if (machineLocked() || target === state.level) return;
-  unlockAudio();
-  playSfx('tick');
-  flipMode();
-  setLevel(target);
+// Roll the strip to a position, ticking each time a row crosses the payline
+async function animateReel(toPos, duration, easing) {
+  const strip = reelStrip(), h = rowH(), off = centreOffset();
+  const anim = strip.animate([{ transform: `translateY(${reelY(reel.pos)}px)` }, { transform: `translateY(${reelY(toPos)}px)` }],
+    { duration: REDUCED ? 1 : duration, easing, fill: 'forwards' });
+  let last = reel.pos;
+  const watch = () => {
+    if (anim.playState !== 'running') return;
+    const idx = Math.round((off - new DOMMatrix(getComputedStyle(strip).transform).m42) / h);
+    if (idx !== last) { last = idx; playSfx('tick'); }
+    requestAnimationFrame(watch);
+  };
+  requestAnimationFrame(watch);
+  await anim.finished;
+  reel.pos = toPos;
+  placeReel();
+  anim.cancel();
 }
 
-function stepLevel(delta) {
+function machineLocked() { return state.busy || reel.spinning; }
+
+async function stepLevel(delta) {
   if (machineLocked()) return;
+  unlockAudio();
   const next = state.level + delta;
   if (next < 1 || next > LEVELS.length) {
-    unlockAudio();
-    const m = $('reelWin');
-    m.classList.remove('bump'); void m.offsetWidth; m.classList.add('bump');
+    const win = $('reelWin');
+    win.classList.remove('bump'); void win.offsetWidth; win.classList.add('bump');
     playSfx('thunk');
     return;
   }
-  jumpLevel(next);
+  reel.spinning = true;
+  await animateReel(reel.pos + delta, 240, 'cubic-bezier(.3,1.3,.5,1)');
+  reel.spinning = false;
+  setLevel(next);
 }
 
-// Arcade roulette: a light chases across the meter, slows down, lands on a new mode
+// Spin: several full rolls forward, slowing down, landing on a different mode
 async function pullLever() {
   if (machineLocked()) return;
   unlockAudio();
@@ -2131,62 +2159,53 @@ async function pullLever() {
   const target = pickOne(LEVELS.map(l => l.v).filter(v => v !== state.level));
   reel.spinning = true;
   setBusyMachine(true);
-  const start = state.level - 1;
-  const steps = 3 * LEVELS.length + ((target - 1 - start + LEVELS.length) % LEVELS.length);
-  for (let i = 1; i <= steps && !REDUCED; i++) {
-    const idx = (start + i) % LEVELS.length;
-    paintMode(idx + 1, { chase: idx });
-    flipMode();
-    playSfx('tick');
-    const left = steps - i;
-    await wait(left > 6 ? 55 : 55 + (6 - left) * 55);
-  }
+  const landing = (reel.mid + 3) * LEVELS.length + (target - 1);
+  await animateReel(landing, 1800, 'cubic-bezier(.1,.6,.1,1)');
+  reel.pos = reel.mid * LEVELS.length + (target - 1);   // same face, recentred
+  placeReel();
   reel.spinning = false;
   setBusyMachine(false);
-  const m = $('reelWin');
+  const win = $('reelWin');
+  win.classList.remove('jackpot'); void win.offsetWidth; win.classList.add('jackpot');
   setLevel(target);
-  paintMode(target);
   gameSpun(target);
-  m.classList.remove('jackpot'); void m.offsetWidth; m.classList.add('jackpot');
 }
 
 function setBusyMachine(on) {
   ['chaosUp', 'chaosDown', 'lever'].forEach(id => ($(id).disabled = on || state.busy));
-  $('meter').querySelectorAll('.seg').forEach(b => (b.disabled = on || state.busy));
 }
 
 function initChaosMachine() {
   $('chaosUp').addEventListener('click', () => stepLevel(1));
   $('chaosDown').addEventListener('click', () => stepLevel(-1));
   $('lever').addEventListener('click', pullLever);
-  $('meter').addEventListener('click', e => {
-    const seg = e.target.closest('.seg');
-    if (seg) jumpLevel(Number(seg.dataset.level));
-  });
   const win = $('reelWin');
   win.addEventListener('keydown', e => {
-    if (['ArrowUp', 'ArrowRight'].includes(e.key)) { e.preventDefault(); stepLevel(1); }
-    if (['ArrowDown', 'ArrowLeft'].includes(e.key)) { e.preventDefault(); stepLevel(-1); }
+    if (['ArrowDown', 'ArrowRight'].includes(e.key)) { e.preventDefault(); stepLevel(1); }
+    if (['ArrowUp', 'ArrowLeft'].includes(e.key)) { e.preventDefault(); stepLevel(-1); }
   });
   let wheelLock = 0;
   win.addEventListener('wheel', e => {
     e.preventDefault();
     const t = performance.now();
-    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    if (t - wheelLock < 280 || Math.abs(d) < 4) return;
+    if (t - wheelLock < 260 || Math.abs(e.deltaY) < 4) return;
     wheelLock = t;
-    stepLevel(d > 0 ? 1 : -1);
+    stepLevel(e.deltaY > 0 ? 1 : -1);
   }, { passive: false });
-  // swipe left/right on the display
-  let startX = null;
-  win.addEventListener('pointerdown', e => { startX = e.clientX; win.setPointerCapture(e.pointerId); });
+  // drag the reel, or tap the row above / below the payline
+  let startY = null;
+  win.addEventListener('pointerdown', e => { startY = e.clientY; win.setPointerCapture(e.pointerId); });
   win.addEventListener('pointerup', e => {
-    if (startX === null) return;
-    const dx = e.clientX - startX;
-    startX = null;
-    if (Math.abs(dx) > 18) stepLevel(dx < 0 ? 1 : -1);
+    if (startY === null) return;
+    const dy = e.clientY - startY;
+    startY = null;
+    if (Math.abs(dy) > 14) { stepLevel(dy < 0 ? 1 : -1); return; }
+    const r = win.getBoundingClientRect(), y = e.clientY - r.top;
+    if (y < r.height / 3) stepLevel(-1);
+    else if (y > (r.height * 2) / 3) stepLevel(1);
   });
-  win.addEventListener('pointercancel', () => { startX = null; });
+  win.addEventListener('pointercancel', () => { startY = null; });
+  window.addEventListener('resize', () => { if (!reel.spinning) placeReel(); });
 }
 
 function setLevel(v) {
@@ -2230,7 +2249,6 @@ function setBusy(on) {
   els.send.disabled = on;
   els.rand.disabled = on;
   ['chaosUp', 'chaosDown', 'lever'].forEach(id => ($(id).disabled = on));
-  $('meter').querySelectorAll('.seg').forEach(b => (b.disabled = on));
   $('reelWin').setAttribute('aria-disabled', String(on));
 }
 
