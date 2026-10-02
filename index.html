@@ -38,7 +38,7 @@
   --text: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'Space Mono', ui-monospace, 'Courier New', monospace;
   --pixel: var(--mono);
-  --sh: var(--ink);   /* hard-shadow colour; yellow on dark sections */
+  --sh: var(--ink);   /* every hard shadow is black */
   --rail-w: 300px;
   --halftone: radial-gradient(rgba(0,0,0,0.11) 1.1px, transparent 1.6px);
 }
@@ -53,6 +53,7 @@ body {
   background-size: 10px 10px;
   color: var(--ink);
   font-family: var(--text);
+  word-spacing: 0.06em;   /* Archivo's space is narrow; open it up a touch everywhere */
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -67,7 +68,7 @@ button { -webkit-tap-highlight-color: transparent; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--ink); border: 3px solid var(--paper); }
 ::-webkit-scrollbar-thumb:hover { background: var(--c1); }
-.chaos ::-webkit-scrollbar-thumb { border-color: var(--ink); background: var(--white); }
+
 
 /* Shared chunky button: raised on hover, pressed on click */
 .kbtn {
@@ -89,11 +90,10 @@ button { -webkit-tap-highlight-color: transparent; }
          calc(26px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
   display: grid;
   grid-template-columns: var(--rail-w) minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) minmax(min-content, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas:
     "brand  head"
     "rail   stream"
-    "chaos  stream"
     "rand   bar";
   background: var(--paper);
   border: var(--B);
@@ -123,7 +123,7 @@ button { -webkit-tap-highlight-color: transparent; }
   min-height: 78px;
 }
 .brand .ico { font-size: 1.9rem; }
-.brand small { display: block; font-family: var(--mono); font-stretch: 100%; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.02em; margin-top: 4px; }
+.brand small { display: block; font-family: var(--text); font-stretch: 100%; font-size: 0.7rem; font-weight: 700; letter-spacing: 0; text-transform: none; margin-top: 5px; }
 
 /* Chat header: group name + members, sound unit on the right */
 .titlebar {
@@ -159,7 +159,6 @@ button { -webkit-tap-highlight-color: transparent; }
   color: #CFCFCF;
 }
 .head-members { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.head-sub .lvl-now { flex-shrink: 0; font-family: var(--mono); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: var(--lvl-color, var(--l1)); }
 
 /* ---------- Sound unit: visualiser, track name and switch in one block ---------- */
 .sound {
@@ -205,6 +204,21 @@ button { -webkit-tap-highlight-color: transparent; }
 .switch[aria-checked="true"] .switch-track { background: var(--c3); }
 .switch[aria-checked="true"] .switch-knob { transform: translateX(22px); background: var(--ink); }
 .switch:active .switch-knob { width: 17px; }
+
+/* Randomize: each card turns into a spinning reel */
+.member.slotting { display: block; padding: 0; overflow: hidden; position: relative; }
+.slot-strip { will-change: transform; }
+.slot-face {
+  height: var(--h);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  background: var(--white);
+  border-bottom: var(--b);
+}
+.slot-face .avatar { flex-shrink: 0; transform: none; }
+.member.slot-land .slot-face:last-child { background: var(--c4); }
 
 /* NEW! sticker on members you've never met before */
 .member.is-new .avatar { position: relative; }
@@ -263,7 +277,7 @@ button { -webkit-tap-highlight-color: transparent; }
   flex-direction: column;
   min-height: 0;
   min-width: 0;
-  background: var(--white);
+  background: var(--paper);
 }
 .rail-head[hidden] { display: none; }
 .rail-head {
@@ -626,18 +640,16 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: stretch;
   gap: 14px;
   padding: 12px 16px 14px;
-  background: var(--ink);
-  --sh: var(--c4);
+  background: var(--paper);
 }
-/* Randomize lives at the bottom of the sidebar, under the chaos machine */
+/* Randomize lives at the bottom of the sidebar */
 .randbox {
-  --sh: var(--c4);
   grid-area: rand;
   display: flex;
   border-top: var(--B);
   border-right: var(--B);
   padding: 12px 14px 14px;
-  background: var(--ink);
+  background: var(--paper);
 }
 .randbox .rand-btn { flex: 1; }
 .bar > * { min-width: 0; }
@@ -657,111 +669,6 @@ button { -webkit-tap-highlight-color: transparent; }
 @keyframes dice { 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg); } }
 .send-btn { grid-area: send; background: var(--c1); min-width: 112px; }
 
-/* ---------- Chaos machine: a flat vertical slot reel (bottom half of the sidebar) ---------- */
-.chaos {
-  --sh: var(--c4);
-  grid-area: chaos;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 12px;
-  background: var(--ink);
-  color: var(--white);
-  border-right: var(--B);
-  border-top: var(--B);
-  padding: 14px 14px 12px;
-}
-.chaos-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-weight: 900;
-  font-stretch: 78%;
-  font-size: 1rem;
-  text-transform: uppercase;
-  color: var(--c4);
-}
-.chaos-num { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; color: var(--white); }
-.chaos-body { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: 10px; }
-
-/* The window shows three rows; the middle one is the live mode */
-.reel-win {
-  --row: 52px;
-  position: relative;
-  height: calc(var(--row) * 3);
-  overflow: hidden;
-  background: var(--ink);
-  border: 3px solid var(--white);
-  cursor: ns-resize;
-  user-select: none;
-  touch-action: none;
-}
-.reel-win:focus-visible { outline: 3px solid var(--c2); outline-offset: 2px; }
-.reel-strip { will-change: transform; }
-.reel-item {
-  height: var(--row);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 14px;
-  background: var(--lvl-color);
-  color: var(--ink);
-  border-bottom: 3px solid var(--ink);
-}
-.reel-item .e { font-size: 1.45rem; line-height: 1; }
-.reel-item .n { font-weight: 800; font-stretch: 78%; font-size: 1.4rem; text-transform: uppercase; line-height: 1; }
-/* flat shade over the top and bottom rows (no gradients) */
-.reel-shade { position: absolute; left: 0; right: 0; height: var(--row); background: rgba(0, 0, 0, 0.55); pointer-events: none; z-index: 1; }
-.reel-shade.top { top: 0; }
-.reel-shade.bot { bottom: 0; }
-/* the payline: a hard frame around the middle row */
-.reel-frame {
-  position: absolute;
-  left: 0; right: 0;
-  top: var(--row);
-  height: var(--row);
-  border: 4px solid var(--white);
-  box-shadow: 0 0 0 3px var(--ink);
-  pointer-events: none;
-  z-index: 2;
-}
-.reel-win.bump .reel-strip { animation: bump 0.25s steps(4); }
-@keyframes bump { 25% { translate: 0 -6px; } 75% { translate: 0 6px; } }
-.reel-win.jackpot .reel-frame { animation: jackpot 0.5s steps(2) 3; }
-@keyframes jackpot { 50% { border-color: var(--c4); } }
-
-.chaos-steps { display: grid; grid-template-rows: 1fr 1fr; gap: 8px; }
-.step {
-  background: var(--white);
-  color: var(--ink);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  font-size: 0.85rem;
-  line-height: 1;
-}
-.step small { font-family: var(--mono); font-size: 0.5rem; font-weight: 700; text-transform: uppercase; }
-
-.spin-btn {
-  background: var(--c4);
-  color: var(--ink);
-  font-family: var(--display);
-  font-weight: 800;
-  font-stretch: 85%;
-  font-size: 1.05rem;
-  text-transform: uppercase;
-  min-height: 46px;
-  --sh: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.chaos-desc { font-family: var(--mono); font-size: 0.64rem; font-weight: 700; line-height: 1.4; color: #CFCFCF; text-transform: uppercase; min-height: 1.4em; }
-.step:disabled, .spin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
 .input-wrap {
   grid-area: input;
   display: flex;
@@ -774,15 +681,7 @@ button { -webkit-tap-highlight-color: transparent; }
   cursor: text;
   transition: box-shadow 120ms;
 }
-.input-wrap:focus-within { box-shadow: 6px 6px 0 var(--white); }
-.input-wrap .prompt {
-  flex-shrink: 0;
-  width: 26px; height: 26px;
-  display: grid; place-items: center;
-  background: var(--ink); color: var(--c4);
-  font-family: var(--mono); font-weight: 700; font-size: 0.95rem;
-}
-.input-wrap:focus-within .prompt { animation: blink 1s steps(1) infinite; }
+.input-wrap:focus-within { box-shadow: 6px 6px 0 var(--ink); }
 .input {
   flex: 1;
   border: none;
@@ -794,7 +693,7 @@ button { -webkit-tap-highlight-color: transparent; }
   outline: none;
   padding: 6px 0;
 }
-.input::placeholder { color: #8A8A8A; font-family: var(--mono); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+.input::placeholder { color: #8A8A8A; }
 
 /* ================================================================
    ANIMATION  (transform / opacity / clip-path only)
@@ -1196,17 +1095,16 @@ button { -webkit-tap-highlight-color: transparent; }
     padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
              env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
     grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
-    grid-template-areas: "head head" "rail rail" "stream stream" "chaos chaos" "rand bar";
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas: "head head" "rail rail" "stream stream" "rand bar";
   }
   .brand { display: none; }
   .titlebar { min-height: 0; }
   .head-main { padding: 10px 10px 10px 12px; }
   .sound { margin-right: 10px; padding: 6px 8px; gap: 8px; }
-  .randbox { border-right: none; border-top: var(--B); padding: 10px 0 12px 10px; background: var(--ink); }
+  .randbox { border-right: none; border-top: var(--B); padding: 10px 0 12px 10px; background: var(--paper); }
   .squad-name { font-size: 1.15rem; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .head-sub { font-size: 0.68rem; margin-top: 4px; }
-  .head-sub .lvl-now { display: none; }
   .np-txt { display: none; }
   .viz { width: 40px; height: 26px; }
   .switch #soundTxt { display: none; }
@@ -1226,6 +1124,8 @@ button { -webkit-tap-highlight-color: transparent; }
     flex: 0 0 158px;
   }
   .member.you { display: none; }
+  .slot-face { padding: 0 10px; gap: 8px; border-bottom: none; }
+  .member.slotting { flex: 0 0 158px; }
   .avatar { width: 38px; height: 38px; font-size: 1.2rem; box-shadow: 2px 2px 0 var(--ink); }
   .member-name { font-size: 0.78rem; }
   .member-arch, .role { display: none; }
@@ -1245,20 +1145,6 @@ button { -webkit-tap-highlight-color: transparent; }
   .brow { gap: 9px; }
 
   .bar { gap: 10px; padding: 10px 10px 12px; border-top: var(--B); }
-  .input-wrap .prompt { display: grid; width: 22px; height: 22px; font-size: 0.8rem; }
-  .input::placeholder { font-size: 0.68rem; letter-spacing: 0; }
-  .chaos { border-right: none; padding: 8px 10px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
-  .chaos-head { display: none; }
-  .chaos-body { grid-template-columns: minmax(0, 1fr) 36px; gap: 6px; }
-  .reel-win { --row: 46px; height: var(--row); }
-  .reel-shade { display: none; }
-  .reel-frame { top: 0; border-width: 3px; }
-  .reel-item .n { font-size: 1.15rem; }
-  .reel-item .e { font-size: 1.2rem; }
-  .chaos-steps { gap: 4px; }
-  .step small { display: none; }
-  .spin-btn { min-height: 46px; padding: 0 12px; font-size: 0.9rem; }
-  .chaos-desc { display: none; }
   .rand-btn { padding: 0 12px; font-size: 0; min-height: 50px; }
   .rand-btn .ico { font-size: 1.4rem; margin: 0; }
   .send-btn { min-width: 74px; min-height: 50px; padding: 0 12px; font-size: 0.95rem; }
@@ -1287,7 +1173,6 @@ button { -webkit-tap-highlight-color: transparent; }
       <h1 class="squad-name" id="squadName">Assembling…</h1>
       <div class="head-sub">
         <span class="head-members" id="headMembers"></span>
-        <span class="lvl-now" id="levelNow">Chaos: Sane</span>
       </div>
     </div>
     <div class="sound" id="soundBox">
@@ -1310,24 +1195,6 @@ button { -webkit-tap-highlight-color: transparent; }
     <div class="rail-list" id="railList"></div>
   </aside>
 
-  <!-- CHAOS MACHINE -->
-  <section class="chaos" id="chaos" aria-label="Chaos level">
-    <div class="chaos-head"><span>Chaos mode</span><span class="chaos-num" id="chaosNum">1/5</span></div>
-    <div class="chaos-body">
-      <div class="reel-win" id="reelWin" role="slider" tabindex="0" aria-label="Chaos level"
-           aria-valuemin="1" aria-valuemax="5" aria-valuenow="1" aria-valuetext="Sane">
-        <div class="reel-strip" id="reelStrip"></div>
-        <i class="reel-shade top" aria-hidden="true"></i><i class="reel-shade bot" aria-hidden="true"></i>
-        <i class="reel-frame" aria-hidden="true"></i>
-      </div>
-      <div class="chaos-steps">
-        <button class="kbtn step" id="chaosDown" type="button" aria-label="Less chaos"><span aria-hidden="true">▲</span><small>Less</small></button>
-        <button class="kbtn step" id="chaosUp" type="button" aria-label="More chaos"><span aria-hidden="true">▼</span><small>More</small></button>
-      </div>
-    </div>
-    <button class="kbtn spin-btn" id="lever" type="button" aria-label="Spin for a random chaos level"><span aria-hidden="true">🎰</span>Spin the chaos</button>
-    <div class="chaos-desc" id="chaosDesc"></div>
-  </section>
 
   <!-- MESSAGE STREAM -->
   <main class="stream" id="stream" aria-live="polite" aria-label="Messages"></main>
@@ -1341,10 +1208,9 @@ button { -webkit-tap-highlight-color: transparent; }
   <div class="bar">
 
     <label class="input-wrap" for="input">
-      <span class="prompt" aria-hidden="true">&gt;</span>
       <span class="sr-only">Your message</span>
       <textarea class="input" id="input" rows="1"
-        placeholder="Ask the council anything"></textarea>
+        placeholder="Ask the council anything…"></textarea>
     </label>
 
     <button class="kbtn send-btn" id="sendBtn" type="button">Send</button>
@@ -1760,7 +1626,7 @@ function pickSquad(prevMembers, prevTitle) {
 const state = {
   members: [],     // current squad (personality objects)
   squadTitle: '',
-  level: 1,
+  level: 3,   // fixed tone sent to the worker as quirk_level (1 sane … 5 feral); the chaos picker was removed
   busy: false,
   msgId: 41,       // message counter, displayed as #0042, #0043…
   round: null,          // { question, userEl, members, memberEls } for the latest reply set
@@ -2092,129 +1958,10 @@ async function unsendAll(msgEls) {
 // ================================================================
 //  LEVELS
 // ================================================================
-// ---------- Chaos machine: vertical slot reel (step, tap a row, swipe, scroll, or spin) ----------
-// Levels run top to bottom (Sane -> Feral). The strip repeats so a spin can roll through
-// several full cycles; after landing we quietly recentre on the middle cycle.
-const reel = { cycles: 9, mid: 4, pos: 0, spinning: false };
-const reelStrip = () => $('reelStrip');
-const rowH = () => reelStrip().firstElementChild?.offsetHeight || 52;
-const centreOffset = () => ($('reelWin').clientHeight - rowH()) / 2;
-const reelY = pos => -(pos * rowH()) + centreOffset();
-const placeReel = () => { reelStrip().style.transform = `translateY(${reelY(reel.pos)}px)`; };
-
-function renderLevels() {
-  reelStrip().innerHTML = Array.from({ length: reel.cycles }, () => LEVELS.map(l =>
-    `<div class="reel-item" style="--lvl-color:var(--l${l.v})" aria-hidden="true"><span class="e">${l.emoji}</span><span class="n">${l.name}</span></div>`).join('')).join('');
-  reel.pos = reel.mid * LEVELS.length + (state.level - 1);
-  placeReel();
-  syncLevels();
-}
-
-function syncLevels() {
-  const l = LEVELS[state.level - 1];
-  const win = $('reelWin');
-  win.setAttribute('aria-valuenow', String(l.v));
-  win.setAttribute('aria-valuetext', l.name);
-  $('chaosNum').textContent = `${l.v}/5`;
-  $('chaosDesc').textContent = l.desc;
-  const now = $('levelNow');
-  now.textContent = `Chaos: ${l.name} ${l.emoji}`;
-  now.style.setProperty('--lvl-color', `var(--l${l.v})`);
-}
-
-// Roll the strip to a position, ticking each time a row crosses the payline
-async function animateReel(toPos, duration, easing) {
-  const strip = reelStrip(), h = rowH(), off = centreOffset();
-  const anim = strip.animate([{ transform: `translateY(${reelY(reel.pos)}px)` }, { transform: `translateY(${reelY(toPos)}px)` }],
-    { duration: REDUCED ? 1 : duration, easing, fill: 'forwards' });
-  let last = reel.pos;
-  const watch = () => {
-    if (anim.playState !== 'running') return;
-    const idx = Math.round((off - new DOMMatrix(getComputedStyle(strip).transform).m42) / h);
-    if (idx !== last) { last = idx; playSfx('tick'); }
-    requestAnimationFrame(watch);
-  };
-  requestAnimationFrame(watch);
-  await anim.finished;
-  reel.pos = toPos;
-  placeReel();
-  anim.cancel();
-}
-
-function machineLocked() { return state.busy || reel.spinning; }
-
-async function stepLevel(delta) {
-  if (machineLocked()) return;
-  unlockAudio();
-  const next = state.level + delta;
-  if (next < 1 || next > LEVELS.length) {
-    const win = $('reelWin');
-    win.classList.remove('bump'); void win.offsetWidth; win.classList.add('bump');
-    playSfx('thunk');
-    return;
-  }
-  reel.spinning = true;
-  await animateReel(reel.pos + delta, 240, 'cubic-bezier(.3,1.3,.5,1)');
-  reel.spinning = false;
-  setLevel(next);
-}
-
-// Spin: several full rolls forward, slowing down, landing on a different mode
-async function pullLever() {
-  if (machineLocked()) return;
-  unlockAudio();
-  playSfx('lever');
-  const target = pickOne(LEVELS.map(l => l.v).filter(v => v !== state.level));
-  reel.spinning = true;
-  setBusyMachine(true);
-  const landing = (reel.mid + 3) * LEVELS.length + (target - 1);
-  await animateReel(landing, 1800, 'cubic-bezier(.1,.6,.1,1)');
-  reel.pos = reel.mid * LEVELS.length + (target - 1);   // same face, recentred
-  placeReel();
-  reel.spinning = false;
-  setBusyMachine(false);
-  const win = $('reelWin');
-  win.classList.remove('jackpot'); void win.offsetWidth; win.classList.add('jackpot');
-  setLevel(target);
-  gameSpun(target);
-}
-
-function setBusyMachine(on) {
-  ['chaosUp', 'chaosDown', 'lever'].forEach(id => ($(id).disabled = on || state.busy));
-}
-
-function initChaosMachine() {
-  $('chaosUp').addEventListener('click', () => stepLevel(1));
-  $('chaosDown').addEventListener('click', () => stepLevel(-1));
-  $('lever').addEventListener('click', pullLever);
-  const win = $('reelWin');
-  win.addEventListener('keydown', e => {
-    if (['ArrowDown', 'ArrowRight'].includes(e.key)) { e.preventDefault(); stepLevel(1); }
-    if (['ArrowUp', 'ArrowLeft'].includes(e.key)) { e.preventDefault(); stepLevel(-1); }
-  });
-  let wheelLock = 0;
-  win.addEventListener('wheel', e => {
-    e.preventDefault();
-    const t = performance.now();
-    if (t - wheelLock < 260 || Math.abs(e.deltaY) < 4) return;
-    wheelLock = t;
-    stepLevel(e.deltaY > 0 ? 1 : -1);
-  }, { passive: false });
-  // drag the reel, or tap the row above / below the payline
-  let startY = null;
-  win.addEventListener('pointerdown', e => { startY = e.clientY; win.setPointerCapture(e.pointerId); });
-  win.addEventListener('pointerup', e => {
-    if (startY === null) return;
-    const dy = e.clientY - startY;
-    startY = null;
-    if (Math.abs(dy) > 14) { stepLevel(dy < 0 ? 1 : -1); return; }
-    const r = win.getBoundingClientRect(), y = e.clientY - r.top;
-    if (y < r.height / 3) stepLevel(-1);
-    else if (y > (r.height * 2) / 3) stepLevel(1);
-  });
-  win.addEventListener('pointercancel', () => { startY = null; });
-  window.addEventListener('resize', () => { if (!reel.spinning) placeReel(); });
-}
+// (The chaos picker was removed; the tone is fixed at state.level.)
+function renderLevels() {}
+function syncLevels() {}
+function gameSpun() {}
 
 function setLevel(v) {
   if (state.busy || v === state.level) return;
@@ -2256,8 +2003,6 @@ function setBusy(on) {
   state.busy = on;
   els.send.disabled = on;
   els.rand.disabled = on;
-  ['chaosUp', 'chaosDown', 'lever'].forEach(id => ($(id).disabled = on));
-  $('reelWin').setAttribute('aria-disabled', String(on));
 }
 
 async function runCouncil(question, userEl) {
@@ -2413,22 +2158,52 @@ async function randomize(announce = true) {
   }
 
   setBusy(true);
-  const oldCards = [...els.rail.querySelectorAll('.member:not(.you)')];
-  if (!REDUCED) {
-    // each card turns away, staggered, like dealing a new hand
-    await Promise.all(oldCards.map((el, i) =>
-      wait(i * T.flipGap).then(() => { playSfx('flick'); return flipOut(el).finished; })));
-  }
   swapTitle(squad.title);
-  playSfx('slide', true);
+  await slotRail(prev, state.members);   // every member card spins like a slot reel, stopping one by one
   renderRail(false);
-  if (!REDUCED) {
-    els.rail.querySelectorAll('.member:not(.you)').forEach((el, i) => flipIn(el, i * T.flipGap));
-  }
+  if (!REDUCED) els.rail.querySelectorAll('.member').forEach((el, i) =>
+    el.animate([{ background: '#FFD600' }, { background: '#FFFFFF' }], { duration: 500, delay: i * 40 }));
+  playSfx('slide', true);
   postSquadChange(prev, state.members, squad.title);
   gameRandomized(state.members);
-  await wait(REDUCED ? 0 : state.members.length * T.flipGap + T.flipIn);
   setBusy(false);
+}
+
+// Slot machine: each card becomes a reel of random faces that rolls and lands on the new member.
+// Reels stop left-to-right (top-to-bottom), each a bit later than the last.
+async function slotRail(prev, next) {
+  if (REDUCED) return;
+  const cards = [...els.rail.querySelectorAll('.member')];
+  const face = (p, i) => `<div class="slot-face" style="--accent:${ACCENTS[i % ACCENTS.length].bg}">
+      <div class="avatar" aria-hidden="true">${escHtml(p.emoji)}</div><div class="member-name">${escHtml(p.name)}</div></div>`;
+  await Promise.all(cards.map(async (card, i) => {
+    if (!next[i]) return;
+    const h = card.offsetHeight;
+    const filler = shuffle(ROSTER.filter(p => p !== next[i] && p !== prev[i])).slice(0, 12);
+    const faces = [prev[i] || filler[0], ...filler, next[i]];
+    card.classList.add('slotting');
+    card.style.height = `${h}px`;
+    card.innerHTML = `<div class="slot-strip" style="--h:${h}px">${faces.map(p => face(p, i)).join('')}</div>`;
+    const strip = card.firstElementChild;
+    const dist = (faces.length - 1) * h;
+    const anim = strip.animate([
+      { transform: 'translateY(0)' },
+      { transform: `translateY(${-dist - 12}px)`, offset: 0.93 },
+      { transform: `translateY(${-dist}px)` },
+    ], { duration: 1000 + i * 320, easing: 'cubic-bezier(.25,.6,.2,1)', fill: 'forwards' });
+    let last = 0;
+    const watch = () => {
+      if (anim.playState !== 'running') return;
+      const idx = Math.floor(-new DOMMatrix(getComputedStyle(strip).transform).m42 / h);
+      if (idx !== last) { last = idx; if (i === 0 || idx % 2 === 0) playSfx('tick'); }
+      requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
+    await anim.finished;
+    playSfx('thunk');
+    card.classList.add('slot-land');
+  }));
+  await wait(220);
 }
 
 function autosize() {
@@ -3734,7 +3509,7 @@ function buildStoryDOM(round) {
     <div class="sx-head">
       <div class="sx-brand">The Council</div>
       <div class="sx-name">${escHtml(round.squadTitle)}</div>
-      <div class="sx-sub"><span class="sx-members">${escHtml(names)}</span><span class="sx-lvl" style="--lvl:${LEVEL_HEX[lvl.v]}">Chaos: ${escHtml(lvl.name)}</span></div>
+      <div class="sx-sub"><span class="sx-members">${escHtml(names)}</span></div>
     </div>
     <div class="sx-chat">
       <div class="sx-day">Today ${now}</div>
@@ -4010,10 +3785,7 @@ function storyKeydown(e) {
 const ACHIEVEMENTS = {
   first:    ['First words',      'Asked the council your first question'],
   rounds10: ['Regular',          'Asked 10 questions'],
-  feral:    ['Feral unlocked',   'Survived a round on Feral'],
   shuffle5: ['Shuffle addict',   'Randomized the squad 5 times'],
-  spin3:    ['High roller',      'Spun the chaos 3 times'],
-  jackpot:  ['Jackpot',          'Spun straight into Feral'],
   story:    ['Story time',       'Took your first screenshot'],
   voice:    ['Hear me out',      'Played a voice'],
   desi:     ['Full filmy',       'Got the saas-bahu treatment'],
@@ -4151,7 +3923,7 @@ function gameRound(round) {
 //  INIT
 // ================================================================
 (async function init() {
-  if (window.matchMedia('(max-width: 720px)').matches) els.input.placeholder = 'Ask the council anything';
+  if (window.matchMedia('(max-width: 720px)').matches) els.input.placeholder = 'Ask the council anything…';
 
   gameLoad();
   renderLevels();
@@ -4162,7 +3934,6 @@ function gameRound(round) {
   els.send.addEventListener('click', send);
   els.stream.addEventListener('click', e => { if (state.busy && !e.target.closest('button')) state.skip = true; });
   els.rand.addEventListener('click', () => randomize(true));
-  initChaosMachine();
   els.stream.addEventListener('click', onSayClick);
   probeCloudVoice();
   window.speechSynthesis?.getVoices();   // start loading browser voices early
